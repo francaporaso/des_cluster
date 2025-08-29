@@ -15,6 +15,6 @@ gold.dnf_zmean_sof, gold.dnf_zmc_sof, gold.dnf_zsigma_sof
 FROM des_metacal_v03_004 as metacal
 INNER JOIN des_y3_gold_v2_2_c as gold ON metacal.unsheared_coadd_object_id = gold.coadd_object_id
 WHERE metacal.unsheared_flags=0 
-AND gold.flags_gold<8
+AND gold.flags_gold=0 -- <8 ?
 AND metacal.unsheared_snr>10 
 AND metacal.unsheared_snr<1000
