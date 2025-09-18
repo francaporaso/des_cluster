@@ -14,7 +14,6 @@ import time
 from tqdm import tqdm
 
 
-
 def SigmaCrit(zl, zs):
 
     global cosmo
@@ -44,58 +43,6 @@ profile_args={
     'NCORES':100,
 }
 
-class ClusterLensing:
-
-    def __init__(self, lens_args:dict, source_args:dict, profile_args:dict, cosmo_params:dict={'Om0':0.3, 'Ode0':0.7, 'H0':100.0}):
-        
-        self.cosmo = LambdaCDM(**cosmo_params)
-        
-        #self.la = lens_args
-        self.profile_name = profile_args['name']
-        self.RMIN = profile_args['RMIN']
-        self.RMAX = profile_args['RMAX']
-        self.NDOTS : int = profile_args['NDOTS']
-        self.NK = profile_args['NK']
-        self.NCORES = profile_args['NCORES']
-
-        self.L, self.K = lenscat_load(**lens_args) # Lenses catalogue and jackknife cuts
-        self.S = sourcecat_load(**source_args)     # Sources catalogue
-
-    def partial_profile(self, inp):
-        ra, dec, redshift, richness = inp
-        deg_to_Mpc = self.cosmo.arcsec_per_kpc_proper(redshift).to('deg/Mpc').value
-        sep_max = deg_to_Mpc*self.ROUT
-
-        mask = self.S.redshfit > (redshift + 0.1)
-
-    def stacked_profile(self):
-
-        N_inbin = np.zeros((self.NK+1, self.NDOTS))
-        DSigma_t_wsum = np.zeros((self.NK+1, self.NDOTS))
-        DSigma_x_wsum = np.zeros((self.NK+1, self.NDOTS))
-
-        with Pool(processes=self.NCORES) as pool:
-            inp = np.array([self.L.ra, self.L.dec, self.L.redshift, self.L.richness]).T
-
-            resmap = np.array(pool.map(self.partial_profile, inp))
-            pool.close()
-            pool.join()
-
-        for i,r in enumerate(resmap):
-            N_inbin += r.N
-            DSigma_t_wsum += r.DSigma_t
-            DSigma_x_wsum += r.DSigma_x
-
-        DSigma_t = DSigma_t_wsum/N_inbin
-        DSigma_x = DSigma_x_wsum/N_inbin
-
-        return DSigma_t, DSigma_x
-
-
-## TODO
-## se puede probar definir mask dentro del for loop, 
-## y q cargue en memoria solo los q caen en cada anillo
-## eso debería ser más eficiente en memoria
 def partial_profile(addnoise, S,
                     RA0, DEC0, Z, Rv,
                     RIN, ROUT, ndots):
@@ -134,7 +81,7 @@ def partial_profile(addnoise, S,
         np.deg2rad(RA0), np.deg2rad(DEC0)
     )
                            
-    e1 = -1.0*catdata.gamma1
+    e1 = catdata.gamma1
     e2 = -1.0*catdata.gamma2
     # Add shape noise due to intrisic galaxy shapes        
     if addnoise:
@@ -171,7 +118,7 @@ def partial_profile(addnoise, S,
     return SIGMAwsum, DSIGMAwsum_T, DSIGMAwsum_X, N_inbin
 
 def partial_profile_unpack(minput):
-    return part_profile_func(*minput)
+    return partial_profile(*minput)
 
 def stacking(RIN, ROUT, ndots, nk,
              L, K):
@@ -188,7 +135,7 @@ def stacking(RIN, ROUT, ndots, nk,
         if num == 1:
             entrada = [Li[1], Li[2], Li[3], Li[0],
                        RIN, ROUT, ndots]
-            resmap = np.array([part_profile_func(entrada)])
+            resmap = np.array([partial_profile_unpack(entrada)])
 
         else:
             entrada = np.array([Li.T[1],Li.T[2],Li.T[3],Li.T[0],
