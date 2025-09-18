@@ -15,11 +15,9 @@ z_s = np.arange(0.0,6.0,0.01)
 
 def sigma_crit(z_l, z_s):
     d_ls = _cosmo.angular_diameter_distance_z1z2(z_l, z_s).value
-    if d_ls<=0.0:
-        return 0.0
     d_l  = _cosmo.angular_diameter_distance(z_l).value*pc.value*1.0e6
     d_s  = _cosmo.angular_diameter_distance(z_s).value
-    return (((c.value**2.0)/(4.0*np.pi*G.value*d_l))*(d_s/d_ls))*(pc.value**2/M_sun.value)
+    return np.where(d_ls>0, ((c.value**2.0)/(4.0*np.pi*G.value*d_l))*(d_s/d_ls)*(pc.value**2/M_sun.value), 0.0)
 
 def mean_sigma_crit_b(z_l):
     # ec 6 Bocquet+2024 (SPT + DES + HST lensing)
