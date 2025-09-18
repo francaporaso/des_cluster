@@ -21,11 +21,11 @@ def sigma_crit(z_l, z_s):
     d_s  = _cosmo.angular_diameter_distance(z_s).value
     return (((c.value**2.0)/(4.0*np.pi*G.value*d_l))*(d_s/d_ls))*(pc.value**2/M_sun.value)
 
-def mean_sigma_crit_b(pz_b, z_l):
+def mean_sigma_crit_b(z_l):
     # ec 6 Bocquet+2024 (SPT + DES + HST lensing)
     'pz_b : ndarray = mean source redshift distribution as "function" of z_s'
 #    z_s = np.linspace(0.0,1.6,0.1) # source redshift range... CHANGE ACCORDINGLY
-    simpson(pz_b*sigma_crit(z_l, z_s), x=z_s)
+    return simpson(pz_b*sigma_crit(z_l, z_s), x=z_s)
 
 if __name__ == '__main__':
     z_l=float(input())
