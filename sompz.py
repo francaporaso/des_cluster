@@ -18,9 +18,9 @@ pz_bin0 = np.zeros(601)
 for i, cid in enumerate(cellid_bin0):
     pz_bin0 += sompz['pzdata/pz_chat'][:][cid]
 
-zrange = (sompz['pzdata/zlow'][:]+pzdata['zhigh'][:])*0.5
+zrange = (sompz['pzdata/zlow'][:]+sompz['pzdata/zhigh'][:])*0.5
 plt.plot(zrange, pz_bin0)
-plt.show()
+plt.savefig('bin0_test.png')
 
 if __name__ == '__main__':
     print('a')
