@@ -24,10 +24,23 @@ def main():
     pchat_s = [chat_bin[i][1]/len(j) for i in range(4)]
     pz_chat = [sompz['pzdata/pz_chat'][chat_bin[i][0]] for i in range(4)]
 
-    np.savetxt('test_mcal_sompz.dat', np.vstack([pchat_s, pz_chat]))
-
+    return pz_chat, pchat_s
 
 if __name__ == '__main__':
     tin = time.time()
-    main()
+    pz_chat, pchat_s = main()
+
+    t = Table({
+        'pz_chat_bin0':pz_chat[0],
+        'pz_chat_bin1':pz_chat[1],
+        'pz_chat_bin2':pz_chat[2],
+        'pz_chat_bin3':pz_chat[3],
+        'pchat_s_bin0':pchat_s[0],
+        'pchat_s_bin1':pchat_s[1],
+        'pchat_s_bin2':pchat_s[2],
+        'pchat_s_bin3':pchat_s[3],
+
+    })
+    t.write('test_mcal_sompz.dat')
+    
     print(f'took {time.time()-tin} s')
