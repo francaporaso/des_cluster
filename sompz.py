@@ -31,7 +31,7 @@ if __name__ == '__main__':
     pz_chat, pchat_s = main()
 
     pz_bin = np.array([
-        np.sum([pz_chat[j][i]*pchat_s[j][i] for i in range(len(pchat_s[j]))])
+        np.sum([pz_chat[j][i]*pchat_s[j][i] for i in range(len(pchat_s[j]))], axis=0)
         for j in range(4)
     ])
     np.savetxt('test_mcal_sompz.dat', pz_bin)
