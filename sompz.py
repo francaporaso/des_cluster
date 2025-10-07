@@ -24,7 +24,7 @@ def main():
     pchat_s = [chat_bin[i][1]/len(j) for i in range(4)]
     pz_chat = [sompz['pzdata/pz_chat'][chat_bin[i][0]] for i in range(4)]
 
-    np.savetxt('test_mcal_sompz.dat', np.hstack([pchat_s, pz_chat]))
+    np.savetxt('test_mcal_sompz.dat', np.vstack([pchat_s, pz_chat]))
 
 
 if __name__ == '__main__':
