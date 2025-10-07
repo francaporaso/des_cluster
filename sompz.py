@@ -30,17 +30,21 @@ if __name__ == '__main__':
     tin = time.time()
     pz_chat, pchat_s = main()
 
-    t = Table({
-        'pz_chat_bin0':pz_chat[0],
-        'pz_chat_bin1':pz_chat[1],
-        'pz_chat_bin2':pz_chat[2],
-        'pz_chat_bin3':pz_chat[3],
-        'pchat_s_bin0':pchat_s[0],
-        'pchat_s_bin1':pchat_s[1],
-        'pchat_s_bin2':pchat_s[2],
-        'pchat_s_bin3':pchat_s[3],
+    pz_bin = np.array([
+        np.sum([pz_chat[j][i]*pchat_s[j][i] for i in range(len(pchat_s[j]))])
+        for j in range(4)
+    ])
+    np.savetxt('test_mcal_sompz.dat', pz_bin)
+    # t = Table({
+    #     'pz_chat_bin0':pz_chat[0],
+    #     'pz_chat_bin1':pz_chat[1],
+    #     'pz_chat_bin2':pz_chat[2],
+    #     'pz_chat_bin3':pz_chat[3],
+    #     'pchat_s_bin0':pchat_s[0],
+    #     'pchat_s_bin1':pchat_s[1],
+    #     'pchat_s_bin2':pchat_s[2],
+    #     'pchat_s_bin3':pchat_s[3],
 
-    })
-    t.write('test_mcal_sompz.dat')
-    
+    # })
+    # t.write('test_mcal_sompz.dat')
     print(f'took {time.time()-tin} s')
