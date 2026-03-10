@@ -117,12 +117,10 @@ def sourcecat_load(name):
     return S
     #return np.vstack([S.ra_gal, S.dec_gal, S.true_redshift_gal, S.kappa, S.gamma1, S.gamma2])
 
+def metacal_load():
+    # TODO to implement
+    pass
 
-#####################
-### BALLTREE - probar
-# import sklearn
-# S = fits...
-# X = np.deg2rad([S.dec_gal, S.ra_gal]).T ## shape = (len(S),2) 
-# BT = sklearn(X, leaf_size=2, metric='haversine') ## haversine == great-circle
-# idx = BT.query_radius([np.deg2rad([DEC0,RA0])], r=0.8) # r: great-dist en radianes
-# catdata = S.ra_gal[idx], S.dec_gal[idx]
+def sompzcat_load():
+    # TODO to implement
+    pass
