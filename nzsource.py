@@ -1,12 +1,14 @@
 from astropy.io import fits
 from astropy.cosmology import Planck18 as cosmo
+#from astropy.cosmology import FlatLambdaCDM
 from astropy.constants import G,c,M_sun,pc
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import simpson
 
-# TODO: revisar unidades
-SC_CONSTANT : float = (c.value**2.0/(4.0*np.pi*G.value))*(pc.value/M_sun.value)*1.0e-6
+#cosmo = FlatLambdaCDM(Om0=0.3, H0=100)
+
+SC_CONSTANT : float = (c**2.0/(4.0*np.pi*G)).to('Msun/Mpc').value # h cancel out
 
 def read_nzsource():
     nzbins = {}
@@ -26,8 +28,8 @@ def read_nzsource():
 def sigma_crit(z_l, z_s):
     
     d_ls = cosmo.angular_diameter_distance_z1z2(z_l, z_s).value
-    d_ls[d_ls<0.0] = 0.0
-    d_l  = cosmo.angular_diameter_distance(z_l).value
+    d_ls[d_ls<=0.0] = 0.0
+    d_l  = cosmo.angular_diameter_distance(z_l).value*cosmo.h # from physical distance to distance/h we need to multiply
     d_s  = cosmo.angular_diameter_distance(z_s).value
     return SC_CONSTANT*(d_s/(d_ls*d_l))
 
@@ -38,8 +40,9 @@ def lensing_efficiency(z_l, z_s, nz):
     z_s (array) : source redshift (zmid of nzsource.fits)
     nz (array) : source redshift distribution 
     '''
+    normfactor = 1.0/simpson(nz, z_s) # normalization
     integrand = nz/sigma_crit(z_l, z_s)
-    return simpson(integrand, z_s)
+    return normfactor*simpson(integrand, z_s)
 
 if __name__ == '__main__':
     
