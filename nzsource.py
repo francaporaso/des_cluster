@@ -5,6 +5,8 @@ from astropy.constants import G,c,M_sun,pc
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import simpson
+from scipy.optimize import brentq
+from scipy.interpolate import intrep1d
 
 #cosmo = FlatLambdaCDM(Om0=0.3, H0=100)
 
@@ -43,6 +45,15 @@ def lensing_efficiency(z_l, z_s, nz):
     normfactor = 1.0/simpson(nz, z_s) # normalization
     integrand = nz/sigma_crit(z_l, z_s)
     return normfactor*simpson(integrand, z_s)
+
+
+def calculate_median(pdf):
+    y = np.cumsum(pdf) - 0.5
+    for i in range(len(y)-1):
+        if np.sign(y[i]) != np.sign(y[i+1]):
+            f = interp1d(z[i:i+2], y[i:i+2], kind='linear')
+            root = brentq(f, z[i], z[i+1])
+            return root
 
 if __name__ == '__main__':
 
