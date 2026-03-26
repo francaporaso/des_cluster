@@ -10,13 +10,13 @@ from scipy.integrate import simpson
 
 SC_CONSTANT : float = (c**2.0/(4.0*np.pi*G)).to('Msun/Mpc').value # h cancel out
 
-def read_nzsource():
+def read_nzsource(filename='../../cats/DESY3/nz_source_allrealizations.fits'):
     nzbins = {}
     nzperc = {}
     nzmean = {}
 
-    with fits.open('../../cats/DESY3/nz_source_allrealizations.fits') as f:
-        
+    with fits.open(filename) as f:
+
         zmid = f[1].data['Z_MID']
 
         for i in range(4):
@@ -26,7 +26,7 @@ def read_nzsource():
     return zmid, nzbins, nzperc, nzmean
 
 def sigma_crit(z_l, z_s):
-    
+
     d_ls = cosmo.angular_diameter_distance_z1z2(z_l, z_s).value
     d_ls[d_ls<=0.0] = 0.0
     d_l  = cosmo.angular_diameter_distance(z_l).value*cosmo.h # from physical distance to distance/h we need to multiply
@@ -36,16 +36,16 @@ def sigma_crit(z_l, z_s):
 def lensing_efficiency(z_l, z_s, nz):
     '''
     eq. 6 from Bocquet+2024
-    z_l (float) : lens redshift 
+    z_l (float) : lens redshift
     z_s (array) : source redshift (zmid of nzsource.fits)
-    nz (array) : source redshift distribution 
+    nz (array) : source redshift distribution
     '''
     normfactor = 1.0/simpson(nz, z_s) # normalization
     integrand = nz/sigma_crit(z_l, z_s)
     return normfactor*simpson(integrand, z_s)
 
 if __name__ == '__main__':
-    
+
     zmid, nzbins, nzperc, nzmean = read_nzsource()
 
     # plt.figure()
