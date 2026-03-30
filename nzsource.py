@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import simpson
 from scipy.optimize import brentq
-from scipy.interpolate import intrep1d
+from scipy.interpolate import interp1d
 
 #cosmo = FlatLambdaCDM(Om0=0.3, H0=100)
 
