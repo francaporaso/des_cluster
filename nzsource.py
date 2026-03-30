@@ -47,7 +47,7 @@ def lensing_efficiency(z_l, z_s, nz):
     return normfactor*simpson(integrand, z_s)
 
 
-def calculate_median(pdf):
+def calculate_median(z, pdf):
     y = np.cumsum(pdf) - 0.5
     for i in range(len(y)-1):
         if np.sign(y[i]) != np.sign(y[i+1]):
