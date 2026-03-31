@@ -25,9 +25,6 @@ elif BINNING=='lin':
 else:
     raise ValueError('BINNING must be "log" or "lin".')
 
-def mask_zbin():
-    pass
-
 def partial_profile(inp):
 
     g_t_raw_num = np.zeros(N)
@@ -50,35 +47,35 @@ def partial_profile(inp):
         np.deg2rad(ra0), np.deg2rad(dec0)
     )
 
+    #get weights
+    w_s = catdata['weights']
+    ## add weights of sigma_crit in the lens cat
+    w_b = np.array([w_b0, w_b1, w_b2, w_b3])
+
     e1 = catdata['e_1']
     e2 = -catdata['e_2']
     R1 = catdata['r11']
     R2 = catdata['r22']
-    #se usa el promedio entre ambos xq son muy similares ((R1-R2)/(0.5*(R1+R2)) < 0.1%)
-    R = 0.5*(R1+R2)
-
-    #get tangential ellipticities
+    #se usa el promedio entre ambos xq son muy similares
+    #((R1-R2)/(0.5*(R1+R2)) < 0.1%)
+    R = 0.5*(R1+R2)*w_s
+    
+    #get weighted tangential ellipticities
     cos2t = np.cos(2.0*theta)
     sin2t = np.sin(2.0*theta)
-    et = -(e1*cos2t+e2*sin2t)
-    ex = (-e1*sin2t+e2*cos2t)
-
-    #get weights
-    w_s = catdata['unsheared_weights']
-    w_b = np.array([w_b0, w_b1, w_b2, w_b3])
-
-    #get redshift bins
-    zbin = mask_zbin()
+    et = -(e1*cos2t+e2*sin2t)*w_s
+    ex = (-e1*sin2t+e2*cos2t)*w_s
 
     ndots = binspace(RIN, ROUT, N+1)
     dig = np.digitize((np.rad2deg(rads)/DEGxMPC), ndots)
 
     for n_i in range(N):
         m_i = dig == n_i+1
-        for b in range(4):  
-            g_t_raw_num[n_i] += w_b[b]*np.sum(et[m_i][zbin[b]]*w_s[m_i][zbin[b]])
-            g_x_raw_num[n_i] += w_b[b]*np.sum(ex[m_i][zbin[b]]*w_s[m_i][zbin[b]])
-            g_a_raw_den[n_i] += w_b[b]*np.sum(R[m_i][zbin[b]]*w_s[m_i][zbin[b]])
+        for b in range(4):
+            zbin = catdata['bhat'] == b
+            g_t_raw_num[n_i] += w_b[b]*np.sum(et[m_i][zbin])
+            g_x_raw_num[n_i] += w_b[b]*np.sum(ex[m_i][zbin])
+            g_a_raw_den[n_i] += w_b[b]*np.sum(R[m_i][zbin])
             N_inbin[n_i] += np.count_nonzero(m_i)
 
     return g_t_raw_num, g_x_raw_num, g_a_raw_den, N_inbin
@@ -86,3 +83,21 @@ def partial_profile(inp):
 
 if __name__ == '__main__':
     print('a')
+
+
+# how to get the bhat for the metacal cat
+#ids1 = table1['id']
+#ids2 = table2['id']
+#
+## sort table2
+#order2 = np.argsort(ids2)
+#ids2_sorted = ids2[order2]
+#
+## find matches
+#idx = np.searchsorted(ids2_sorted, ids1)
+#
+## valid matches mask
+#mask = (idx < len(ids2)) & (ids2_sorted[idx] == ids1)
+#
+#t1_matched = table1[mask]
+#t2_matched = table2[order2[idx[mask]]]
