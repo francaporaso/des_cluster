@@ -6,7 +6,7 @@ from astropy.table import Table
 from scipy.integrate import simpson
 
 from funcs import eq2p2#, get_masked_idx_fast
-from io import read_source, read_redmapper
+from io import *
 from nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
 
 COSMO = FlatLambdaCDM(H0=100, Om0=0.3)
