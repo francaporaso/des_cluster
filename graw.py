@@ -98,7 +98,7 @@ def partial_profile(inp):
 
 def main():
 
-    l0 = Lens[Lens['mem_match_id']==69]
+    l0 = Lenses[Lenses['mem_match_id']==69]
     g_t_raw_num, g_x_raw_num, g_a_raw_den, N_inbin = partial_profile(l0['ra_gal'], l0['dec_gal'], l0['redshift'], l0['wb_0'], l0['wb_1'], l0['wb_2'], l0['wb_3'])
 
     g_t_raw = g_t_raw_num/g_a_raw_den
