@@ -105,7 +105,7 @@ def main():
 
 if __name__ == '__main__':
     print('a')
-
+    main()
 
 # how to get the bhat for the metacal cat
 #ids1 = table1['id']
