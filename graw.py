@@ -44,10 +44,10 @@ def get_masked_data(psi, ra0, dec0, z0, wb):
 
 def partial_profile(inp):
 
-    g_t_raw_num = np.zeros(N)
-    g_x_raw_num = np.zeros(N)
-    g_a_raw_den = np.zeros(N)
-    N_inbin = np.zeros(N)
+    g_t_raw_num = np.zeros(NBINS)
+    g_x_raw_num = np.zeros(NBINS)
+    g_a_raw_den = np.zeros(NBINS)
+    N_inbin = np.zeros(NBINS)
 
     ra0, dec0, z0, *w_b = inp
 
@@ -84,7 +84,7 @@ def partial_profile(inp):
     ndots = binspace(RIN, ROUT, NBINS+1)
     dig = np.digitize((np.rad2deg(rads)/DEGxMPC), ndots)
 
-    for n_i in range(N):
+    for n_i in range(NBINS):
         m_i = dig == n_i+1
         for b in range(4):
             zbin = catdata['bhat'] == b
