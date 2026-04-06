@@ -6,7 +6,7 @@ from astropy.table import Table
 from scipy.integrate import simpson
 
 from funcs import eq2p2#, get_masked_idx_fast
-from io import *
+#from io import *
 from nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
 
 COSMO = FlatLambdaCDM(H0=100, Om0=0.3)
@@ -15,8 +15,6 @@ NBINS = 10
 RIN, ROUT = 0.2, 15.0 #Mpc/h
 BINNING = 'log'
 
-Source = read_source() # metacal file
-Lenses = read_redmapper() # redmapper
 
 ZMED = np.array([0.285, 0.476, 0.743, 0.942])
 
@@ -26,6 +24,16 @@ elif BINNING=='lin':
     binspace = np.linspace
 else:
     raise ValueError('BINNING must be "log" or "lin".')
+
+
+def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits'):
+    return Table.read(filename)
+
+def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_25314.fits'):
+    return Table.read(filename)
+
+Source = read_source() # metacal file
+Lenses = read_redmapper() # redmapper
 
 def get_masked_data(psi, ra0, dec0, z0, wb):
     mask_sky = (Source['ra_gal'] < (ra0+psi))&(Source['ra_gal'] > (ra0-psi))&(Source['dec_gal'] < (dec0+psi))&(Source['dec_gal'] > (dec0-psi))
