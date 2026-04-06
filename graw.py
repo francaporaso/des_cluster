@@ -6,17 +6,17 @@ from astropy.table import Table
 from scipy.integrate import simpson
 
 from funcs import eq2p2, get_masked_idx_fast
-from io import read_metacal, read_redmapper
+from io import read_source, read_redmapper
 from nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
 
 COSMO = FlatLambdaCDM(H0=100, Om0=0.3)
 
-N = 10
+NBINS = 10
 RIN, ROUT = 0.2, 15.0 #Mpc/h
 BINNING = 'log'
 
-Source = read_metacal()
-Lenses = read_redmapper()
+Source = read_source() # metacal file
+Lenses = read_redmapper() # redmapper
 
 if BINNING=='log':
     binspace = np.geomspace
@@ -59,14 +59,14 @@ def partial_profile(inp):
     #se usa el promedio entre ambos xq son muy similares
     #((R1-R2)/(0.5*(R1+R2)) < 0.1%)
     R = 0.5*(R1+R2)*w_s
-    
+
     #get weighted tangential ellipticities
     cos2t = np.cos(2.0*theta)
     sin2t = np.sin(2.0*theta)
     et = -(e1*cos2t+e2*sin2t)*w_s
     ex = (-e1*sin2t+e2*cos2t)*w_s
 
-    ndots = binspace(RIN, ROUT, N+1)
+    ndots = binspace(RIN, ROUT, NBINS+1)
     dig = np.digitize((np.rad2deg(rads)/DEGxMPC), ndots)
 
     for n_i in range(N):
@@ -79,6 +79,21 @@ def partial_profile(inp):
             N_inbin[n_i] += np.count_nonzero(m_i)
 
     return g_t_raw_num, g_x_raw_num, g_a_raw_den, N_inbin
+
+
+def main():
+
+    l0 = Lens[Lens['mem_match_id']==63]
+    g_t_raw_num, g_x_raw_num, g_a_raw_den, N_inbin = partial_profile(l0['ra_gal'], l0['dec_gal'], l0['redshift'], l0['wb_0'], l0['wb_1'], l0['wb_2'], l0['wb_3'])
+
+    g_t_raw = g_t_raw_num/g_a_raw_den
+    g_x_raw = g_x_raw_num/g_a_raw_den
+
+    r = binspace(RIN, ROUT, NBINS)
+    plt.scatter(r, g_t_raw, s=5)
+    plt.scatter(r, g_x_raw, s=5, m='x', color='gray')
+    plt.show()
+
 
 
 if __name__ == '__main__':
