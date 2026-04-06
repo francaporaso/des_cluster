@@ -18,12 +18,21 @@ BINNING = 'log'
 Source = read_source() # metacal file
 Lenses = read_redmapper() # redmapper
 
+ZMED = np.array([0.285, 0.476, 0.743, 0.942])
+
 if BINNING=='log':
     binspace = np.geomspace
 elif BINNING=='lin':
     binspace = np.linspace
 else:
     raise ValueError('BINNING must be "log" or "lin".')
+
+def get_masked_data(psi, ra0, dec0, z0, wb):
+    mask_sky = (Source['ra_gal'] < (ra0+psi))&(Source['ra_gal'] > (ra0-psi))&(Source['dec_gal'] < (dec0+psi))&(Source['dec_gal'] > (dec0-psi))
+    for i in range(4):
+        if z0 > ZMED[i]:
+            wb[i] = 0.0
+    return mask_sky, wb
 
 def partial_profile(inp):
 
@@ -32,14 +41,14 @@ def partial_profile(inp):
     g_a_raw_den = np.zeros(N)
     N_inbin = np.zeros(N)
 
-    ra0, dec0, z0, w_b0, w_b1, w_b2, w_b3 = inp
+    ra0, dec0, z0, *w_b = inp
 
     DEGxMPC = COSMO.arcsec_per_kpc_proper(z0).to('deg/Mpc').value
     psi = DEGxMPC*ROUT
 
     # get masked data
-    idx = get_masked_idx_fast(psi, ra0, dec0, z0)
-    catdata = Source[idx]
+    mask, w_b = get_masked_data(psi, ra0, dec0, z0, w_b)
+    catdata = Source[mask]
 
     # calculate transformation to polar coords
     rads, theta = eq2p2(
@@ -49,8 +58,6 @@ def partial_profile(inp):
 
     #get weights
     w_s = catdata['weights']
-    ## add weights of sigma_crit in the lens cat
-    w_b = np.array([w_b0, w_b1, w_b2, w_b3])
 
     e1 = catdata['e_1']
     e2 = -catdata['e_2']
@@ -83,7 +90,7 @@ def partial_profile(inp):
 
 def main():
 
-    l0 = Lens[Lens['mem_match_id']==63]
+    l0 = Lens[Lens['mem_match_id']==69]
     g_t_raw_num, g_x_raw_num, g_a_raw_den, N_inbin = partial_profile(l0['ra_gal'], l0['dec_gal'], l0['redshift'], l0['wb_0'], l0['wb_1'], l0['wb_2'], l0['wb_3'])
 
     g_t_raw = g_t_raw_num/g_a_raw_den
