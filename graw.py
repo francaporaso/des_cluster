@@ -65,7 +65,7 @@ def partial_profile(inp):
     )
 
     #get weights
-    w_s = catdata['weight']
+    w_s = catdata['weights']
 
     e1 = catdata['e_1']
     e2 = -catdata['e_2']
@@ -88,9 +88,9 @@ def partial_profile(inp):
         m_i = dig == n_i+1
         for b in range(4):
             zbin = catdata['bhat'] == b
-            g_t_raw_num[n_i] += w_b[b]*np.sum(et[m_i][zbin])
-            g_x_raw_num[n_i] += w_b[b]*np.sum(ex[m_i][zbin])
-            g_a_raw_den[n_i] += w_b[b]*np.sum(R[m_i][zbin])
+            g_t_raw_num[n_i] += w_b[b]*np.sum(et[m_i & zbin])
+            g_x_raw_num[n_i] += w_b[b]*np.sum(ex[m_i & zbin])
+            g_a_raw_den[n_i] += w_b[b]*np.sum(R[m_i & zbin])
             N_inbin[n_i] += np.count_nonzero(m_i)
 
     return g_t_raw_num, g_x_raw_num, g_a_raw_den, N_inbin
