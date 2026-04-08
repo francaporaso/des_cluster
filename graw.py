@@ -107,11 +107,11 @@ def main():
     g_x_raw = g_x_raw_num/g_a_raw_den
 
     r = binspace(RIN, ROUT, NBINS)
-    plt.scatter(r, g_t_raw[g_t_raw > 0], s=5, marker='o')
-    plt.scatter(r, np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', facecolor='none')
+    plt.scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
+    plt.scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', facecolor='none')
 
-    plt.scatter(r, g_x_raw[g_x_raw > 0], s=5, marker='x', color='gray')
-    plt.scatter(r, np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='x', color='gray', facecolor='none')
+    plt.scatter(r[g_t_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='x', color='gray')
+    plt.scatter(r[g_t_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='x', color='gray', facecolor='none')
     plt.loglog()
     plt.savefig('test_des.png')
 
