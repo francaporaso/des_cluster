@@ -100,7 +100,7 @@ def partial_profile(inp):
 
 def main():
 
-    l = Lenses[Lenses['lambda']>150.0]
+    l = Lenses[ (Lenses['lambda']>38.0) & (Lenses['lambda']<=55) & (Lenses['redshift']>0.19) & (Lenses['redshift']<=0.27) ]
     print(f'nlenses = {len(l)}')
 
     g_t_raw_num = np.zeros((len(l), NBINS))
