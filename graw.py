@@ -100,20 +100,42 @@ def partial_profile(inp):
 
 def main():
 
-    l0 = Lenses[Lenses['mem_match_id']==69]
-    g_t_raw_num, g_x_raw_num, g_a_raw_den, N_inbin = partial_profile([l0['ra_gal'], l0['dec_gal'], l0['redshift'], l0['wb_0'], l0['wb_1'], l0['wb_2'], l0['wb_3']])
+    l = Lenses[Lenses['lambda']>150.0]
 
-    g_t_raw = g_t_raw_num/g_a_raw_den
-    g_x_raw = g_x_raw_num/g_a_raw_den
+    g_t_raw_num = np.zeros((len(l), NBINS))
+    g_x_raw_num = np.zeros((len(l), NBINS))
+    g_a_raw_num = np.zeros((len(l), NBINS))
+    N_inbin = np.zeros((len(l), NBINS))
+
+    for i, li in enumerate(l):
+        g_t_raw_num[i,:], g_x_raw_num[i,:], g_a_raw_den[i,:], N_inbin[i,:] = partial_profile(
+            [
+                li['ra_gal'],
+                li['dec_gal'],
+                li['redshift'],
+                li['wb_0'],
+                li['wb_1'],
+                li['wb_2'],
+                li['wb_3']
+            ]
+        )
+
+    g_t_raw = np.sum(g_t_raw_num, axis=0)/np.sum(g_a_raw_den, axis=0)
+    g_x_raw = np.sum(g_x_raw_num, axis=0)/np.sum(g_a_raw_den, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
-    plt.scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
-    plt.scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', facecolor='none')
+    fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
 
-    plt.scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='x', color='gray')
-    plt.scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='x', color='gray', facecolor='none')
-    plt.loglog()
-    plt.savefig('test_des.png')
+    axes[0].scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
+    axes[0].scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', facecolor='none')
+
+    axes[0].scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='x', color='gray')
+    axes[0].scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='x', color='gray', facecolor='none')
+
+    axes[1].scatter(r, N_inbin.sum(axis=0), c='green', s=5)
+
+    fig.loglog()
+    fig.savefig('test_des.png')
 
 if __name__ == '__main__':
 
