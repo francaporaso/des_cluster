@@ -16,7 +16,7 @@ COSMO = FlatLambdaCDM(H0=100, Om0=0.3)
 NBINS = 10
 RIN, ROUT = 0.2, 15.0 #Mpc/h
 BINNING = 'log'
-
+PLOT = True
 
 ZMED = np.array([0.285, 0.476, 0.743, 0.942])
 
@@ -101,6 +101,7 @@ def partial_profile(inp):
 def main():
 
     l = Lenses[Lenses['lambda']>150.0]
+    print(f'nlenses = {len(l)}')
 
     g_t_raw_num = np.zeros((len(l), NBINS))
     g_x_raw_num = np.zeros((len(l), NBINS))
@@ -124,17 +125,21 @@ def main():
     g_x_raw = np.sum(g_x_raw_num, axis=0)/np.sum(g_a_raw_den, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
-    fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
 
-    axes[0].scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
-    axes[0].scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', facecolor='none')
-    axes[0].scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='x', color='gray')
-    axes[0].scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='x', color='gray', facecolor='none')
-    axes[0].loglog()
+    np.savetxt('test_des.dat', np.vstack([r, g_t_raw, g_x_raw, N_inbin]))
 
-    axes[1].scatter(r, N_inbin.sum(axis=0), c='green', s=5)
+    if PLOT:
+        fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
 
-    fig.savefig('test_des.png')
+        axes[0].scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
+        axes[0].scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', facecolor='none')
+        axes[0].scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='x', color='gray')
+        axes[0].scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='x', color='gray', facecolor='none')
+        axes[0].loglog()
+
+        axes[1].scatter(r, N_inbin.sum(axis=0), c='green', s=5)
+
+        fig.savefig('test_des.png')
 
 if __name__ == '__main__':
 
