@@ -104,7 +104,7 @@ def main():
 
     g_t_raw_num = np.zeros((len(l), NBINS))
     g_x_raw_num = np.zeros((len(l), NBINS))
-    g_a_raw_num = np.zeros((len(l), NBINS))
+    g_a_raw_den = np.zeros((len(l), NBINS))
     N_inbin = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
