@@ -107,11 +107,13 @@ def main():
     g_x_raw = g_x_raw_num/g_a_raw_den
 
     r = binspace(RIN, ROUT, NBINS)
-    plt.scatter(r, g_t_raw, s=5)
-    plt.scatter(r, g_x_raw, s=5, marker='x', color='gray')
-    plt.show()
+    plt.scatter(r, g_t_raw[g_t_raw > 0], s=5, marker='o')
+    plt.scatter(r, np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', facecolor='none')
 
-
+    plt.scatter(r, g_x_raw[g_x_raw > 0], s=5, marker='x', color='gray')
+    plt.scatter(r, np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='x', color='gray', facecolor='none')
+    plt.loglog()
+    plt.savefig('test_des.png')
 
 if __name__ == '__main__':
 
@@ -119,7 +121,7 @@ if __name__ == '__main__':
     t1 = time()
     main()
     print('End'.center(17,'-'))
-    print(f'Took {time()-t1:2f.2} s')
+    print(f'Took {time()-t1} s')
 
 # how to get the bhat for the metacal cat
 #ids1 = table1['id']
