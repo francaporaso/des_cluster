@@ -65,7 +65,7 @@ def partial_profile(inp):
     )
 
     #get weights
-    w_s = catdata['weights']
+    w_s = catdata['weight']
 
     e1 = catdata['e_1']
     e2 = -catdata['e_2']
