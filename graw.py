@@ -4,6 +4,8 @@ from astropy.cosmology import FlatLambdaCDM
 #from astropy.constants import c, G, pc, M_sun
 from astropy.table import Table
 from scipy.integrate import simpson
+import matplotlib.pyplot as plt
+from time import time
 
 from funcs import eq2p2#, get_masked_idx_fast
 #from io import *
@@ -112,8 +114,12 @@ def main():
 
 
 if __name__ == '__main__':
-    print('a')
+
+    print('Start'.center(15,'-'))
+    t1 = time()
     main()
+    print('End'.center(17,'-'))
+    print(f'Took {time()-t1:2f.2} s')
 
 # how to get the bhat for the metacal cat
 #ids1 = table1['id']
