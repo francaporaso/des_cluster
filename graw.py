@@ -108,7 +108,7 @@ def main():
 
     r = binspace(RIN, ROUT, NBINS)
     plt.scatter(r, g_t_raw, s=5)
-    plt.scatter(r, g_x_raw, s=5, m='x', color='gray')
+    plt.scatter(r, g_x_raw, s=5, marker='x', color='gray')
     plt.show()
 
 
