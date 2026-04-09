@@ -50,7 +50,7 @@ def partial_profile(inp):
     g_x_raw_num = np.zeros(NBINS)
     response_sum = np.zeros(NBINS)
     N_inbin = np.zeros(NBINS)
-    n_eff = np.zeros(NBINS)
+    n_eff_den = np.zeros(NBINS)
 
     ra0, dec0, z0, *w_b = inp
 
