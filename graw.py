@@ -70,7 +70,7 @@ def partial_profile(inp):
     w_s = catdata['weight']
 
     e1 = catdata['e_1']
-    e2 = -catdata['e_2']
+    e2 = catdata['e_2']
     R1 = catdata['r11']
     R2 = catdata['r22']
     #se usa el promedio entre ambos xq son muy similares
