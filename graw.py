@@ -127,7 +127,7 @@ def main():
     response = np.sum(response_sum, axis=0)
     g_t_raw = np.sum(g_t_raw_num, axis=0)/response
     g_x_raw = np.sum(g_x_raw_num, axis=0)/response
-    n_eff = response**2/np.sum(n_eff_den, axis=0)
+    n_eff = np.sum(response_sum**2, axis=0)/np.sum(n_eff_den, axis=0)
     Nbin = np.sum(N_inbin, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
