@@ -133,11 +133,12 @@ def main():
 
         axes[0].scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
         axes[0].scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
-        axes[0].scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='x', color='gray')
-        axes[0].scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='x', edgecolor='gray', facecolor='none')
+        axes[1].scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='o', color='gray')
+        axes[1].scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
         axes[0].loglog()
+        axes[1].loglog()
 
-        axes[1].scatter(r, N_inbin.sum(axis=0), c='green', s=5)
+        #axes[1].scatter(r, N_inbin.sum(axis=0), c='green', s=5)
 
         fig.savefig('test_des.png')
 
