@@ -69,7 +69,7 @@ def partial_profile(inp):
     #get weights
     w_s = catdata['weight']
 
-    e1 = -catdata['e_1']
+    e1 = catdata['e_1']
     e2 = catdata['e_2']
     R1 = catdata['r11']
     R2 = catdata['r22']
@@ -80,8 +80,8 @@ def partial_profile(inp):
     #get weighted tangential ellipticities
     cos2t = np.cos(2.0*theta)
     sin2t = np.sin(2.0*theta)
-    et = -(e1*cos2t+e2*sin2t)*w_s
-    ex = (-e1*sin2t+e2*cos2t)*w_s
+    et = (-e1*cos2t+e2*sin2t)*w_s
+    ex = (e1*sin2t+e2*cos2t)*w_s
 
     ndots = binspace(RIN, ROUT, NBINS+1)
     dig = np.digitize((np.rad2deg(rads)/DEGxMPC), ndots)
