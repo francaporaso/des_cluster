@@ -48,8 +48,9 @@ def partial_profile(inp):
 
     g_t_raw_num = np.zeros(NBINS)
     g_x_raw_num = np.zeros(NBINS)
-    g_a_raw_den = np.zeros(NBINS)
+    response_sum = np.zeros(NBINS)
     N_inbin = np.zeros(NBINS)
+    n_eff = np.zeros(NBINS)
 
     ra0, dec0, z0, *w_b = inp
 
@@ -92,10 +93,11 @@ def partial_profile(inp):
             zbin = catdata['bhat'] == b
             g_t_raw_num[n_i] += w_b[b]*np.sum(et[m_i & zbin])
             g_x_raw_num[n_i] += w_b[b]*np.sum(ex[m_i & zbin])
-            g_a_raw_den[n_i] += w_b[b]*np.sum(R[m_i & zbin])
-            N_inbin[n_i] += np.count_nonzero(m_i)
+            response_sum[n_i] += w_b[b]*np.sum(R[m_i & zbin])
+            n_eff_den[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
+            N_inbin[n_i] += np.count_nonzero(m_i & zbin)
 
-    return g_t_raw_num, g_x_raw_num, g_a_raw_den, N_inbin
+    return g_t_raw_num, g_x_raw_num, response_sum, n_eff_den, N_inbin
 
 
 def main():
@@ -105,11 +107,12 @@ def main():
 
     g_t_raw_num = np.zeros((len(l), NBINS))
     g_x_raw_num = np.zeros((len(l), NBINS))
-    g_a_raw_den = np.zeros((len(l), NBINS))
+    response_sum = np.zeros((len(l), NBINS))
+    n_eff_den = np.zeros((len(l), NBINS))
     N_inbin = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
-        g_t_raw_num[i,:], g_x_raw_num[i,:], g_a_raw_den[i,:], N_inbin[i,:] = partial_profile(
+        g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], n_eff_den[i,:], N_inbin[i,:] = partial_profile(
             [
                 li['ra_gal'],
                 li['dec_gal'],
@@ -121,25 +124,30 @@ def main():
             ]
         )
 
-    g_t_raw = np.sum(g_t_raw_num, axis=0)/np.sum(g_a_raw_den, axis=0)
-    g_x_raw = np.sum(g_x_raw_num, axis=0)/np.sum(g_a_raw_den, axis=0)
+    response = np.sum(response_sum, axis=0)
+    g_t_raw = np.sum(g_t_raw_num, axis=0)/response
+    g_x_raw = np.sum(g_x_raw_num, axis=0)/response
+    n_eff = response**2/np.sum(n_eff_den, axis=0)
     Nbin = np.sum(N_inbin, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
 
-    np.savetxt('test_des.dat', np.vstack([r, g_t_raw, g_x_raw, N_inbin]))
+    np.savetxt('test_des.dat', np.vstack([r, g_t_raw, g_x_raw, n_eff, N_inbin]))
 
     if PLOT:
-        fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
+        fig, axes = plt.subplots(ncols=2, nrows=2, sharex=True, figsize=(5,6))
 
-        axes[0].scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
-        axes[0].scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
-        axes[1].scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='o', color='gray')
-        axes[1].scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
-        axes[0].loglog()
-        axes[1].loglog()
+        axes[0,0].scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
+        axes[0,0].scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
+        axes[1,0].scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='o', color='gray')
+        axes[1,0].scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
+        axes[0,0].loglog()
+        axes[1,0].loglog()
 
-        #axes[1].scatter(r, N_inbin.sum(axis=0), c='green', s=5)
+        axes[0,1].scatter(r, Nbin, c='green', s=5)
+        axes[1,1].scatter(r, n_eff, c='green', s=5)
+        axes[0,1].loglog()
+        axes[1,1].loglog()
 
         fig.savefig('test_des.png')
 
