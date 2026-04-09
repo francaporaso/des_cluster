@@ -69,7 +69,7 @@ def partial_profile(inp):
     #get weights
     w_s = catdata['weight']
 
-    e1 = catdata['e_1']
+    e1 = -catdata['e_1']
     e2 = catdata['e_2']
     R1 = catdata['r11']
     R2 = catdata['r22']
@@ -122,7 +122,8 @@ def main():
         )
 
     g_t_raw = np.sum(g_t_raw_num, axis=0)/np.sum(g_a_raw_den, axis=0)
-    g_x_raw = np.sum(g_x_raw_num, axis=0)/np.sum(g_a_raw_den, axis=0)
+    g_x_raw = np.sum(g_x_raw_num:w:, axis=0)/np.sum(g_a_raw_den, axis=0)
+    Nbin = np.sum(N_inbin, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
 
