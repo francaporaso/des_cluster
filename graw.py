@@ -187,10 +187,10 @@ def stack_dsigma():
     dsigma_x_sum = np.zeros((len(l), NBINS))
     response_sum = np.zeros((len(l), NBINS))
     n_sl_sum = np.zeros((len(l), NBINS))
-     = np.zeros((len(l), NBINS))
+    n_bin_sum = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
-        dsigma_t_sum[i,:], dsigma_x_sum[i,:], response_sum[i,:], n_sl_sum[i,:], [i,:] = partial_profile_DeltaSigma(
+        dsigma_t_sum[i,:], dsigma_x_sum[i,:], response_sum[i,:], n_sl_sum[i,:], n_bin_sum[i,:] = partial_profile_DeltaSigma(
             [
                 li['ra_gal'],
                 li['dec_gal'],
@@ -207,7 +207,7 @@ def stack_dsigma():
 
     dsigma_t = np.sum(dsigma_t_sum, axis=0)/n_eff
     dsigma_x = np.sum(dsigma_x_sum, axis=0)/n_eff
-    Nbin = np.sum(, axis=0)
+    n_bin = np.sum(n_bin_sum, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
 
@@ -223,7 +223,7 @@ def stack_dsigma():
         axes[0,0].loglog()
         axes[1,0].loglog()
 
-        axes[0,1].scatter(r, Nbin, c='green', s=5)
+        axes[0,1].scatter(r, n_bin, c='green', s=5)
         axes[1,1].scatter(r, n_eff, c='green', s=5)
         axes[0,1].loglog()
         axes[1,1].loglog()
