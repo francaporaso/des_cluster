@@ -52,7 +52,7 @@ def partial_profile_gt_raw(inp):
     g_t_raw_num = np.zeros(NBINS)
     g_x_raw_num = np.zeros(NBINS)
     response_sum = np.zeros(NBINS)
-     = np.zeros(NBINS)
+    N_inbin = np.zeros(NBINS)
     n_eff_den = np.zeros(NBINS)
 
     ra0, dec0, z0, *w_b = inp
@@ -100,7 +100,7 @@ def partial_profile_gt_raw(inp):
             n_eff_den[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
             [n_i] += np.count_nonzero(m_i & zbin)
 
-    return g_t_raw_num, g_x_raw_num, response_sum, n_eff_den,
+    return g_t_raw_num, g_x_raw_num, response_sum, n_eff_den, N_inbin
 
 def partial_profile_DeltaSigma(inp):
     '''
