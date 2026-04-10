@@ -190,7 +190,7 @@ def stack_dsigma():
     N_inbin = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
-        dsigma_t_sum[i,:], dsigma_x_sum[i,:], response_sum[i,:], n_ls_sum[i,:], N_inbin[i,:] = partial_profile(
+        dsigma_t_sum[i,:], dsigma_x_sum[i,:], response_sum[i,:], n_ls_sum[i,:], N_inbin[i,:] = partial_profile_DeltaSigma(
             [
                 li['ra_gal'],
                 li['dec_gal'],
@@ -243,7 +243,7 @@ def stack_gt_raw():
     N_inbin = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
-        g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], n_eff_den[i,:], N_inbin[i,:] = partial_profile(
+        g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], n_eff_den[i,:], N_inbin[i,:] = partial_profile_gt_raw(
             [
                 li['ra_gal'],
                 li['dec_gal'],
