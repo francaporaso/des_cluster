@@ -171,7 +171,7 @@ def partial_profile_DeltaSigma(inp):
         for b in range(4):
             zbin = catdata['bhat'] == b
             dsigma_t_sum[n_i] += w_b[b]*np.sum(et[m_i & zbin]/R[m_i & zbin])
-            dsigma_x_sum[n_i] += w_b[b]*np.sum(ex[m_i & zbin])/R[m_i & zbin])
+            dsigma_x_sum[n_i] += w_b[b]*np.sum(ex[m_i & zbin]/R[m_i & zbin])
             response_sum[n_i] += w_b[b]*np.sum(R[m_i & zbin])
             n_ls_sum[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
