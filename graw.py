@@ -173,7 +173,7 @@ def partial_profile_DeltaSigma(inp):
             dsigma_t_sum[n_i] += w_b[b]*np.sum(et[m_i & zbin]/R[m_i & zbin])
             dsigma_x_sum[n_i] += w_b[b]*np.sum(ex[m_i & zbin]/R[m_i & zbin])
             response_sum[n_i] += w_b[b]*np.sum(R[m_i & zbin])
-            n_ls_sum[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
+            n_sl_sum[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
 
     return dsigma_t_sum, dsigma_x_sum, response_sum, n_ls_sum, N_inbin
@@ -186,11 +186,11 @@ def stack_dsigma():
     dsigma_t_sum = np.zeros((len(l), NBINS))
     dsigma_x_sum = np.zeros((len(l), NBINS))
     response_sum = np.zeros((len(l), NBINS))
-    n_ls_sum = np.zeros((len(l), NBINS))
+    n_sl_sum = np.zeros((len(l), NBINS))
     N_inbin = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
-        dsigma_t_sum[i,:], dsigma_x_sum[i,:], response_sum[i,:], n_ls_sum[i,:], N_inbin[i,:] = partial_profile_DeltaSigma(
+        dsigma_t_sum[i,:], dsigma_x_sum[i,:], response_sum[i,:], n_sl_sum[i,:], N_inbin[i,:] = partial_profile_DeltaSigma(
             [
                 li['ra_gal'],
                 li['dec_gal'],
