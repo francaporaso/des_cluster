@@ -52,7 +52,7 @@ def partial_profile_gt_raw(inp):
     g_t_raw_num = np.zeros(NBINS)
     g_x_raw_num = np.zeros(NBINS)
     response_sum = np.zeros(NBINS)
-    N_inbin = np.zeros(NBINS)
+     = np.zeros(NBINS)
     n_eff_den = np.zeros(NBINS)
 
     ra0, dec0, z0, *w_b = inp
@@ -98,9 +98,9 @@ def partial_profile_gt_raw(inp):
             g_x_raw_num[n_i] += w_b[b]*np.sum(ex[m_i & zbin])
             response_sum[n_i] += w_b[b]*np.sum(R[m_i & zbin])
             n_eff_den[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
-            N_inbin[n_i] += np.count_nonzero(m_i & zbin)
+            [n_i] += np.count_nonzero(m_i & zbin)
 
-    return g_t_raw_num, g_x_raw_num, response_sum, n_eff_den, N_inbin
+    return g_t_raw_num, g_x_raw_num, response_sum, n_eff_den,
 
 def partial_profile_DeltaSigma(inp):
     '''
@@ -176,7 +176,7 @@ def partial_profile_DeltaSigma(inp):
             n_sl_sum[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
 
-    return dsigma_t_sum, dsigma_x_sum, response_sum, n_sl_sum, N_inbin
+    return dsigma_t_sum, dsigma_x_sum, response_sum, n_sl_sum, n_bin
 
 def stack_dsigma():
     savefile = 'test-des_dsigma'
@@ -187,10 +187,10 @@ def stack_dsigma():
     dsigma_x_sum = np.zeros((len(l), NBINS))
     response_sum = np.zeros((len(l), NBINS))
     n_sl_sum = np.zeros((len(l), NBINS))
-    N_inbin = np.zeros((len(l), NBINS))
+     = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
-        dsigma_t_sum[i,:], dsigma_x_sum[i,:], response_sum[i,:], n_sl_sum[i,:], N_inbin[i,:] = partial_profile_DeltaSigma(
+        dsigma_t_sum[i,:], dsigma_x_sum[i,:], response_sum[i,:], n_sl_sum[i,:], [i,:] = partial_profile_DeltaSigma(
             [
                 li['ra_gal'],
                 li['dec_gal'],
@@ -207,7 +207,7 @@ def stack_dsigma():
 
     dsigma_t = np.sum(dsigma_t_sum, axis=0)/n_eff
     dsigma_x = np.sum(dsigma_x_sum, axis=0)/n_eff
-    Nbin = np.sum(N_inbin, axis=0)
+    Nbin = np.sum(, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
 
@@ -240,10 +240,10 @@ def stack_gt_raw():
     g_x_raw_num = np.zeros((len(l), NBINS))
     response_sum = np.zeros((len(l), NBINS))
     n_eff_den = np.zeros((len(l), NBINS))
-    N_inbin = np.zeros((len(l), NBINS))
+     = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
-        g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], n_eff_den[i,:], N_inbin[i,:] = partial_profile_gt_raw(
+        g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], n_eff_den[i,:], [i,:] = partial_profile_gt_raw(
             [
                 li['ra_gal'],
                 li['dec_gal'],
@@ -259,11 +259,11 @@ def stack_gt_raw():
     g_t_raw = np.sum(g_t_raw_num, axis=0)/response
     g_x_raw = np.sum(g_x_raw_num, axis=0)/response
     n_eff = np.sum(response_sum**2, axis=0)/np.sum(n_eff_den, axis=0)
-    Nbin = np.sum(N_inbin, axis=0)
+    Nbin = np.sum(, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
 
-    np.savetxt('test-des_gtraw.dat', np.vstack([r, g_t_raw, g_x_raw, n_eff, N_inbin]))
+    np.savetxt('test-des_gtraw.dat', np.vstack([r, g_t_raw, g_x_raw, n_eff, ]))
 
     if PLOT:
         fig, axes = plt.subplots(ncols=2, nrows=2, sharex=True, figsize=(5,6))
