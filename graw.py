@@ -214,19 +214,19 @@ def stack_dsigma():
     np.savetxt(savefile+'.dat', np.vstack([r, dsigma_t, dsigma_x, n_eff]))
 
     if PLOT:
-        fig, axes = plt.subplots(ncols=2, nrows=2, sharex=True, figsize=(5,6))
+        fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
 
-        axes[0,0].scatter(r[dsigma_t > 0], dsigma_t[dsigma_t > 0], s=5, marker='o')
-        axes[0,0].scatter(r[dsigma_t <= 0], np.abs(dsigma_t[dsigma_t <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
-        axes[1,0].scatter(r[dsigma_x > 0], dsigma_x[dsigma_x > 0], s=5, marker='o', color='gray')
-        axes[1,0].scatter(r[dsigma_x <= 0], np.abs(dsigma_x[dsigma_x <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
-        axes[0,0].loglog()
-        axes[1,0].loglog()
+        axes[0].scatter(r[dsigma_t > 0], dsigma_t[dsigma_t > 0], s=5, marker='o')
+        axes[0].scatter(r[dsigma_t <= 0], np.abs(dsigma_t[dsigma_t <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
+        axes[1].scatter(r[dsigma_x > 0], dsigma_x[dsigma_x > 0], s=5, marker='o', color='gray')
+        axes[1].scatter(r[dsigma_x <= 0], np.abs(dsigma_x[dsigma_x <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
+        axes[0].loglog()
+        axes[1].loglog()
 
-        axes[0,1].scatter(r, n_bin, c='green', s=5)
-        axes[1,1].scatter(r, n_eff, c='green', s=5)
-        axes[0,1].loglog()
-        axes[1,1].loglog()
+        #axes[0,1].scatter(r, n_bin, c='green', s=5)
+        #axes[1,1].scatter(r, n_eff, c='green', s=5)
+        #axes[0,1].loglog()
+        #axes[1,1].loglog()
 
         fig.savefig(savefile+'.png')
 
