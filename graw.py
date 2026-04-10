@@ -176,7 +176,7 @@ def partial_profile_DeltaSigma(inp):
             n_sl_sum[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
 
-    return dsigma_t_sum, dsigma_x_sum, response_sum, n_ls_sum, N_inbin
+    return dsigma_t_sum, dsigma_x_sum, response_sum, n_sl_sum, N_inbin
 
 def stack_dsigma():
     savefile = 'test-des_dsigma'
