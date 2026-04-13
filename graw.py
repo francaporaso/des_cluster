@@ -16,10 +16,10 @@ from nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzso
 COSMO = FlatLambdaCDM(H0=100, Om0=0.3)
 NSIDE = 128
 ZMED = np.array([0.285, 0.476, 0.743, 0.942]) # median redshift of source distribution
-PIX_TO_IDX : dict = {}
 REDSHIFT = 'redshift' # name of the redshift col in source table
 SOURCE = None
 LENSES = None
+PIX_TO_IDX : dict = {}
 
 # Tuning globals
 NBINS = 10
@@ -146,6 +146,8 @@ def partial_profile_gt_raw(inp):
     return g_t_raw_num, g_x_raw_num, response_sum, n_eff_den, N_inbin
 
 def stack_gt_raw():
+
+    init_globals()
 
     l = LENSES[ (LENSES['lambda']>38.0) & (LENSES['lambda']<=55) & (LENSES['redshift']>0.19) & (LENSES['redshift']<=0.27) ]
     print(f'nlenses = {len(l)}')
