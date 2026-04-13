@@ -10,7 +10,7 @@ from scipy.interpolate import interp1d
 
 #cosmo = FlatLambdaCDM(Om0=0.3, H0=100)
 
-SC_CONSTANT : float = (c**2.0/(4.0*np.pi*G)).to('Msun/Mpc').value # h cancel out
+SC_CONSTANT : float = (c**2.0/(4.0*np.pi*G)).to('Msun/pc').value
 
 def read_nzsource(filename='../../cats/DESY3/nz_source_allrealizations.fits'):
     nzbins = {}
@@ -28,10 +28,18 @@ def read_nzsource(filename='../../cats/DESY3/nz_source_allrealizations.fits'):
     return zmid, nzbins, nzperc, nzmean
 
 def sigma_crit(z_l, z_s):
+    '''
+    Sigma_crit in M_sun/pc**2. Units of SC_CONSTANT are M_sun/pc.
+    Since the units of two of the three angular distances cancel out, 
+    only transform one of them to pc (d_ls). 
+    
+    If needed, to go from physical distance to distance/h is necesary 
+    to multiply distance by the value of h.
+    '''
 
-    d_ls = cosmo.angular_diameter_distance_z1z2(z_l, z_s).value
+    d_ls = cosmo.angular_diameter_distance_z1z2(z_l, z_s).value * 1e6
     d_ls[d_ls<=0.0] = 0.0
-    d_l  = cosmo.angular_diameter_distance(z_l).value*cosmo.h # from physical distance to distance/h we need to multiply
+    d_l  = cosmo.angular_diameter_distance(z_l).value 
     d_s  = cosmo.angular_diameter_distance(z_s).value
     return SC_CONSTANT*(d_s/(d_ls*d_l))
 
