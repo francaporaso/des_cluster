@@ -53,7 +53,7 @@ def lensing_efficiency(z_l, z_s, nz):
     # masking the values of z_s lower than z_l, since Sigma_cr^-1 is 0.
     mask = z_s>=z_l
     
-    normfactor = 1.0/simpson(nz[mask], z_s[mask]) # normalization
+    normfactor = 1.0/simpson(nz, z_s) # normalization
     integrand = nz[mask]/sigma_crit(z_l, z_s[mask])
     return normfactor*simpson(integrand, z_s[mask])
 
