@@ -38,10 +38,12 @@ def sigma_crit(z_l, z_s):
     '''
 
     d_ls = cosmo.angular_diameter_distance_z1z2(z_l, z_s).value * 1e6
-    d_ls[d_ls<=0.0] = 0.0
+    #d_ls[d_ls<=0.0] = 0.0
     d_l  = cosmo.angular_diameter_distance(z_l).value 
     d_s  = cosmo.angular_diameter_distance(z_s).value
-    return SC_CONSTANT*(d_s/(d_ls*d_l))
+    sc = SC_CONSTANT*(d_s/(d_ls*d_l))
+    sc[sc<=0.0] = 0.0
+    return sc
 
 def lensing_efficiency(z_l, z_s, nz):
     '''
