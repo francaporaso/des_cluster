@@ -41,9 +41,7 @@ def sigma_crit(z_l, z_s):
     #d_ls[d_ls<=0.0] = 0.0
     d_l  = cosmo.angular_diameter_distance(z_l).value 
     d_s  = cosmo.angular_diameter_distance(z_s).value
-    sc = SC_CONSTANT*(d_s/(d_ls*d_l))
-    sc[sc<=0.0] = 0.0
-    return sc
+    return SC_CONSTANT*(d_s/(d_ls*d_l))
 
 def lensing_efficiency(z_l, z_s, nz):
     '''
@@ -52,10 +50,12 @@ def lensing_efficiency(z_l, z_s, nz):
     z_s (array) : source redshift (zmid of nzsource.fits)
     nz (array) : source redshift distribution
     '''
-    normfactor = 1.0/simpson(nz, z_s) # normalization
-    integrand = nz/sigma_crit(z_l, z_s)
-    return normfactor*simpson(integrand, z_s)
-
+    # masking the values of z_s lower than z_l, since Sigma_cr^-1 is 0.
+    mask = z_s>=z_l
+    
+    normfactor = 1.0/simpson(nz[mask], z_s[mask]) # normalization
+    integrand = nz/sigma_crit(z_l, z_s[mask])
+    return normfactor*simpson(integrand, z_s[mask])
 
 def calculate_median(z, pdf):
     y = np.cumsum(pdf) - 0.5
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     # plt.figure()
     # for i in range(4):
-    #     plt.fill_between(zmid, nzperc[f'{i}'][0], nzperc[f'{i}'][1], color=f'C{i}', alpha=0.25)
+    #     plt.fill_between(zmid, nzperc[f'{i}'][0], nzperc[f'{i}'][1], col or=f'C{i}', alpha=0.25)
     #     plt.plot(zmid, nzmean[f'{i}'], c=f'C{i}')
     # plt.show()
 
