@@ -175,7 +175,7 @@ def stack_gt_raw():
     g_t_raw = np.sum(g_t_raw_num, axis=0)/response
     g_x_raw = np.sum(g_x_raw_num, axis=0)/response
     n_eff = np.sum(response_sum**2, axis=0)/np.sum(n_eff_den, axis=0)
-    Nbin = np.sum(n_bin_sum, axis=0)
+    N_bin = np.sum(n_bin_sum, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
 
@@ -191,7 +191,7 @@ def stack_gt_raw():
         axes[0,0].loglog()
         axes[1,0].loglog()
 
-        axes[0,1].scatter(r, Nbin, c='green', s=5)
+        axes[0,1].scatter(r, N_bin, c='green', s=5)
         axes[1,1].scatter(r, n_eff, c='green', s=5)
         axes[0,1].loglog()
         axes[1,1].loglog()
