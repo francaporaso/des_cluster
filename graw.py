@@ -18,6 +18,8 @@ NSIDE = 128
 ZMED = np.array([0.285, 0.476, 0.743, 0.942]) # median redshift of source distribution
 PIX_TO_IDX : dict = {}
 REDSHIFT = 'redshift' # name of the redshift col in source table
+SOURCE = None
+LENSES = None
 
 # Tuning globals
 NBINS = 10
@@ -38,11 +40,22 @@ def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits'):
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
     return Table.read(filename)
 
-Source = read_source() # metacal file
-Lenses = read_redmapper() # redmapper
+def init_globals():
+    global SOURCE, LENSES
+    global PIX_TO_IDX
+
+    # reading catalogs
+    SOURCE = read_source() # metacal file
+    LENSES = read_redmapper() # redmapper
+    
+    # making a dict of healpix idx for fast query
+    upix, split_idx = np.unique(SOURCE['pix'], return_index=True)
+    split_idx = np.append(split_idx, len(SOURCE))
+    for i, pix in enumerate(upix):
+        PIX_TO_IDX[int(pix)] = np.arange(split_idx[i], split_idx[i+1])
 
 def get_masked_square(psi, ra0, dec0, z0, wb):
-    mask_sky = (Source['ra_gal'] < (ra0+psi))&(Source['ra_gal'] > (ra0-psi))&(Source['dec_gal'] < (dec0+psi))&(Source['dec_gal'] > (dec0-psi))
+    mask_sky = (SOURCE['ra_gal'] < (ra0+psi))&(SOURCE['ra_gal'] > (ra0-psi))&(SOURCE['dec_gal'] < (dec0+psi))&(SOURCE['dec_gal'] > (dec0-psi))
     for i in range(4):
         if z0 > ZMED[i]:
             wb[i] = 0.0
@@ -67,7 +80,7 @@ def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
         if p in PIX_TO_IDX
     ])
 
-    ### mask_z = Source[REDSHIFT][idx_arrays] > (z0+0.1) # for source w redshift per source
+    ### mask_z = SOURCE[REDSHIFT][idx_arrays] > (z0+0.1) # for source w redshift per source
     for i in range(4):
         if z0 > ZMED[i]:
             wb[i] = 0.0
@@ -92,7 +105,7 @@ def partial_profile_gt_raw(inp):
 
     # get masked data
     mask, w_b = get_masked_idx_fast(psi, ra0, dec0, z0, w_b)
-    catdata = Source[mask]
+    catdata = SOURCE[mask]
 
     # calculate transformation to polar coords
     rads, theta = eq2p2(
@@ -134,7 +147,7 @@ def partial_profile_gt_raw(inp):
 
 def stack_gt_raw():
 
-    l = Lenses[ (Lenses['lambda']>38.0) & (Lenses['lambda']<=55) & (Lenses['redshift']>0.19) & (Lenses['redshift']<=0.27) ]
+    l = LENSES[ (LENSES['lambda']>38.0) & (LENSES['lambda']<=55) & (LENSES['redshift']>0.19) & (LENSES['redshift']<=0.27) ]
     print(f'nlenses = {len(l)}')
 
     g_t_raw_num = np.zeros((len(l), NBINS))
@@ -243,7 +256,7 @@ if __name__ == '__main__':
 
 #     # get masked data
 #     mask, w_b = get_masked_data(psi, ra0, dec0, z0, w_b)
-#     catdata = Source[mask]
+#     catdata = SOURCE[mask]
 
 #     # calculate transformation to polar coords
 #     rads, theta = eq2p2(
@@ -285,7 +298,7 @@ if __name__ == '__main__':
 
 # def stack_dsigma():
 #     savefile = 'test-des_dsigma'
-#     l = Lenses[ (Lenses['lambda']>38.0) & (Lenses['lambda']<=55) & (Lenses['redshift']>0.19) & (Lenses['redshift']<=0.27) ]
+#     l = LENSES[ (LENSES['lambda']>38.0) & (LENSES['lambda']<=55) & (LENSES['redshift']>0.19) & (LENSES['redshift']<=0.27) ]
 #     print(f'nlenses = {len(l)}')
 
 #     dsigma_t_sum = np.zeros((len(l), NBINS))
