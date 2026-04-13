@@ -54,7 +54,7 @@ def lensing_efficiency(z_l, z_s, nz):
     mask = z_s>=z_l
     
     normfactor = 1.0/simpson(nz[mask], z_s[mask]) # normalization
-    integrand = nz/sigma_crit(z_l, z_s[mask])
+    integrand = nz[mask]/sigma_crit(z_l, z_s[mask])
     return normfactor*simpson(integrand, z_s[mask])
 
 def calculate_median(z, pdf):
