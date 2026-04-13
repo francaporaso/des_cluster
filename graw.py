@@ -4,7 +4,7 @@ from astropy.cosmology import FlatLambdaCDM
 #from astropy.constants import c, G, pc, M_sun
 from astropy.table import Table
 import healpy as hp
-from scipy.integrate import simpson
+#from scipy.integrate import simpson
 import matplotlib.pyplot as plt
 from time import time
 
@@ -22,7 +22,7 @@ LENSES = None
 PIX_TO_IDX : dict = {}
 
 # Tuning globals
-NBINS = 10
+NBINS = 15
 RIN, ROUT = 0.2, 15.0 #Mpc/h
 BINNING = 'log'
 PLOT = True
@@ -182,21 +182,21 @@ def stack_gt_raw():
     np.savetxt('test-des_gtraw.dat', np.vstack([r, g_t_raw, g_x_raw, n_eff, N_bin]))
 
     if PLOT:
-        fig, axes = plt.subplots(ncols=2, nrows=2, sharex=True, figsize=(5,6))
+        fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
 
-        axes[0,0].scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
-        axes[0,0].scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
-        axes[1,0].scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='o', color='gray')
-        axes[1,0].scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
-        axes[0,0].loglog()
-        axes[1,0].loglog()
+        axes[0].scatter(r[g_t_raw > 0], g_t_raw[g_t_raw > 0], s=5, marker='o')
+        axes[0].scatter(r[g_t_raw <= 0], np.abs(g_t_raw[g_t_raw <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
+        axes[1].scatter(r[g_x_raw > 0], g_x_raw[g_x_raw > 0], s=5, marker='o', color='gray')
+        axes[1].scatter(r[g_x_raw <= 0], np.abs(g_x_raw[g_x_raw <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
+        axes[0].loglog()
+        #axes[1].loglog()
 
-        axes[0,1].scatter(r, N_bin, c='green', s=5)
-        axes[1,1].scatter(r, n_eff, c='green', s=5)
-        axes[0,1].loglog()
-        axes[1,1].loglog()
+        # axes[0,1].scatter(r, N_bin, c='green', s=5)
+        # axes[1,1].scatter(r, n_eff, c='green', s=5)
+        # axes[0,1].loglog()
+        # axes[1,1].loglog()
 
-        fig.savefig('test_des.png')
+        fig.savefig('test-des_gtraw.png')
 
 if __name__ == '__main__':
 
