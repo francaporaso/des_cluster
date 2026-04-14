@@ -181,7 +181,7 @@ def stacking():
 
     r = binspace(RIN, ROUT, NBINS)
 
-    np.savetxt('results/test-des_dsigma.dat', np.vstack([r, dsigma_t, dsigma_x, n_eff, n_bin]))
+    np.savetxt('results/test-des_dsigma.dat', np.vstack([r, dsigma_t, dsigma_x, response, n_eff, n_bin]))
 
     if PLOT:
         fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
