@@ -25,7 +25,7 @@ PIX_TO_IDX : dict = {}
 NBINS = 15
 RIN, ROUT = 0.2, 15.0 #Mpc/h
 BINNING = 'log'
-PLOT = True
+PLOT = False
 
 if BINNING=='log':
     binspace = np.geomspace
@@ -33,6 +33,7 @@ elif BINNING=='lin':
     binspace = np.linspace
 else:
     raise ValueError('BINNING must be "log" or "lin".')
+
 
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits'):
     return Table.read(filename)
@@ -87,7 +88,7 @@ def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
 
     return idx_arrays, wb
 
-def partial_profile_gt_raw(inp):
+def partial_profile(inp):
     '''
     Profile of reduced shear g_t(r) as in eq. 6 of Grandis et al. (2024)
     '''
@@ -159,7 +160,7 @@ def stack_gt_raw():
     n_bin_sum = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
-        g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], n_eff_den[i,:], n_bin_sum[i,:] = partial_profile_gt_raw(
+        g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], n_eff_den[i,:], n_bin_sum[i,:] = partial_profile(
             [
                 li['ra_gal'],
                 li['dec_gal'],
@@ -204,7 +205,7 @@ if __name__ == '__main__':
     t1 = time()
     stack_gt_raw()
     print('End'.center(17,'-'))
-    print(f'Took {time()-t1} s')
+    print(f'Took {time()-t1:.2f} s')
 
 # how to get the bhat for the metacal cat
 #ids1 = table1['id']
