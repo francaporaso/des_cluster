@@ -172,8 +172,8 @@ def stacking():
             ]
         )
 
-    response = np.sum(response_sum, axis=0)
     n_eff = np.sum(response_sum**2/n_sl_sum, axis=0)
+    response = np.sum(response_sum, axis=0)
 
     dsigma_t = np.sum(dsigma_t_num, axis=0)/(response*n_eff)
     dsigma_x = np.sum(dsigma_x_num, axis=0)/(response*n_eff)
