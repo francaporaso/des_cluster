@@ -194,7 +194,7 @@ def stacking():
     # ==== Saving
     #np.savetxt('results/test-des_dsigma.dat', np.vstack([r, dsigma_t, dsigma_x, response, n_eff, n_bin]))
     
-    outputname = (f'results/lensing_desy3_{sample}'
+    outputname = (f'results/lensing_desy3_{sample}_'
                   f'lambda{LMIN:02.0f}-{LMAX:02.0f}_'
                   f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_'
                   f'bin{BINNING}.fits')
