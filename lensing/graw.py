@@ -8,7 +8,7 @@ import healpy as hp
 import matplotlib.pyplot as plt
 from time import time
 
-from lensing.funcs import eq2p2
+from .funcs import eq2p2
 #from io import *
 from cluster.nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
 
