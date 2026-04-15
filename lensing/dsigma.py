@@ -193,9 +193,9 @@ def stacking():
     # ==== Saving
     #np.savetxt('results/test-des_dsigma.dat', np.vstack([r, dsigma_t, dsigma_x, response, n_eff, n_bin]))
     
-    outputname = (f'lensing/results/lensing_desy3_',
-                  f'lambda{LMIN:02.0f}-{LMAX:02.0f}_',
-                  f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_',
+    outputname = (f'lensing/results/lensing_desy3_'
+                  f'lambda{LMIN:02.0f}-{LMAX:02.0f}_'
+                  f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_'
                   f'bin{BINNING}.fits')
 
     head=fits.Header()
@@ -217,7 +217,7 @@ def stacking():
         'HISTORY':f'{asctime()}',
     })
 
-    ## TODO reincorporate the [0] when the jackknife is implemented
+    ## TODO reincorporate the [0] when the jackknife is implemented 
     table = Table({
         'R':binspace(RIN, ROUT, NBINS),
         'DSigma_t':dsigma_t,#[0], 
