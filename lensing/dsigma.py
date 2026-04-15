@@ -208,7 +208,7 @@ def stacking():
         'lam_mean':np.mean(l['lambda']),
         'z_min':ZMIN,
         'z_max':ZMAX,
-        'z_mean':np.mean(l['lambda']),
+        'z_mean':np.mean(l['redshift']),
         'RIN':RIN,
         'ROUT':ROUT,
         'NBINS':NBINS,
