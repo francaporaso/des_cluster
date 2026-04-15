@@ -36,10 +36,10 @@ lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
 sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
 
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits'):
-    return Table.read(filename)
+    return Table.read(filename, fomart='fits', memmap=True)
 
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
-    return Table.read(filename)
+    return Table.read(filename, fomart='fits', memmap=True)
 
 def init_globals():
     global binspace
@@ -54,8 +54,8 @@ def init_globals():
         raise ValueError('BINNING must be "log" or "lin".')
 
     # reading catalogs
-    SOURCE = read_source(lensname) # metacal file
-    LENSES = read_redmapper(sourcename) # redmapper
+    SOURCE = read_source(sourcename) # metacal file
+    LENSES = read_redmapper(lensname) # redmapper
 
     # making a dict of healpix idx for fast query
     upix, split_idx = np.unique(SOURCE['pix'], return_index=True)
