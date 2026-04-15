@@ -3,12 +3,13 @@ import h5py
 from astropy.cosmology import FlatLambdaCDM
 #from astropy.constants import c, G, pc, M_sun
 from astropy.table import Table
+from astropy.io import fits
 import healpy as hp
 #from scipy.integrate import simpson
 import matplotlib.pyplot as plt
 from time import time
 
-from lensing.funcs import eq2p2
+from lensing.funcs import eq2p2, cov_matrix
 #from io import *
 #from nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
 
@@ -25,8 +26,14 @@ binspace = None
 # Input globals
 NBINS = 15
 RIN, ROUT = 0.05, 5.0 #Mpc/h
+LMIN, LMAX = 38.0, 55.0
+ZMIN, ZMAX = 0.19, 0.27
+NJK = 100
 BINNING = 'log'
 PLOT = False
+OVERWRITE = False
+lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
+sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
 
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits'):
     return Table.read(filename)
@@ -47,8 +54,8 @@ def init_globals():
         raise ValueError('BINNING must be "log" or "lin".')
 
     # reading catalogs
-    SOURCE = read_source() # metacal file
-    LENSES = read_redmapper() # redmapper
+    SOURCE = read_source(lensname) # metacal file
+    LENSES = read_redmapper(sourcename) # redmapper
 
     # making a dict of healpix idx for fast query
     upix, split_idx = np.unique(SOURCE['pix'], return_index=True)
@@ -148,14 +155,15 @@ def partial_profile(inp):
 
 def stacking():
 
-    l = LENSES[ (LENSES['lambda']>38.0) & (LENSES['lambda']<=55) & (LENSES['redshift']>0.19) & (LENSES['redshift']<=0.27) ]
-    print(f'nlenses = {len(l)}')
+    l = LENSES[ (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) ]
+    nlenses = len(l)
+    print(f'nlenses = {nlenses}')
 
-    dsigma_t_num = np.zeros((len(l), NBINS))
-    dsigma_x_num = np.zeros((len(l), NBINS))
-    response_sum = np.zeros((len(l), NBINS))
-    n_sl_sum = np.zeros((len(l), NBINS))
-    n_bin_sum = np.zeros((len(l), NBINS))
+    dsigma_t_num = np.zeros((nlenses, NBINS))
+    dsigma_x_num = np.zeros((nlenses, NBINS))
+    response_sum = np.zeros((nlenses, NBINS))
+    n_sl_sum = np.zeros((nlenses, NBINS))
+    n_bin_sum = np.zeros((nlenses, NBINS))
 
     for i, li in enumerate(l):
         dsigma_t_num[i,:], dsigma_x_num[i,:], response_sum[i,:], n_sl_sum[i,:], n_bin_sum[i,:] = partial_profile(
@@ -170,6 +178,8 @@ def stacking():
             ]
         )
 
+
+    # === calculating stack
     n_eff = np.sum(response_sum**2/n_sl_sum, axis=0)
     n_bin = np.sum(n_bin_sum, axis=0)
     response = np.sum(response_sum, axis=0)
@@ -177,12 +187,62 @@ def stacking():
     dsigma_t = np.sum(dsigma_t_num, axis=0)/response
     dsigma_x = np.sum(dsigma_x_num, axis=0)/response
 
-    r = binspace(RIN, ROUT, NBINS)
+    # ==== Saving
+    #np.savetxt('results/test-des_dsigma.dat', np.vstack([r, dsigma_t, dsigma_x, response, n_eff, n_bin]))
+    
+    outputname = (f'lensing/results/lensing_desy3_',
+                  f'lambda{LMIN:02.0f}-{LMAX:02.0f}_',
+                  f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_',
+                  f'bin{BINNING}.fits')
 
-    np.savetxt('results/test-des_dsigma.dat', np.vstack([r, dsigma_t, dsigma_x, response, n_eff, n_bin]))
+    head=fits.Header()
+    head.update({
+        'nlenses':nlenses,
+        'lenscat':lensname,
+        'sourcat':sourcename,
+        'lam_min':LMIN,
+        'lam_max':LMAX,
+        'lam_mean':np.mean(l['lambda']),
+        'z_min':ZMIN,
+        'z_max':ZMAX,
+        'z_mean':np.mean(l['lambda']),
+        'RIN':RIN,
+        'ROUT':ROUT,
+        'NBINS':NBINS,
+        'NJK':NJK,
+        'binning':BINNING,
+        'HISTORY':f'{time.asctime()}',
+    })
+
+    table = Table({
+        'R':binspace(RIN, ROUT, NBINS),
+        'DSigma_t':dsigma_t[0],
+        'DSigma_x':dsigma_x[0]
+    })
+
+    cov_hdu = [
+        fits.ImageHDU(cov_matrix(dsigma_t[1:,:]), name='cov_DSigma_t'),
+        fits.ImageHDU(cov_matrix(dsigma_x[1:,:]), name='cov_DSigma_x'),
+    ]
+
+    jack_hdu = [
+        fits.ImageHDU(dsigma_t[1:NJK+1, :], name='jack_DSigma_t'),
+        fits.ImageHDU(dsigma_x[1:NJK+1, :], name='jack_DSigma_x'),
+    ]
+
+
+    hdul = fits.HDUList([
+        fits.PrimaryHDU(header=head),
+        fits.BinTableHDU(table, name='profiles'),
+        *cov_hdu,
+        *jack_hdu
+    ])
+
+    hdul.writeto(outputname, overwrite=OVERWRITE)
+    print(f' File saved in: {outputname}', flush=True)
 
     if PLOT:
-        plot_profile(r, dsigma_t, dsigma_x)
+        plot_profile(binspace(RIN, ROUT, NBINS), dsigma_t, dsigma_x)
 
 def plot_profile(r, dsigma_t, dsigma_x):
 
@@ -193,6 +253,7 @@ def plot_profile(r, dsigma_t, dsigma_x):
     axes[1].scatter(r[dsigma_x > 0], dsigma_x[dsigma_x > 0], s=5, marker='o', color='gray')
     axes[1].scatter(r[dsigma_x <= 0], np.abs(dsigma_x[dsigma_x <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
     axes[0].loglog()
+    plt.show()
     #axes[1].loglog()
 
     # axes[0,1].scatter(r, N_bin, c='green', s=5)
@@ -200,7 +261,7 @@ def plot_profile(r, dsigma_t, dsigma_x):
     # axes[0,1].loglog()
     # axes[1,1].loglog()
 
-    fig.savefig('results/test-des_dsigma.png')
+    #fig.savefig('results/test-des_dsigma.png')
 
 def main():
     print('Start'.center(15,'-'))
@@ -211,7 +272,6 @@ def main():
 
     print('End'.center(17,'-'))
     print(f'Took {time()-t1:.2f} s')
-
 
 if __name__ == '__main__':
     main()
