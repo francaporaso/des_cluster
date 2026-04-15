@@ -36,10 +36,10 @@ lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
 sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
 
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits'):
-    return Table.read(filename, fomart='fits', memmap=True)
+    return Table.read(filename, format='fits', memmap=True)
 
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
-    return Table.read(filename, fomart='fits', memmap=True)
+    return Table.read(filename, format='fits', memmap=True)
 
 def init_globals():
     global binspace
