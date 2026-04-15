@@ -7,7 +7,7 @@ from astropy.io import fits
 import healpy as hp
 #from scipy.integrate import simpson
 import matplotlib.pyplot as plt
-from time import time
+from time import time, asctime
 
 from lensing.funcs import eq2p2, cov_matrix
 #from io import *
@@ -211,7 +211,7 @@ def stacking():
         'NBINS':NBINS,
         'NJK':NJK,
         'binning':BINNING,
-        'HISTORY':f'{time.asctime()}',
+        'HISTORY':f'{asctime()}',
     })
 
     table = Table({
