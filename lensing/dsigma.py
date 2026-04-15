@@ -31,7 +31,8 @@ ZMIN, ZMAX = 0.19, 0.27
 NJK = 100
 BINNING = 'log'
 PLOT = False
-OVERWRITE = False
+OVERWRITE = True
+sample='test'
 lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
 sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
 
@@ -193,7 +194,7 @@ def stacking():
     # ==== Saving
     #np.savetxt('results/test-des_dsigma.dat', np.vstack([r, dsigma_t, dsigma_x, response, n_eff, n_bin]))
     
-    outputname = (f'results/lensing_desy3_'
+    outputname = (f'results/lensing_desy3_{sample}'
                   f'lambda{LMIN:02.0f}-{LMAX:02.0f}_'
                   f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_'
                   f'bin{BINNING}.fits')
