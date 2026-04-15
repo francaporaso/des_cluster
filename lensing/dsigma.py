@@ -154,7 +154,10 @@ def partial_profile(inp):
     return dsigma_t_num, dsigma_x_num, response_sum, n_sl_sum, n_bin
 
 def stacking():
-
+    #### TODO
+    #### falta incorporar la matriz de covarianza!
+    #### las shapes de los array que se intentan guardar no coinciden.
+    
     l = LENSES[ (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) ]
     nlenses = len(l)
     print(f'nlenses = {nlenses}')
