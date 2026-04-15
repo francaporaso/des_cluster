@@ -217,28 +217,29 @@ def stacking():
         'HISTORY':f'{asctime()}',
     })
 
+    ## TODO reincorporate the [0] when the jackknife is implemented
     table = Table({
         'R':binspace(RIN, ROUT, NBINS),
-        'DSigma_t':dsigma_t[0],
-        'DSigma_x':dsigma_x[0]
+        'DSigma_t':dsigma_t,#[0], 
+        'DSigma_x':dsigma_x#[0]
     })
 
-    cov_hdu = [
-        fits.ImageHDU(cov_matrix(dsigma_t[1:,:]), name='cov_DSigma_t'),
-        fits.ImageHDU(cov_matrix(dsigma_x[1:,:]), name='cov_DSigma_x'),
-    ]
+    # cov_hdu = [
+    #     fits.ImageHDU(cov_matrix(dsigma_t[1:,:]), name='cov_DSigma_t'),
+    #     fits.ImageHDU(cov_matrix(dsigma_x[1:,:]), name='cov_DSigma_x'),
+    # ]
 
-    jack_hdu = [
-        fits.ImageHDU(dsigma_t[1:NJK+1, :], name='jack_DSigma_t'),
-        fits.ImageHDU(dsigma_x[1:NJK+1, :], name='jack_DSigma_x'),
-    ]
+    # jack_hdu = [
+    #     fits.ImageHDU(dsigma_t[1:NJK+1, :], name='jack_DSigma_t'),
+    #     fits.ImageHDU(dsigma_x[1:NJK+1, :], name='jack_DSigma_x'),
+    # ]
 
 
     hdul = fits.HDUList([
         fits.PrimaryHDU(header=head),
         fits.BinTableHDU(table, name='profiles'),
-        *cov_hdu,
-        *jack_hdu
+        # *cov_hdu,
+        # *jack_hdu
     ])
 
     hdul.writeto(outputname, overwrite=OVERWRITE)
