@@ -173,11 +173,11 @@ def stacking():
         )
 
     n_eff = np.sum(response_sum**2/n_sl_sum, axis=0)
+    n_bin = np.sum(n_bin_sum, axis=0)
     response = np.sum(response_sum, axis=0)
 
-    dsigma_t = np.sum(dsigma_t_num, axis=0)/n_eff
-    dsigma_x = np.sum(dsigma_x_num, axis=0)/n_eff
-    n_bin = np.sum(n_bin_sum, axis=0)
+    dsigma_t = np.sum(dsigma_t_num, axis=0)/n_bin
+    dsigma_x = np.sum(dsigma_x_num, axis=0)/n_bin
 
     r = binspace(RIN, ROUT, NBINS)
 
