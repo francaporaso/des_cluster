@@ -48,7 +48,7 @@ def init_globals():
     # reading catalogs
     SOURCE = read_source() # metacal file
     LENSES = read_redmapper() # redmapper
-    
+
     # making a dict of healpix idx for fast query
     upix, split_idx = np.unique(SOURCE['pix'], return_index=True)
     split_idx = np.append(split_idx, len(SOURCE))
@@ -138,8 +138,8 @@ def partial_profile(inp):
         m_i = dig == n_i+1
         for b in range(4):
             zbin = catdata['bhat'] == b
-            dsigma_t_num[n_i] += w_b[b]*np.sum(et[m_i & zbin])
-            dsigma_x_num[n_i] += w_b[b]*np.sum(ex[m_i & zbin])
+            dsigma_t_num[n_i] += w_b[b]**2*np.sum(et[m_i & zbin])
+            dsigma_x_num[n_i] += w_b[b]**2*np.sum(ex[m_i & zbin])
             response_sum[n_i] += w_b[b]*np.sum(R[m_i & zbin])
             n_sl_sum[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
@@ -175,8 +175,8 @@ def stacking():
     n_eff = np.sum(response_sum**2/n_sl_sum, axis=0)
     response = np.sum(response_sum, axis=0)
 
-    dsigma_t = np.sum(dsigma_t_num, axis=0)/(response*n_eff)
-    dsigma_x = np.sum(dsigma_x_num, axis=0)/(response*n_eff)
+    dsigma_t = np.sum(dsigma_t_num, axis=0)/n_eff)
+    dsigma_x = np.sum(dsigma_x_num, axis=0)/n_eff
     n_bin = np.sum(n_bin_sum, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
