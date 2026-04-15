@@ -49,8 +49,8 @@ if __name__ == '__main__':
     NIT = 5_000
     NWALKERS = 64
 
-    data_filename = 'lensing/results/lensing_desy3_test_lambda38-55_z019-027_binlog.fits'
-    chain_filename = 'fitting/results/fitting_desy3_test_lambda38-55_z019-027.hdf5'
+    data_filename = 'results/lensing_desy3_test_lambda38-55_z019-027_binlog.fits'
+    chain_filename = 'results/fitting_desy3_test_lambda38-55_z019-027.hdf5'
     model_name = 'NFW'
     observable = 'delta_sigma'
     cov_mode = 'diag'
