@@ -20,20 +20,13 @@ REDSHIFT = 'redshift' # name of the redshift col in source table
 SOURCE = None
 LENSES = None
 PIX_TO_IDX : dict = {}
+binspace = None
 
-# Tuning globals
+# Input globals
 NBINS = 15
-RIN, ROUT = 0.2, 15.0 #Mpc/h
+RIN, ROUT = 0.05, 5.0 #Mpc/h
 BINNING = 'log'
 PLOT = False
-
-if BINNING=='log':
-    binspace = np.geomspace
-elif BINNING=='lin':
-    binspace = np.linspace
-else:
-    raise ValueError('BINNING must be "log" or "lin".')
-
 
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits'):
     return Table.read(filename)
@@ -42,8 +35,16 @@ def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_2
     return Table.read(filename)
 
 def init_globals():
+    global binspace
     global SOURCE, LENSES
     global PIX_TO_IDX
+
+    if BINNING=='log':
+        binspace = np.geomspace
+    elif BINNING=='lin':
+        binspace = np.linspace
+    else:
+        raise ValueError('BINNING must be "log" or "lin".')
 
     # reading catalogs
     SOURCE = read_source() # metacal file
@@ -81,7 +82,6 @@ def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
         if p in PIX_TO_IDX
     ])
 
-    ### mask_z = SOURCE[REDSHIFT][idx_arrays] > (z0+0.1) # for source w redshift per source
     for i in range(4):
         if z0 > ZMED[i]:
             wb[i] = 0.0
@@ -148,8 +148,6 @@ def partial_profile(inp):
 
 def stacking():
 
-    init_globals()
-
     l = LENSES[ (LENSES['lambda']>38.0) & (LENSES['lambda']<=55) & (LENSES['redshift']>0.19) & (LENSES['redshift']<=0.27) ]
     print(f'nlenses = {len(l)}')
 
@@ -184,26 +182,36 @@ def stacking():
     np.savetxt('results/test-des_dsigma.dat', np.vstack([r, dsigma_t, dsigma_x, response, n_eff, n_bin]))
 
     if PLOT:
-        fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
+        plot_profile(r, dsigma_t, dsigma_x)
 
-        axes[0].scatter(r[dsigma_t > 0], dsigma_t[dsigma_t > 0], s=5, marker='o')
-        axes[0].scatter(r[dsigma_t <= 0], np.abs(dsigma_t[dsigma_t <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
-        axes[1].scatter(r[dsigma_x > 0], dsigma_x[dsigma_x > 0], s=5, marker='o', color='gray')
-        axes[1].scatter(r[dsigma_x <= 0], np.abs(dsigma_x[dsigma_x <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
-        axes[0].loglog()
-        #axes[1].loglog()
+def plot_profile(r, dsigma_t, dsigma_x):
 
-        # axes[0,1].scatter(r, N_bin, c='green', s=5)
-        # axes[1,1].scatter(r, n_eff, c='green', s=5)
-        # axes[0,1].loglog()
-        # axes[1,1].loglog()
+    fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
 
-        fig.savefig('results/test-des_dsigma.png')
+    axes[0].scatter(r[dsigma_t > 0], dsigma_t[dsigma_t > 0], s=5, marker='o')
+    axes[0].scatter(r[dsigma_t <= 0], np.abs(dsigma_t[dsigma_t <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
+    axes[1].scatter(r[dsigma_x > 0], dsigma_x[dsigma_x > 0], s=5, marker='o', color='gray')
+    axes[1].scatter(r[dsigma_x <= 0], np.abs(dsigma_x[dsigma_x <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
+    axes[0].loglog()
+    #axes[1].loglog()
 
-if __name__ == '__main__':
+    # axes[0,1].scatter(r, N_bin, c='green', s=5)
+    # axes[1,1].scatter(r, n_eff, c='green', s=5)
+    # axes[0,1].loglog()
+    # axes[1,1].loglog()
 
+    fig.savefig('results/test-des_dsigma.png')
+
+def main():
     print('Start'.center(15,'-'))
+
     t1 = time()
+    init_globals()
     stacking()
+
     print('End'.center(17,'-'))
     print(f'Took {time()-t1:.2f} s')
+
+
+if __name__ == '__main__':
+    main()
