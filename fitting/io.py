@@ -12,8 +12,8 @@ class DataProfile:
     covDSt : np.ndarray
     DSigma_x : np.ndarray
     covDSx : np.ndarray
-    covS : np.ndarray
-    Sigma : np.ndarray
+    Sigma : np.ndarray|None = None
+    covS : np.ndarray|None = None
 
     def plot_profile(self, observable='sigma', **kwargs):
         import matplotlib.pyplot as plt
@@ -47,21 +47,21 @@ class DataProfile:
 # the **kwargs requires giving the arg name when calling this function
 # ex: data = read_dataprofile_fits(name='myprofile.fits')
 # this is not going to work: data = read_dataprofile_fits('myprofile.fits').
-def read_dataprofile_fits(binning='lin', *args, **kwargs):
-    binspace = (np.linspace if binning=='lin' else np.geomspace)
+def read_dataprofile_fits(*args, **kwargs):
+    #binspace = (np.linspace if binning=='lin' else np.geomspace)
     with fits.open(*args, **kwargs) as f:
         hd = f[0].header
         dt = f[1].data
         data = DataProfile(
-            R = binspace(hd['RIN'],hd['ROUT'],hd['N']),
+            R = dt['R'],
             redshift = hd['Z_MEAN'],
-            Njk = hd['NK'],
-            Sigma = dt['Sigma'],
+            Njk = hd['NJK'],
             DSigma_t = dt['DSigma_t'],
-            DSigma_x = dt['DSigma_x'],
-            covS = f[2].data,
             covDSt = f[3].data,
+            DSigma_x = dt['DSigma_x'],
             covDSx = f[4].data,
+            #Sigma = dt['Sigma'],
+            #covS = f[2].data,
         )
     return data
 
