@@ -164,7 +164,7 @@ def stacking():
     print(f'{nlenses =}')
     localNJK = NJK
     if (nlenses//10) > NJK:
-        localNJK = nlenses//10
+        localNJK = nlenses//10 - 1
     print(f'{localNJK =}')
 
     dsigma_t_num = np.zeros((localNJK+1, NBINS))
