@@ -162,6 +162,7 @@ def stacking():
     l = LENSES[ (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) ]
     nlenses = len(l)
     print(f'{nlenses =}')
+    localNJK = NJK
     if (nlenses//10) > NJK:
         localNJK = nlenses//10
     print(f'{localNJK =}')
