@@ -4,6 +4,8 @@ from astropy.coordinates import angular_separation, position_angle
 #from astropy.constants import G,c,M_sun,pc
 #from astropy.io import fits
 from astropy.table import Table
+from kmeans_radec import kmeans_sample
+
 #parameters
 # cvel = c.value;    # Speed of light (m.s-1)
 # G    = G.value;    # Gravitational constant (m3.kg-1.s-2)
@@ -25,6 +27,13 @@ def cov_matrix(array):
     COV *= (K-1)/K
     return COV
 
+def normalize_cov(cov):
+    norm_cov = np.zeros_like(cov)
+    for i in range(len(cov)):
+        for j in range(len(cov)):
+            norm_cov[i,j]=cov[i,j]/np.sqrt(cov[i,i]*cov[j,j])
+    return norm_cov
+
 def eq2p2(ra_gal, dec_gal, RA0,DEC0):
     """
     angular separation and position angle from centre (RA0,DEC0) to gal position (ra_gal, dec_gal)
@@ -38,6 +47,21 @@ def eq2p2(ra_gal, dec_gal, RA0,DEC0):
     theta = position_angle(0.0, DEC0, ra_prime, dec_gal).value
 
     return rad, theta
+
+def get_jackknife_kmeans(ra_cl, dec_cl, nlenses, NJK):
+
+    K = np.zeros((NJK+1, nlenses), dtype=bool)
+    K[0] = True
+
+    L = np.column_stack([ra_cl, dec_cl])
+
+    km = kmeans_sample(L, ncen=NJK, verbose=0)
+    labels = km.find_nearest(L)
+
+    for j in range(1, NJK+1):
+        K[j] = ~(labels==j-1)
+
+    return K, labels
 
 ## TODO
 ## agregar de nuevo option for octant
