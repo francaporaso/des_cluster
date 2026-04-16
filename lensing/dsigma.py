@@ -163,7 +163,7 @@ def stacking():
     nlenses = len(l)
     print(f'{nlenses =}')
     localNJK = NJK
-    if (nlenses//10) > NJK:
+    if localNJK > (nlenses//10):
         localNJK = nlenses//10 - 1
     print(f'{localNJK =}')
 
