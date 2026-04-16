@@ -7,7 +7,9 @@ from astropy.io import fits
 import healpy as hp
 #from scipy.integrate import simpson
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 from time import time, asctime
+from tqdm import tqdm
 
 from lensing.funcs import eq2p2, cov_matrix, get_jackknife_kmeans
 #from io import *
@@ -24,6 +26,7 @@ PIX_TO_IDX : dict = {}
 binspace = None
 
 # Input globals
+NCORES = 16
 NBINS = 15
 RIN, ROUT = 0.05, 5.0 #Mpc/h
 LMIN, LMAX = 38.0, 55.0
@@ -166,16 +169,19 @@ def stacking():
     #n_sl_sum = np.zeros((NJK+1, NBINS))
     #n_bin_sum = np.zeros((NJK+1, NBINS))
 
-    for i, li in enumerate(l):
-        resmap = partial_profile([
-            li['ra_gal'],
-            li['dec_gal'],
-            li['redshift'],
-            li['wb_0'],
-            li['wb_1'],
-            li['wb_2'],
-            li['wb_3']
-        ])
+    #for i, li in enumerate(l):
+        # partial_profile([
+        #         li['ra_gal','dec_gal','redshift','wb_0','wb_1','wb_2','wb_3']
+        #     ])
+    with Pool(processes=NCORES) as pool:
+        resmap = list(
+            tqdm(
+                pool.imap(
+                    partial_profile, 
+                    l['ra_gal','dec_gal','redshift','wb_0','wb_1','wb_2','wb_3'].as_array()
+                ), total=nlenses
+            )
+        )
 
     # === calculating stack
     
