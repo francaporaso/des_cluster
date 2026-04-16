@@ -28,7 +28,7 @@ binspace = None
 # Input globals
 NCORES = 16
 NBINS = 15
-RIN, ROUT = 0.05, 5.0 #Mpc/h
+RIN, ROUT = 0.1, 5.0 #Mpc/h
 LMIN, LMAX = 38.0, 55.0
 ZMIN, ZMAX = 0.19, 0.27
 NJK = 40 # kmeans_radec allows up to a tenth of the # of lenses
@@ -162,8 +162,8 @@ def stacking():
     l = LENSES[ (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) ]
     nlenses = len(l)
     print(f'{nlenses =}')
-    if x:=nlenses//10 > NJK:
-        NJK = x
+    if (nlenses//10) > NJK:
+        NJK = nlenses//10
     print(f'{NJK =}')
 
     dsigma_t_num = np.zeros((NJK+1, NBINS))
