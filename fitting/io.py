@@ -59,7 +59,7 @@ def read_dataprofile_fits(*args, **kwargs):
             DSigma_t = dt['DSigma_t'],
             covDSt = f[2].data,
             DSigma_x = dt['DSigma_x'],
-            covDSx = f[1].data,
+            covDSx = f[3].data,
             #Sigma = dt['Sigma'],
             #covS = f[2].data,
         )

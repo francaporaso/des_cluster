@@ -130,11 +130,11 @@ def partial_profile(inp):
 
     e1 = -catdata['e_1']
     e2 = catdata['e_2']
-    R1 = catdata['r11']
-    R2 = catdata['r22']
-    #se usa el promedio entre ambos xq son muy similares
-    #((R1-R2)/(0.5*(R1+R2)) < 0.1%)
-    R = 0.5*(R1+R2)*w_s
+    r1 = catdata['r11']
+    r2 = catdata['r22']
+    # uses the mean of the trace bc they are very similar
+    #((r1-r2)/(0.5*(r1+r2)) < 0.1%)
+    res = 0.5*(r1+r2)*w_s
 
     #get weighted tangential ellipticities
     cos2t = np.cos(2.0*theta)
@@ -151,8 +151,8 @@ def partial_profile(inp):
             zbin = catdata['bhat'] == b
             dsigma_t_num[n_i] += np.sum(et[m_i & zbin])
             dsigma_x_num[n_i] += np.sum(ex[m_i & zbin])
-            response_sum[n_i] += w_b[b]*np.sum(R[m_i & zbin])
-            n_sl_sum[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
+            response_sum[n_i] += w_b[b]*np.sum(res[m_i & zbin])
+            n_sl_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
 
     return dsigma_t_num, dsigma_x_num, response_sum, n_sl_sum, n_bin
@@ -164,7 +164,7 @@ def stacking():
     print(f'{nlenses =}')
     localNJK = NJK
     if localNJK > (nlenses//10):
-        localNJK = nlenses//10 - 1
+        localNJK = nlenses//10
     print(f'{localNJK =}')
 
     dsigma_t_num = np.zeros((localNJK+1, NBINS))
@@ -178,7 +178,7 @@ def stacking():
         #         li['ra_gal','dec_gal','redshift','wb_0','wb_1','wb_2','wb_3']
         #     ])
     with Pool(processes=NCORES) as pool:
-        resmap = list(
+        results_map = list(
             tqdm(
                 pool.imap(
                     partial_profile, 
@@ -190,14 +190,14 @@ def stacking():
     # === calculating stack
     
     # reduce
-    gt, gx, r, _, _ = map(
+    gt, gx, res, _, _ = map(
         lambda x: np.vstack(x),
-        zip(*resmap)
+        zip(*results_map)
     )
 
     dsigma_t_num[0,:] = gt.sum(axis=0)
     dsigma_x_num[0,:] = gx.sum(axis=0)
-    response_sum[0,:] = r.sum(axis=0)
+    response_sum[0,:] = res.sum(axis=0)
     #n_sl_sum[0,:] = nsl.sum(axis=0)
     #n_bin_sum[0,:] = nbin.sum(axis=0)
 
@@ -210,7 +210,7 @@ def stacking():
 
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
-        response_sum[j+1,:] = r[mask].sum(axis=0)
+        response_sum[j+1,:] = res[mask].sum(axis=0)
         #n_sl_sum[j+1,:] = nsl[mask].sum(axis=0)
         #n_bin_sum[j+1,:] = nbin[mask].sum(axis=0)
 
@@ -248,7 +248,7 @@ def stacking():
     })
 
     table = Table({
-        'R':binspace(RIN, ROUT, NBINS),
+        'res':binspace(RIN, ROUT, NBINS),
         'DSigma_t':dsigma_t[0], 
         'DSigma_x':dsigma_x[0]
     })
