@@ -163,12 +163,12 @@ def stacking():
     nlenses = len(l)
     print(f'{nlenses =}')
     if (nlenses//10) > NJK:
-        NJK = nlenses//10
-    print(f'{NJK =}')
+        localNJK = nlenses//10
+    print(f'{localNJK =}')
 
-    dsigma_t_num = np.zeros((NJK+1, NBINS))
-    dsigma_x_num = np.zeros((NJK+1, NBINS))
-    response_sum = np.zeros((NJK+1, NBINS))
+    dsigma_t_num = np.zeros((localNJK+1, NBINS))
+    dsigma_x_num = np.zeros((localNJK+1, NBINS))
+    response_sum = np.zeros((localNJK+1, NBINS))
     #n_sl_sum = np.zeros((NJK+1, NBINS))
     #n_bin_sum = np.zeros((NJK+1, NBINS))
 
@@ -201,7 +201,7 @@ def stacking():
     #n_bin_sum[0,:] = nbin.sum(axis=0)
 
     # jackknife
-    _, kidx = get_jackknife_kmeans(l['ra_gal'], l['dec_gal'], nlenses=nlenses, NJK=NJK)
+    _, kidx = get_jackknife_kmeans(l['ra_gal'], l['dec_gal'], nlenses=nlenses, NJK=localNJK)
     kunq = np.unique(kidx)
 
     for j, k in enumerate(kunq):
@@ -241,7 +241,7 @@ def stacking():
         'RIN':RIN,
         'ROUT':ROUT,
         'NBINS':NBINS,
-        'NJK':NJK,
+        'NJK':localNJK,
         'binning':BINNING,
         'HISTORY':f'{asctime()}',
     })
@@ -258,8 +258,8 @@ def stacking():
     ]
 
     jack_hdu = [
-        fits.ImageHDU(dsigma_t[1:NJK+1, :], name='jack_DSigma_t'),
-        fits.ImageHDU(dsigma_x[1:NJK+1, :], name='jack_DSigma_x'),
+        fits.ImageHDU(dsigma_t[1:localNJK+1, :], name='jack_DSigma_t'),
+        fits.ImageHDU(dsigma_x[1:localNJK+1, :], name='jack_DSigma_x'),
     ]
 
 
