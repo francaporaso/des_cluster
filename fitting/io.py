@@ -57,9 +57,9 @@ def read_dataprofile_fits(*args, **kwargs):
             redshift = hd['Z_MEAN'],
             Njk = hd['NJK'],
             DSigma_t = dt['DSigma_t'],
-            covDSt = np.identity(hd['NBINS']), #f[2].data,
+            covDSt = f[2].data,
             DSigma_x = dt['DSigma_x'],
-            covDSx = np.identity(hd['NBINS']), # f[1].data,
+            covDSx = f[1].data,
             #Sigma = dt['Sigma'],
             #covS = f[2].data,
         )
