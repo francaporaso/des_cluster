@@ -9,7 +9,7 @@ import healpy as hp
 import matplotlib.pyplot as plt
 from time import time, asctime
 
-from lensing.funcs import eq2p2, cov_matrix
+from lensing.funcs import eq2p2, cov_matrix, get_jackknife_kmeans
 #from io import *
 #from nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
 
@@ -28,7 +28,7 @@ NBINS = 15
 RIN, ROUT = 0.05, 5.0 #Mpc/h
 LMIN, LMAX = 38.0, 55.0
 ZMIN, ZMAX = 0.19, 0.27
-NJK = 100
+NJK = 40 # kmeans_radec allows up to a tenth of the # of lenses
 BINNING = 'log'
 PLOT = False
 OVERWRITE = True
@@ -155,44 +155,63 @@ def partial_profile(inp):
     return dsigma_t_num, dsigma_x_num, response_sum, n_sl_sum, n_bin
 
 def stacking():
-    #### TODO
-    #### falta incorporar la matriz de covarianza!
-    #### las shapes de los array que se intentan guardar no coinciden.
     
     l = LENSES[ (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) ]
     nlenses = len(l)
     print(f'nlenses = {nlenses}')
 
-    dsigma_t_num = np.zeros((nlenses, NBINS))
-    dsigma_x_num = np.zeros((nlenses, NBINS))
-    response_sum = np.zeros((nlenses, NBINS))
-    n_sl_sum = np.zeros((nlenses, NBINS))
-    n_bin_sum = np.zeros((nlenses, NBINS))
+    dsigma_t_num = np.zeros((NJK+1, NBINS))
+    dsigma_x_num = np.zeros((NJK+1, NBINS))
+    response_sum = np.zeros((NJK+1, NBINS))
+    #n_sl_sum = np.zeros((NJK+1, NBINS))
+    #n_bin_sum = np.zeros((NJK+1, NBINS))
 
     for i, li in enumerate(l):
-        dsigma_t_num[i,:], dsigma_x_num[i,:], response_sum[i,:], n_sl_sum[i,:], n_bin_sum[i,:] = partial_profile(
-            [
-                li['ra_gal'],
-                li['dec_gal'],
-                li['redshift'],
-                li['wb_0'],
-                li['wb_1'],
-                li['wb_2'],
-                li['wb_3']
-            ]
-        )
-
+        resmap = partial_profile([
+            li['ra_gal'],
+            li['dec_gal'],
+            li['redshift'],
+            li['wb_0'],
+            li['wb_1'],
+            li['wb_2'],
+            li['wb_3']
+        ])
 
     # === calculating stack
-    n_eff = np.sum(response_sum**2/n_sl_sum, axis=0)
-    n_bin = np.sum(n_bin_sum, axis=0)
-    response = np.sum(response_sum, axis=0)
+    
+    # reduce
+    gt, gx, r, _, _ = map(
+        lambda x: np.vstack(x),
+        zip(*resmap)
+    )
 
-    dsigma_t = np.sum(dsigma_t_num, axis=0)/response
-    dsigma_x = np.sum(dsigma_x_num, axis=0)/response
+    dsigma_t_num[0,:] = gt.sum(axis=0)
+    dsigma_x_num[0,:] = gx.sum(axis=0)
+    response_sum[0,:] = r.sum(axis=0)
+    #n_sl_sum[0,:] = nsl.sum(axis=0)
+    #n_bin_sum[0,:] = nbin.sum(axis=0)
+
+    # jackknife
+    _, kidx = get_jackknife_kmeans(l['ra_gal'], l['dec_gal'], nlenses=nlenses, NJK=NJK)
+    kunq = np.unique(kidx)
+
+    for j, k in enumerate(kunq):
+        mask = (kidx!=k)
+
+        dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
+        dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
+        response_sum[j+1,:] = r[mask].sum(axis=0)
+        #n_sl_sum[j+1,:] = nsl[mask].sum(axis=0)
+        #n_bin_sum[j+1,:] = nbin[mask].sum(axis=0)
+
+    dsigma_t = dsigma_t_num/response_sum
+    dsigma_x = dsigma_x_num/response_sum
+
+    #n_eff = np.sum(response_sum**2/n_sl_sum, axis=0)
+    #n_bin = np.sum(n_bin_sum, axis=0)
+    #response = np.sum(response_sum, axis=0)
 
     # ==== Saving
-    #np.savetxt('results/test-des_dsigma.dat', np.vstack([r, dsigma_t, dsigma_x, response, n_eff, n_bin]))
     
     outputname = (f'results/lensing_desy3_{sample}_'
                   f'lambda{LMIN:02.0f}-{LMAX:02.0f}_'
@@ -218,29 +237,28 @@ def stacking():
         'HISTORY':f'{asctime()}',
     })
 
-    ## TODO reincorporate the [0] when the jackknife is implemented 
     table = Table({
         'R':binspace(RIN, ROUT, NBINS),
-        'DSigma_t':dsigma_t,#[0], 
-        'DSigma_x':dsigma_x#[0]
+        'DSigma_t':dsigma_t[0], 
+        'DSigma_x':dsigma_x[0]
     })
 
-    # cov_hdu = [
-    #     fits.ImageHDU(cov_matrix(dsigma_t[1:,:]), name='cov_DSigma_t'),
-    #     fits.ImageHDU(cov_matrix(dsigma_x[1:,:]), name='cov_DSigma_x'),
-    # ]
+    cov_hdu = [
+        fits.ImageHDU(cov_matrix(dsigma_t[1:,:]), name='cov_DSigma_t'),
+        fits.ImageHDU(cov_matrix(dsigma_x[1:,:]), name='cov_DSigma_x'),
+    ]
 
-    # jack_hdu = [
-    #     fits.ImageHDU(dsigma_t[1:NJK+1, :], name='jack_DSigma_t'),
-    #     fits.ImageHDU(dsigma_x[1:NJK+1, :], name='jack_DSigma_x'),
-    # ]
+    jack_hdu = [
+        fits.ImageHDU(dsigma_t[1:NJK+1, :], name='jack_DSigma_t'),
+        fits.ImageHDU(dsigma_x[1:NJK+1, :], name='jack_DSigma_x'),
+    ]
 
 
     hdul = fits.HDUList([
         fits.PrimaryHDU(header=head),
         fits.BinTableHDU(table, name='profiles'),
-        # *cov_hdu,
-        # *jack_hdu
+        *cov_hdu,
+        *jack_hdu
     ])
 
     hdul.writeto(outputname, overwrite=OVERWRITE)
