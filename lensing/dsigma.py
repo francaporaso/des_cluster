@@ -161,7 +161,10 @@ def stacking():
     
     l = LENSES[ (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) ]
     nlenses = len(l)
-    print(f'nlenses = {nlenses}')
+    print(f'{nlenses =}')
+    if x:=nlenses//10 > NJK:
+        NJK = x
+    print(f'{NJK =}')
 
     dsigma_t_num = np.zeros((NJK+1, NBINS))
     dsigma_x_num = np.zeros((NJK+1, NBINS))
