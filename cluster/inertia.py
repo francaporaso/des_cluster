@@ -60,8 +60,8 @@ def main():
 
         ax.scatter(x, y, s=10, edgecolor='b', facecolor='none')
         ax.axline((0.0,0.0), slope=np.tan(theta), c='k')
-        ax.axline((0.0,0.0), slope=np.tan(theta+np.pi), c='k')
-    fig.show()
+        #ax.axline((0.0,0.0), slope=np.tan(theta+np.pi), c='k')
+    plt.show()
 
 if __name__=='__main__':
     main()
