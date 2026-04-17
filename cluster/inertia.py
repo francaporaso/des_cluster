@@ -59,7 +59,7 @@ def main():
     plt.figure()
     plt.scatter(x, y, s=10, edgecolor='b', facecolor='none')
     plt.axline((0.0,0.0), slope=np.tan(theta), c='k')
-    plt.axline((0.0,0.0), slope=-np.tan(theta), c='k')
+    plt.axline((0.0,0.0), slope=np.tan(theta+np.pi), c='k')
     plt.show()
 
 
