@@ -4,84 +4,63 @@ import matplotlib.pyplot as plt
 from astropy.table import Table
 import h5py
 
-lenses = h5py.File('../cats/DESY3/desy3_redmapper_v6.4.22+2_release.h5')
-path_cl = 'catalog/cluster/'
-path_mem = 'catalog/cluster_members/'
+ZMIN, ZMAX = 0.19, 0.27
+LMIN, LMAX = 38.0, 55.0
 
-redshift = 'z_lambda'
-idcol = 'mem_match_id'
-lambdaz = 'lambda_chisq'
+CLUSTERS = Table.read('../cats/DESY3/desy3_redmapper_cluster-ws.fits', format='fits', memmap=True)
+MEMBERS = Table.read('../cats/DESY3/desy3_redmapper_cluster-members.fits', format='fits', memmap=True)
 
-idx = 0
+def gnomonic_projection(ra, dec, ra0, dec0):
+    '''
+    gnomonic projection of the shpere on a tangent point at some position.
+    for transforming spherical coordinates to the plane
+    '''
+    ra = np.deg2rad(ra-ra0)
+    dec = np.deg2rad(dec-dec0)
 
-mask = (lenses[path_cl+redshift][:]>0.19) & (lenses[path_cl+redshift][:]<0.27) & (lenses[path_cl+lambdaz][:]>38.0) & (lenses[path_cl+lambdaz][:]<55.0)
+    x = np.sin(ra)/np.cos(ra)
+    y = np.sin(dec)/(np.cos(dec)*np.cos(ra))
 
-cl_id = np.sort(lenses[path_cl][idcol][mask].data)
+    return x, y
 
-mask_cl = lenses[path_cl+idcol][:] == cl_id[idx]
-mask_mem = lenses[path_mem+idcol][:] == cl_id[idx]
+def inertia(dx,dy,w):
+    '''
+    "momentos" func from github.com/elizabethjg/multipole_density_profile/blob/master/member_distribution.py
+    equations 2, 3 & 4 of Gonzalez et al 2020 (arxiv.org/pdf/2006.08651)
+    '''
 
-n_mem = np.sum(mask_mem)
+    Q11  = np.sum((dx**2)*w)/np.sum(w)
+    Q22  = np.sum((dy**2)*w)/np.sum(w)
+    Q12  = np.sum((dx*dy)*w)/np.sum(w)
+    E1 = (Q11-Q22)/(Q11+Q22)
+    E2 = (2.*Q12)/(Q11+Q22)
+    e = np.sqrt(E1**2 + E2**2)
+    theta = np.arctan2(E2,E1)/2.
+    return e,theta
 
-# center of the cluster : corresponds to the BGC position
-ra_cl = lenses[path_cl]['ra'][mask_cl]
-dec_cl = lenses[path_cl]['dec'][mask_cl]
+def cluster_orientation(ra_cl, dec_cl, ra_mem, dec_mem):
+    
+    x, y = gnomonic_projection(ra_mem, dec_mem, ra_cl, dec_cl)
+    e, theta = inertia(x, y, np.ones_like(x))
+    return x, y, e, theta
 
-# member positions
-ra_mem = lenses[path_mem]['ra'][mask_mem]
-dec_mem = lenses[path_mem]['dec'][mask_mem]
-p_mem = lenses[path_mem]['pmem'][mask_mem]
+def main():
 
-# member positions wrt BCG position
-# excluding the BGC for analysis
-bgc_idx = np.where(ra_mem==ra_cl)[0][0]
-assert np.where(dec_mem==dec_cl)[0][0] == bgc_idx
-x_m = np.delete(ra_mem-ra_cl, bgc_idx) 
-y_m = np.delete(dec_mem-dec_cl, bgc_idx)
-p_mem = np.delete(p_mem, bgc_idx) 
-r_m = np.hypot(x_m,y_m)
+    l = CLUSTERS[ (CLUSTERS['lambda']>LMIN) & (CLUSTERS['lambda']<=LMAX) & (CLUSTERS['redshift']>ZMIN) & (CLUSTERS['redshift']<=ZMAX) ]
+    id_cl = l['mem_match_id'][0]
+    
+    m = MEMBERS[MEMBERS['mem_match_id']==id_cl]
 
-## should the components be weighted by the pmem? or magnitude or something?
-inertia = np.zeros((2,2))
-inertia[0,0] = np.sum(x_m**2)/n_mem
-inertia[1,1] = np.sum(y_m**2)/n_mem
-inertia[0,1] = np.sum(x_m*y_m)/n_mem
-inertia[1,0] = inertia[0,1]
+    x, y, e, theta = cluster_orientation(l['ra_cl'], l['dec_cl'], m['ra_mem'], m['dec_mem'])
 
-inertia_r = np.zeros((2,2))
-inertia_r[0,0] = np.sum(x_m**2/r_m**2)/n_mem
-inertia_r[1,1] = np.sum(y_m**2/r_m**2)/n_mem
-inertia_r[0,1] = np.sum(x_m*y_m/r_m**2)/n_mem
-inertia_r[1,0] = inertia_r[0,1]
+    print(f'{e=}')
+    print(f'{theta=}')
 
-inertia_m = np.zeros((2,2))
-inertia_m[0,0] = np.sum(p_mem*x_m**2)
-inertia_m[1,1] = np.sum(p_mem*y_m**2)
-inertia_m[0,1] = np.sum(p_mem*y_m*x_m)
-inertia_m[1,0] = inertia_m[0,1]
+    plt.figure()
+    plt.scatter(x, y, s=10, edgecolor='b', facecolor='none')
+    plt.axline([0.0,0.0], np.tan(theta), c='k')
+    plt.show()
 
-eigval, eigvec = np.linalg.eigh(inertia)
-eigval_r, eigvec_r = np.linalg.eigh(inertia_r)
-eigval_m, eigvec_m = np.linalg.eigh(inertia_m)
 
-q = eigval[0]/eigval[1]
-q_r = eigval_r[0]/eigval_r[1]
-q_m = eigval_m[0]/eigval_m[1]
-
-print(f'{q=:.2f}')
-print(f'{q_r=:.2f}')
-print(f'{q_m=:.2f}')
-
-plt.figure()
-plt.scatter(x_m, y_m, s=15, edgecolors='C0', facecolor='none')
-for i, lsi in zip(range(2), ['-', '--']):
-    plt.axline([0.0,0.0], *[eigvec[i]*eigval[i]], c='b', ls=lsi)
-    plt.axline([0.0,0.0], *[eigvec_r[i]*eigval_r[i]], c='r', ls=lsi)
-    plt.axline([0.0,0.0], *[eigvec_m[i]*eigval_m[i]], c='limegreen', ls=lsi)
-plt.axvline(0.0, c='gray', ls=':', alpha=0.3)
-plt.axhline(0.0, c='gray', ls=':', alpha=0.3)
-plt.plot([],[],c='b',label='std', alpha=0.5)
-plt.plot([],[],c='r',label='red', alpha=0.5)
-plt.plot([],[],c='limegreen',label='mass', alpha=0.5)
-plt.legend()
-plt.show()
+if __name__=='__main__':
+    main()
