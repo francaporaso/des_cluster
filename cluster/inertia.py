@@ -47,7 +47,7 @@ def cluster_orientation(ra_cl, dec_cl, ra_mem, dec_mem):
 def main():
 
     l = CLUSTERS[ (CLUSTERS['lambda']>LMIN) & (CLUSTERS['lambda']<=LMAX) & (CLUSTERS['redshift']>ZMIN) & (CLUSTERS['redshift']<=ZMAX) ]
-    id_cl = l['mem_match_id'][0]
+    id_cl = l['mem_match_id'][12]
     
     m = MEMBERS[MEMBERS['mem_match_id']==id_cl]
 
