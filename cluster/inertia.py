@@ -35,7 +35,7 @@ def inertia(dx,dy,w):
     E1 = (Q11-Q22)/(Q11+Q22)
     E2 = (2.*Q12)/(Q11+Q22)
     e = np.sqrt(E1**2 + E2**2)
-    theta = np.arctan2(E2,E1)/2.
+    theta = np.arctan2(E2,E1)/2.0
     return e,theta
 
 def cluster_orientation(ra_cl, dec_cl, ra_mem, dec_mem):
@@ -58,7 +58,7 @@ def main():
 
     plt.figure()
     plt.scatter(x, y, s=10, edgecolor='b', facecolor='none')
-    plt.axline([0.0,0.0], np.tan(theta), c='k')
+    plt.axline((0.0,0.0), slope=np.tan(theta), c='k')
     plt.show()
 
 
