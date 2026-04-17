@@ -58,7 +58,6 @@ def main():
         print(f'{e=}')
         print(f'{theta=}')
 
-        ax.figure()
         ax.scatter(x, y, s=10, edgecolor='b', facecolor='none')
         ax.axline((0.0,0.0), slope=np.tan(theta), c='k')
         ax.axline((0.0,0.0), slope=np.tan(theta+np.pi), c='k')
