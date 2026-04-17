@@ -51,7 +51,7 @@ def main():
     
     m = MEMBERS[MEMBERS['mem_match_id']==id_cl]
 
-    x, y, e, theta = cluster_orientation(l['ra_cl'], l['dec_cl'], m['ra_mem'], m['dec_mem'])
+    x, y, e, theta = cluster_orientation(l[l['mem_match_id']==id_cl]['ra_cl'], l[l['mem_match_id']==id_cl]['dec_cl'], m['ra_mem'], m['dec_mem'])
 
     print(f'{e=}')
     print(f'{theta=}')
