@@ -58,7 +58,7 @@ def main():
         print(f'{e=}')
         print(f'{theta=}')
 
-        ax.scatter(x*np.cos(theta)-y*np.sin(theta), x*np.sin(theta)+y*np.cos(theta), s=10, edgecolor='b', facecolor='none', alpha=0.5)
+        ax.scatter(x*np.cos(2*theta)-y*np.sin(2*theta), x*np.sin(2*theta)+y*np.cos(2*theta), s=10, edgecolor='b', facecolor='none', alpha=0.5)
         
         #ax.scatter(x, y, s=10, edgecolor='b', facecolor='none', alpha=0.5)
         #ax.axline((0.0,0.0), slope=np.tan(theta), c='k', alpha=0.5)
