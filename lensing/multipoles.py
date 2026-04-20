@@ -123,7 +123,7 @@ def partial_profile(id_cl):
     #l = LENSES[LENSES['mem_match_id'] == id_cl]
     l = LENSES.loc[id_cl]
     ra0, dec0, z0, *w_b = l['ra_cl', 'dec_cl', 'redshift', 'wb_0', 'wb_1', 'wb_2', 'wb_3']
-    _, e0, theta0 = ANGLES.T[ANGLES[0]==id_cl]
+    _, e0, theta0 = ANGLES.T[ANGLES[0]==id_cl][0]
 
     DEGxMPC = COSMO.arcsec_per_kpc_proper(z0).to('deg/Mpc').value
     psi = DEGxMPC*ROUT
