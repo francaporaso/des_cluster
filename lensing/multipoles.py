@@ -229,7 +229,7 @@ def stacking():
     #n_bin_sum[0,:] = nbin.sum(axis=0)
 
     # jackknife
-    _, kidx = get_jackknife_kmeans(l['ra_gal'], l['dec_gal'], nlenses=nlenses, NJK=localNJK)
+    _, kidx = get_jackknife_kmeans(l['ra_cl'], l['dec_cl'], nlenses=nlenses, NJK=localNJK)
     kunq = np.unique(kidx)
 
     for j, k in enumerate(kunq):
