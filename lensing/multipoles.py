@@ -281,7 +281,7 @@ def stacking():
     })
 
     table = Table({
-        'res':binspace(RIN, ROUT, NBINS),
+        'R':binspace(RIN, ROUT, NBINS),
         'DSigma_t':dsigma_t[0], 
         'DSigma_x':dsigma_x[0],
         'Gamma_t':Gamma_quad_t[0],
