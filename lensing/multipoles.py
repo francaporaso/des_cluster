@@ -205,7 +205,7 @@ def stacking():
             tqdm(
                 pool.imap(
                     partial_profile, 
-                    l['mem_match_id'].as_array()
+                    l['mem_match_id'].data
                 ), total=nlenses
             )
         )
