@@ -28,7 +28,7 @@ binspace = None
 
 # Input globals
 # now read from config file
-config = toml.load('config.toml')
+config = toml.load('lensing/config.toml')
 NCORES = config['RUN']['NCORES']
 NBINS = config['PROFILE']['NBINS']
 RIN, ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
