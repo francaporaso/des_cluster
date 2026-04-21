@@ -36,6 +36,7 @@ def normalize_cov(cov):
 
 def eq2p2(ra_gal, dec_gal, RA0,DEC0):
     """
+    equatorial 2 polars
     angular separation and position angle from centre (RA0,DEC0) to gal position (ra_gal, dec_gal)
     returns two angles in radians
     all parameters must be in radians.
