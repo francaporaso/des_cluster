@@ -150,8 +150,8 @@ def partial_profile(id_cl):
     res = 0.5*(r1+r2)*w_s
 
     #get weighted tangential ellipticities
-    cos2t = np.cos(2.0*phi_li)
-    sin2t = np.sin(2.0*phi_li)
+    cos2t = np.cos(2.0*(phi_li-theta0))
+    sin2t = np.sin(2.0*(phi_li-theta0))
     et = (-e1*cos2t+e2*sin2t)*w_s
     ex = (e1*sin2t+e2*cos2t)*w_s
 
