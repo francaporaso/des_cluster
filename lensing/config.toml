@@ -1,0 +1,19 @@
+[RUN]
+SAMPLE = 'test'
+NCORES = 16
+OVERWRITE = True
+PLOT = False
+
+[PROFILE]
+NBINS = 15
+RIN = 0.1 #Mpc/h
+ROUT = 5.0 #Mpc/h
+NJK = 40
+BINNING = 'log' # 'lin'
+
+[LENSES]
+LMIN = 38.0
+LMAX = 55.0
+ZMIN = 0.19
+ZMAX = 0.27
+
