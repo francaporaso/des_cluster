@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from multiprocessing import Pool
 from time import time, asctime
 from tqdm import tqdm
+import toml
 
 from lensing.funcs import eq2p2, cov_matrix, get_jackknife_kmeans
 #from io import *
@@ -26,15 +27,26 @@ PIX_TO_IDX : dict = {}
 binspace = None
 
 # Input globals
-NCORES = 16
-NBINS = 15
-RIN, ROUT = 0.1, 5.0 #Mpc/h
-LMIN, LMAX = 38.0, 55.0
-ZMIN, ZMAX = 0.19, 0.27
-NJK = 40 # kmeans_radec allows up to a tenth of the # of lenses
-BINNING = 'log'
-PLOT = False
-OVERWRITE = True
+# now read from config file
+config = toml.load('config.toml')
+NCORES = config['RUN']['NCORES']
+NBINS = config['PROFILE']['NBINS']
+RIN, ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
+LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
+ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
+NJK = config['PROFILE']['NJK'] # kmeans_radec allows up to a tenth of the # of lenses
+BINNING = config['PROFILE']['BINNING']
+PLOT = config['RUN']['PLOT']
+OVERWRITE = config['RUN']['OVERWRITE']
+#NCORES = 16
+#NBINS = 15
+#RIN, ROUT = 0.1, 5.0 #Mpc/h
+#LMIN, LMAX = 38.0, 55.0
+#ZMIN, ZMAX = 0.19, 0.27
+#NJK = 40 # kmeans_radec allows up to a tenth of the # of lenses
+#BINNING = 'log'
+#PLOT = False
+#OVERWRITE = True
 sample='test'
 lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
 sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
@@ -158,7 +170,7 @@ def partial_profile(inp):
     return dsigma_t_num, dsigma_x_num, response_sum, n_sl_sum, n_bin
 
 def stacking():
-    
+
     l = LENSES[ (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) ]
     nlenses = len(l)
     print(f'{nlenses =}')
@@ -181,14 +193,14 @@ def stacking():
         results_map = list(
             tqdm(
                 pool.imap(
-                    partial_profile, 
+                    partial_profile,
                     l['ra_gal','dec_gal','redshift','wb_0','wb_1','wb_2','wb_3'].as_array()
                 ), total=nlenses
             )
         )
 
     # === calculating stack
-    
+
     # reduce
     gt, gx, res, _, _ = map(
         lambda x: np.vstack(x),
@@ -222,7 +234,7 @@ def stacking():
     #response = np.sum(response_sum, axis=0)
 
     # ==== Saving
-    
+
     outputname = (f'results/lensing_desy3_{sample}_'
                   f'lambda{LMIN:02.0f}-{LMAX:02.0f}_'
                   f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_'
@@ -249,7 +261,7 @@ def stacking():
 
     table = Table({
         'res':binspace(RIN, ROUT, NBINS),
-        'DSigma_t':dsigma_t[0], 
+        'DSigma_t':dsigma_t[0],
         'DSigma_x':dsigma_x[0]
     })
 
