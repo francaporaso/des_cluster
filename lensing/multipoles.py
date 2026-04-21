@@ -133,7 +133,7 @@ def partial_profile(id_cl):
     catdata = SOURCE[mask]
 
     # calculate transformation to polar coords
-    rads, theta = eq2p2(
+    rads, phi_li = eq2p2(
         np.deg2rad(catdata['ra_gal']), np.deg2rad(catdata['dec_gal']),
         np.deg2rad(ra0), np.deg2rad(dec0)
     )
@@ -150,8 +150,8 @@ def partial_profile(id_cl):
     res = 0.5*(r1+r2)*w_s
 
     #get weighted tangential ellipticities
-    cos2t = np.cos(2.0*theta)
-    sin2t = np.sin(2.0*theta)
+    cos2t = np.cos(2.0*phi_li)
+    sin2t = np.sin(2.0*phi_li)
     et = (-e1*cos2t+e2*sin2t)*w_s
     ex = (e1*sin2t+e2*cos2t)*w_s
 
@@ -166,18 +166,18 @@ def partial_profile(id_cl):
             dsigma_x_num[n_i] += np.sum(ex[m_i & zbin])
             monopole_den[n_i] += w_b[b]*np.sum(res[m_i & zbin])
 
-            quadpole_t_num[n_i] += np.sum(et[m_i & zbin])*np.cos(2.0*theta0)
-            quadpole_x_num[n_i] += np.sum(ex[m_i & zbin])*np.sin(2.0*theta0)
-            quadpole_t_den[n_i] += w_b[b]*np.sum(res[m_i & zbin])*(np.cos(2.0*theta0))**2
-            quadpole_x_den[n_i] += w_b[b]*np.sum(res[m_i & zbin])*(np.sin(2.0*theta0))**2
-            
+            quadpole_t_num[n_i] += np.sum(et[m_i & zbin])*np.cos(2.0*(phi_li-theta0))
+            quadpole_x_num[n_i] += np.sum(ex[m_i & zbin])*np.sin(2.0*(phi_li-theta0))
+            quadpole_t_den[n_i] += w_b[b]*np.sum(res[m_i & zbin])*(np.cos(2.0*(phi_li-theta0)))**2
+            quadpole_x_den[n_i] += w_b[b]*np.sum(res[m_i & zbin])*(np.sin(2.0*(phi_li-theta0)))**2
+
             n_sl_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
 
     return dsigma_t_num, dsigma_x_num, monopole_den, quadpole_t_num, quadpole_t_num, quadpole_t_den, quadpole_x_den, n_sl_sum, n_bin
 
 def stacking():
-    
+
     l = LENSES[ (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) ]
     nlenses = len(l)
     print(f'{nlenses =}')
@@ -204,14 +204,14 @@ def stacking():
         results_map = list(
             tqdm(
                 pool.imap(
-                    partial_profile, 
+                    partial_profile,
                     l['mem_match_id'].data
                 ), total=nlenses
             )
         )
 
     # === calculating stack
-    
+
     # reduce
     gt, gx, mono_den, Gamma_t, Gamma_x, quad_t_den, quad_x_den, _, _ = map(
         lambda x: np.vstack(x),
@@ -255,7 +255,7 @@ def stacking():
     #response = np.sum(response_sum, axis=0)
 
     # ==== Saving
-    
+
     outputname = (f'results/lensing_desy3_{sample}_'
                   f'lambda{LMIN:02.0f}-{LMAX:02.0f}_'
                   f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_'
@@ -282,7 +282,7 @@ def stacking():
 
     table = Table({
         'R':binspace(RIN, ROUT, NBINS),
-        'DSigma_t':dsigma_t[0], 
+        'DSigma_t':dsigma_t[0],
         'DSigma_x':dsigma_x[0],
         'Gamma_t':Gamma_quad_t[0],
         'Gamma_x':Gamma_quad_x[0],
