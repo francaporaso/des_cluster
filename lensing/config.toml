@@ -1,8 +1,8 @@
 [RUN]
 SAMPLE = 'test'
 NCORES = 16
-OVERWRITE = True
-PLOT = False
+OVERWRITE = true
+PLOT = false
 
 [PROFILE]
 NBINS = 15
