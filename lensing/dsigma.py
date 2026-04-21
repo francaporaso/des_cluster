@@ -187,14 +187,14 @@ def stacking():
 
     #for i, li in enumerate(l):
         # partial_profile([
-        #         li['ra_gal','dec_gal','redshift','wb_0','wb_1','wb_2','wb_3']
+        #         li['ra_cl','dec_cl','redshift','wb_0','wb_1','wb_2','wb_3']
         #     ])
     with Pool(processes=NCORES) as pool:
         results_map = list(
             tqdm(
                 pool.imap(
                     partial_profile,
-                    l['ra_gal','dec_gal','redshift','wb_0','wb_1','wb_2','wb_3'].as_array()
+                    l['ra_cl','dec_cl','redshift','wb_0','wb_1','wb_2','wb_3'].as_array()
                 ), total=nlenses
             )
         )
@@ -214,7 +214,7 @@ def stacking():
     #n_bin_sum[0,:] = nbin.sum(axis=0)
 
     # jackknife
-    _, kidx = get_jackknife_kmeans(l['ra_gal'], l['dec_gal'], nlenses=nlenses, NJK=localNJK)
+    _, kidx = get_jackknife_kmeans(l['ra_cl'], l['dec_cl'], nlenses=nlenses, NJK=localNJK)
     kunq = np.unique(kidx)
 
     for j, k in enumerate(kunq):
