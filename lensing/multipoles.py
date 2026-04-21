@@ -166,10 +166,10 @@ def partial_profile(id_cl):
             dsigma_x_num[n_i] += np.sum(ex[m_i & zbin])
             monopole_den[n_i] += w_b[b]*np.sum(res[m_i & zbin])
 
-            quadpole_t_num[n_i] += np.sum(et[m_i & zbin]*np.cos(2.0*(phi_li-theta0)))
-            quadpole_x_num[n_i] += np.sum(ex[m_i & zbin]*np.sin(2.0*(phi_li-theta0)))
-            quadpole_t_den[n_i] += w_b[b]*np.sum(res[m_i & zbin]*np.cos(2.0*(phi_li-theta0))**2)
-            quadpole_x_den[n_i] += w_b[b]*np.sum(res[m_i & zbin]*np.sin(2.0*(phi_li-theta0))**2)
+            quadpole_t_num[n_i] += np.sum(et[m_i & zbin]*np.cos(2.0*(phi_li[m_i & zbin]-theta0)))
+            quadpole_x_num[n_i] += np.sum(ex[m_i & zbin]*np.sin(2.0*(phi_li[m_i & zbin]-theta0)))
+            quadpole_t_den[n_i] += w_b[b]*np.sum(res[m_i & zbin]*np.cos(2.0*(phi_li[m_i & zbin]-theta0))**2)
+            quadpole_x_den[n_i] += w_b[b]*np.sum(res[m_i & zbin]*np.sin(2.0*(phi_li[m_i & zbin]-theta0))**2)
 
             n_sl_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
