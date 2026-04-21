@@ -174,7 +174,7 @@ def partial_profile(id_cl):
             n_sl_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
 
-    return dsigma_t_num, dsigma_x_num, monopole_den, quadpole_t_num, quadpole_t_num, quadpole_t_den, quadpole_x_den, n_sl_sum, n_bin
+    return dsigma_t_num, dsigma_x_num, monopole_den, quadpole_t_num, quadpole_x_num, quadpole_t_den, quadpole_x_den, n_sl_sum, n_bin
 
 def stacking():
 
