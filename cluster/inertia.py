@@ -65,7 +65,7 @@ def main():
     weights_names = ['wo_weight', 'lum', 'dist']
 
     results = {sam: {
-        w: {'idx': np.zeros(n_cl, dtype=int), 
+        w: {'mem_match_id': np.zeros(n_cl, dtype=int), 
             'e': np.zeros(n_cl, dtype=float), 
             'theta': np.zeros(n_cl, dtype=float)}
             for w in weights_names
