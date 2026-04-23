@@ -192,8 +192,8 @@ def stack_gt_raw():
         g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], quad_t_num[i,:], quad_x_num[i,:], sqcos_den[i,:], sqsin_den[i,:], n_eff_den[i,:], n_bin_sum[i,:] = partial_profile(
             [
                 li['mem_match_id'],
-                li['ra_gal'],
-                li['dec_gal'],
+                li['ra_cl'],
+                li['dec_cl'],
                 li['redshift'],
                 li['wb_0'],
                 li['wb_1'],
