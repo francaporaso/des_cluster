@@ -172,7 +172,7 @@ def stack_gt_raw():
 
     init_globals()
 
-    l = LENSES[ (LENSES['lambda']>38.0) & (LENSES['lambda']<=55) & (LENSES['redshift']>0.19) & (LENSES['redshift']<=0.27) ]
+    l = LENSES[ (LENSES['lambda']>38.0) & (LENSES['lambda']<=200) & (LENSES['redshift']>0.19) & (LENSES['redshift']<=0.27) ]
     print(f'nlenses = {len(l)}')
 
     #mono
