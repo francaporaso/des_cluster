@@ -10,7 +10,7 @@ from time import time
 
 from .funcs import eq2p2
 #from io import *
-from cluster.nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
+#from cluster.nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
 
 # Fixed globals
 COSMO = FlatLambdaCDM(H0=100, Om0=0.3)
@@ -19,11 +19,12 @@ ZMED = np.array([0.285, 0.476, 0.743, 0.942]) # median redshift of source distri
 REDSHIFT = 'redshift' # name of the redshift col in source table
 SOURCE = None
 LENSES = None
+ANGLES = None
 PIX_TO_IDX : dict = {}
 
 # Tuning globals
 NBINS = 15
-RIN, ROUT = 0.2, 15.0 #Mpc/h
+RIN, ROUT = 0.1, 5.0 #Mpc/h
 BINNING = 'log'
 PLOT = False
 
@@ -36,19 +37,21 @@ else:
 
 
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits'):
-    return Table.read(filename)
+    return Table.read(filename, format='fits', memmap=True)
 
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
-    return Table.read(filename)
+    return Table.read(filename, format='fits', memmap=True)
 
 def init_globals():
-    global SOURCE, LENSES
+    global SOURCE, LENSES, ANGLES
     global PIX_TO_IDX
 
     # reading catalogs
     SOURCE = read_source() # metacal file
     LENSES = read_redmapper() # redmapper
-    
+    with h5py.File('../cats/DESY3/desy3_redmapper_cluster-orientations.hdf5') as h:
+        ANGLES = Table(h['allmem/wo_weight'])
+
     # making a dict of healpix idx for fast query
     upix, split_idx = np.unique(SOURCE['pix'], return_index=True)
     split_idx = np.append(split_idx, len(SOURCE))
@@ -92,14 +95,20 @@ def partial_profile(inp):
     '''
     Profile of reduced shear g_t(r) as in eq. 6 of Grandis et al. (2024)
     '''
-
+    #mono
     g_t_raw_num = np.zeros(NBINS)
     g_x_raw_num = np.zeros(NBINS)
     response_sum = np.zeros(NBINS)
+    #quad
+    quad_t_num = np.zeros(NBINS) 
+    quad_x_num = np.zeros(NBINS)
+    sqcos_den = np.zeros(NBINS)
+    sqsin_den = np.zeros(NBINS)
+
     N_inbin = np.zeros(NBINS)
     n_eff_den = np.zeros(NBINS)
 
-    ra0, dec0, z0, *w_b = inp
+    idx0, ra0, dec0, z0, *w_b = inp
 
     DEGxMPC = COSMO.arcsec_per_kpc_proper(z0).to('deg/Mpc').value
     psi = DEGxMPC*ROUT
@@ -114,16 +123,19 @@ def partial_profile(inp):
         np.deg2rad(ra0), np.deg2rad(dec0)
     )
 
+    # get cluster orientation
+    ell, phi = ANGLES[ANGLES['idx']==idx0]['e', 'theta'].as_array()[0]
+
     #get weights
     w_s = catdata['weight']
 
     e1 = -catdata['e_1']
     e2 = catdata['e_2']
-    R1 = catdata['r11']
-    R2 = catdata['r22']
+    r1 = catdata['r11']
+    r2 = catdata['r22']
     #se usa el promedio entre ambos xq son muy similares
-    #((R1-R2)/(0.5*(R1+R2)) < 0.1%)
-    R = 0.5*(R1+R2)*w_s
+    #((r1-r2)/(0.5*(r1+r2)) < 0.1%)
+    resp = 0.5*(r1+r2)*w_s
 
     #get weighted tangential ellipticities
     cos2t = np.cos(2.0*theta)
@@ -138,13 +150,23 @@ def partial_profile(inp):
         m_i = dig == n_i+1
         for b in range(4):
             zbin = catdata['bhat'] == b
+
+            #monopole
             g_t_raw_num[n_i] += w_b[b]*np.sum(et[m_i & zbin])
             g_x_raw_num[n_i] += w_b[b]*np.sum(ex[m_i & zbin])
-            response_sum[n_i] += w_b[b]*np.sum(R[m_i & zbin])
-            n_eff_den[n_i] += w_b[b]**2 * np.sum(R[m_i & zbin]**2)
+            response_sum[n_i] += w_b[b]*np.sum(resp[m_i & zbin])
+            
+            #quadrupole
+            quad_t_num[n_i] += w_b[b]*np.sum(et[m_i&zbin] * np.cos(2.0*(theta[m_i&zbin]-phi)))
+            quad_x_num[n_i] += w_b[b]*np.sum(ex[m_i&zbin] * np.sin(2.0*(theta[m_i&zbin]-phi)))
+            sqcos_den[n_i] += w_b[b]*np.sum(resp[m_i&zbin] * np.cos(2.0*(theta[m_i&zbin]-phi))**2)
+            sqsin_den[n_i] += w_b[b]*np.sum(resp[m_i&zbin] * np.sin(2.0*(theta[m_i&zbin]-phi))**2)
+
+            #extra
+            n_eff_den[n_i] += w_b[b]**2 * np.sum(resp[m_i & zbin]**2)
             N_inbin[n_i] += np.count_nonzero(m_i & zbin)
 
-    return g_t_raw_num, g_x_raw_num, response_sum, n_eff_den, N_inbin
+    return g_t_raw_num, g_x_raw_num, response_sum, quad_t_num, quad_x_num, sqcos_den, sqsin_den, n_eff_den, N_inbin
 
 def stack_gt_raw():
 
@@ -153,15 +175,23 @@ def stack_gt_raw():
     l = LENSES[ (LENSES['lambda']>38.0) & (LENSES['lambda']<=55) & (LENSES['redshift']>0.19) & (LENSES['redshift']<=0.27) ]
     print(f'nlenses = {len(l)}')
 
+    #mono
     g_t_raw_num = np.zeros((len(l), NBINS))
     g_x_raw_num = np.zeros((len(l), NBINS))
     response_sum = np.zeros((len(l), NBINS))
+    #quad
+    quad_t_num = np.zeros((len(l), NBINS)) 
+    quad_x_num = np.zeros((len(l), NBINS))
+    sqcos_den = np.zeros((len(l), NBINS))
+    sqsin_den = np.zeros((len(l), NBINS))
+    #neff
     n_eff_den = np.zeros((len(l), NBINS))
     n_bin_sum = np.zeros((len(l), NBINS))
 
     for i, li in enumerate(l):
-        g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], n_eff_den[i,:], n_bin_sum[i,:] = partial_profile(
+        g_t_raw_num[i,:], g_x_raw_num[i,:], response_sum[i,:], quad_t_num[i,:], quad_x_num[i,:], sqcos_den[i,:], sqsin_den[i,:], n_eff_den[i,:], n_bin_sum[i,:] = partial_profile(
             [
+                li['mem_match_id'],
                 li['ra_gal'],
                 li['dec_gal'],
                 li['redshift'],
@@ -173,14 +203,19 @@ def stack_gt_raw():
         )
 
     response = np.sum(response_sum, axis=0)
+    #mono
     g_t_raw = np.sum(g_t_raw_num, axis=0)/response
     g_x_raw = np.sum(g_x_raw_num, axis=0)/response
+    #quad
+    quad_t_raw = np.sum(quad_t_num, axis=0)/np.sum(sqcos_den, axis=0)
+    quad_x_raw = np.sum(quad_x_num, axis=0)/np.sum(sqsin_den, axis=0)
+    #neff
     n_eff = np.sum(response_sum**2, axis=0)/np.sum(n_eff_den, axis=0)
     N_bin = np.sum(n_bin_sum, axis=0)
 
     r = binspace(RIN, ROUT, NBINS)
 
-    np.savetxt('test-des_gtraw.dat', np.vstack([r, g_t_raw, g_x_raw, n_eff, N_bin]))
+    np.savetxt('test-des_gtraw.dat', np.vstack([r, g_t_raw, g_x_raw, quad_t_raw, quad_x_raw, n_eff, N_bin]))
 
     if PLOT:
         fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
