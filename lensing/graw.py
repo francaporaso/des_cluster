@@ -49,7 +49,7 @@ def init_globals():
     # reading catalogs
     SOURCE = read_source() # metacal file
     LENSES = read_redmapper() # redmapper
-    with h5py.File('../cats/DESY3/desy3_redmapper_cluster-orientations.hdf5') as h:
+    with h5py.File('../cats/DESY3/test-orientations.h5') as h:
         ANGLES = Table(h['allmem/wo_weight'])
 
     # making a dict of healpix idx for fast query
