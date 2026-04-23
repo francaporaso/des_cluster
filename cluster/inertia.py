@@ -10,8 +10,8 @@ COSMO = FlatLambdaCDM(H0=100.0, Om0=0.3)
 ZMIN, ZMAX = 0.19, 0.27
 LMIN, LMAX = 38.0, 55.0
 
-CLUSTERS = Table.read('../cats/DESY3/desy3_redmapper_cluster-ws.fits', format='fits', memmap=True)
-MEMBERS = Table.read('../cats/DESY3/desy3_redmapper_cluster-members.fits', format='fits', memmap=True)
+CLUSTERS = Table.read('../../cats/DESY3/desy3_redmapper_cluster-ws.fits', format='fits', memmap=True)
+MEMBERS = Table.read('../../cats/DESY3/desy3_redmapper_cluster-members.fits', format='fits', memmap=True)
 
 def gnomonic_projection(ra, dec, ra0:float, dec0:float):
     '''
@@ -56,16 +56,21 @@ def main():
     wcs.wcs.cunit=['deg', 'deg']
     wcs.wcs.ctype=['RA---TAN', 'DEC--TAN']
 
-    #l = CLUSTERS[ (CLUSTERS['lambda']>LMIN) & (CLUSTERS['lambda']<=LMAX) & (CLUSTERS['redshift']>ZMIN) & (CLUSTERS['redshift']<=ZMAX) ]
-    l = CLUSTERS
-    nclusters = len(l)
+    l = CLUSTERS[ (CLUSTERS['lambda']>LMIN) & (CLUSTERS['lambda']<=LMAX) & (CLUSTERS['redshift']>ZMIN) & (CLUSTERS['redshift']<=ZMAX) ]
+    # l = CLUSTERS
+    n_cl = len(l)
     id_cl = l['mem_match_id'].data
 
     samples_names = ['allmem', 'pmemcut']
     weights_names = ['wo_weight', 'lum', 'dist']
 
-    e = {sam: {w: np.zeros(len(l)) for w in weights_names} for sam in samples_names}
-    theta = {sam: {w: np.zeros(len(l)) for w in weights_names} for sam in samples_names}
+    results = {sam: {
+        w: {'idx': np.zeros(n_cl, dtype=int), 
+            'e': np.zeros(n_cl, dtype=float), 
+            'theta': np.zeros(n_cl, dtype=float)}
+            for w in weights_names
+        } for sam in samples_names
+    }
 
     for i, idx in enumerate(id_cl):
         l_idx = l[id_cl==idx]
@@ -92,18 +97,22 @@ def main():
             }
 
             for w in weights_names:
-                e[sam][w][i], theta[sam][w][i] = inertia(x, y, weight=weights[w])
+                results[sam][w]['idx'][i] = idx
+                e, theta = inertia(x, y, weight=weights[w])
+                results[sam][w]['e'][i] = e
+                results[sam][w]['theta'][i] = theta
                 #plt.axline([0.,0.],slope=np.tan(theta[sam][w][i]),ls='-' if sam=='pmemcut' else '--', c=f'C{i}')
     #plt.legend(bbox_to_anchor=(1.5,1.5), ncol=5)
 
-
-    f = h5py.File('test-theta.hdf5', 'w')
-    for grp_name in theta:
-        grp = f.create_group(grp_name)
-        for dset_name in theta[grp_name]:
-            dset = grp.create_dataset(dset_name, data = theta[grp_name][dset_name])
-            print(grp_name, dset_name, theta[grp_name][dset_name])
-    f.close()
+    with h5py.File('test-orientations.h5', 'w') as f:
+        for sam, weights in results.items():
+            grp_sam = f.create_group(sam)
+            
+            for w, data in weights.items():
+                grp_w = grp_sam.create_group(w)
+                
+                for key, array in data.items():
+                    grp_w.create_dataset(key, data=array)
 
     # np.savetxt('../cats/DESY3/redmapper_orientation.dat', np.vstack([id_cl, e, theta]), header='# id_cl | e | theta ')
 
