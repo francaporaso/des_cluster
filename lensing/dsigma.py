@@ -30,14 +30,14 @@ binspace = None
 # now read from config file
 config = toml.load('lensing/config.toml')
 NCORES = config['RUN']['NCORES']
-NBINS = config['PROFILE']['NBINS']
-RIN, ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
-LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
-ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
-NJK = config['PROFILE']['NJK'] # kmeans_radec allows up to a tenth of the # of lenses
-BINNING = config['PROFILE']['BINNING']
 PLOT = config['RUN']['PLOT']
 OVERWRITE = config['RUN']['OVERWRITE']
+RIN, ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
+NBINS = config['PROFILE']['NBINS']
+NJK = config['PROFILE']['NJK'] # kmeans_radec allows up to a tenth of the # of lenses
+BINNING = config['PROFILE']['BINNING']
+LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
+ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
 #NCORES = 16
 #NBINS = 15
 #RIN, ROUT = 0.1, 5.0 #Mpc/h
@@ -161,9 +161,9 @@ def partial_profile(inp):
         m_i = dig == n_i+1
         for b in range(4):
             zbin = catdata['bhat'] == b
-            dsigma_t_num[n_i] += np.sum(et[m_i & zbin])
-            dsigma_x_num[n_i] += np.sum(ex[m_i & zbin])
-            response_sum[n_i] += w_b[b]*np.sum(res[m_i & zbin])
+            dsigma_t_num[n_i] += w_b[b]**2 * np.sum(et[m_i & zbin])
+            dsigma_x_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin])
+            response_sum[n_i] += w_b[b]**3 * np.sum(res[m_i & zbin])
             n_sl_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
 
