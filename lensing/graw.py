@@ -124,7 +124,12 @@ def partial_profile(inp):
     )
 
     # get cluster orientation
-    ell, phi = ANGLES[ANGLES['idx']==idx0]['e', 'theta'].as_array()[0]
+    _, an = ANGLES[ANGLES['idx']==idx0]['e', 'theta'].as_array()[0]
+
+    theta2 = (2.0*np.pi - theta) + np.pi/2
+    theta_ra = theta2
+    theta_ra[theta2>2.0*np.pi] = theta2[theta2>2.0*np.pi] - 2.0*np.pi
+    phi = theta_ra - an # angle for quad
 
     #get weights
     w_s = catdata['weight']
@@ -157,10 +162,10 @@ def partial_profile(inp):
             response_sum[n_i] += w_b[b]*np.sum(resp[m_i & zbin])
             
             #quadrupole
-            quad_t_num[n_i] += w_b[b]*np.sum(et[m_i&zbin] * np.cos(2.0*(theta[m_i&zbin]-phi)))
-            quad_x_num[n_i] += w_b[b]*np.sum(ex[m_i&zbin] * np.sin(2.0*(theta[m_i&zbin]-phi)))
-            sqcos_den[n_i] += w_b[b]*np.sum(resp[m_i&zbin] * np.cos(2.0*(theta[m_i&zbin]-phi))**2)
-            sqsin_den[n_i] += w_b[b]*np.sum(resp[m_i&zbin] * np.sin(2.0*(theta[m_i&zbin]-phi))**2)
+            quad_t_num[n_i] += w_b[b]*np.sum(et[m_i&zbin] * np.cos(2.0*(phi[m_i&zbin])))
+            quad_x_num[n_i] += w_b[b]*np.sum(ex[m_i&zbin] * np.sin(2.0*(phi[m_i&zbin])))
+            sqcos_den[n_i] += w_b[b]*np.sum(resp[m_i&zbin] * np.cos(2.0*(phi[m_i&zbin]))**2)
+            sqsin_den[n_i] += w_b[b]*np.sum(resp[m_i&zbin] * np.sin(2.0*(phi[m_i&zbin]))**2)
 
             #extra
             n_eff_den[n_i] += w_b[b]**2 * np.sum(resp[m_i & zbin]**2)
