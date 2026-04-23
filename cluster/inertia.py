@@ -56,8 +56,8 @@ def main():
     wcs.wcs.cunit=['deg', 'deg']
     wcs.wcs.ctype=['RA---TAN', 'DEC--TAN']
 
-    l = CLUSTERS[ (CLUSTERS['lambda']>LMIN) & (CLUSTERS['lambda']<=LMAX) & (CLUSTERS['redshift']>ZMIN) & (CLUSTERS['redshift']<=ZMAX) ]
-    # l = CLUSTERS
+    #l = CLUSTERS[ (CLUSTERS['lambda']>LMIN) & (CLUSTERS['lambda']<=LMAX) & (CLUSTERS['redshift']>ZMIN) & (CLUSTERS['redshift']<=ZMAX) ]
+    l = CLUSTERS
     n_cl = len(l)
     id_cl = l['mem_match_id'].data
 
