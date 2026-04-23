@@ -10,8 +10,8 @@ COSMO = FlatLambdaCDM(H0=100.0, Om0=0.3)
 ZMIN, ZMAX = 0.19, 0.27
 LMIN, LMAX = 38.0, 55.0
 
-CLUSTERS = Table.read('../../cats/DESY3/desy3_redmapper_cluster-ws.fits', format='fits', memmap=True)
-MEMBERS = Table.read('../../cats/DESY3/desy3_redmapper_cluster-members.fits', format='fits', memmap=True)
+CLUSTERS = Table.read('../cats/DESY3/desy3_redmapper_cluster-ws.fits', format='fits', memmap=True)
+MEMBERS = Table.read('../cats/DESY3/desy3_redmapper_cluster-members.fits', format='fits', memmap=True)
 
 def gnomonic_projection(ra, dec, ra0:float, dec0:float):
     '''
