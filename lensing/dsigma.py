@@ -81,7 +81,9 @@ def init_globals():
 
 def get_masked_square(psi, ra0, dec0, z0, wb):
     mask_sky = (SOURCE['ra_gal'] < (ra0+psi))&(SOURCE['ra_gal'] > (ra0-psi))&(SOURCE['dec_gal'] < (dec0+psi))&(SOURCE['dec_gal'] > (dec0-psi))
-    for i in range(4):
+    #drop the first redshift bin altogether
+    wb[0] = 0.0
+    for i in range(1,4):
         if z0 > ZMED[i]:
             wb[i] = 0.0
     return mask_sky, wb
