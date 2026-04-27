@@ -120,7 +120,8 @@ def partial_profile(inp):
     dsigma_x_num = np.zeros(NBINS)
     response_sum = np.zeros(NBINS)
     n_bin = np.zeros(NBINS)
-    n_sl_sum = np.zeros(NBINS)
+    sq_weight_sum = np.zeros(NBINS)
+    weight_sum = np.zeros(NBINS)
 
     ra0, dec0, z0, *w_b = inp
 
@@ -161,13 +162,17 @@ def partial_profile(inp):
         m_i = dig == n_i+1
         for b in range(4):
             zbin = catdata['bhat'] == b
+
             dsigma_t_num[n_i] += w_b[b]**2 * np.sum(et[m_i & zbin])
             dsigma_x_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin])
+            
             response_sum[n_i] += w_b[b]**3 * np.sum(res[m_i & zbin])
-            n_sl_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
+            
+            weight_sum[n_i] += w_b[b] * np.sum(res[m_i & zbin])
+            sq_weight_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin)
 
-    return dsigma_t_num, dsigma_x_num, response_sum, n_sl_sum, n_bin
+    return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
 
 def stacking():
 
@@ -182,7 +187,8 @@ def stacking():
     dsigma_t_num = np.zeros((localNJK+1, NBINS))
     dsigma_x_num = np.zeros((localNJK+1, NBINS))
     response_sum = np.zeros((localNJK+1, NBINS))
-    n_sl = np.zeros((localNJK+1, NBINS))
+    weight_sl = np.zeros((localNJK+1, NBINS))
+    sq_weight_sl = np.zeros((localNJK+1, NBINS))
     n_bin = np.zeros((localNJK+1, NBINS))
 
     with Pool(processes=NCORES) as pool:
@@ -198,7 +204,7 @@ def stacking():
     # === calculating stack
 
     # reduce
-    gt, gx, res, nsl, nbin = map(
+    gt, gx, res, w_sl, sqw_sl, nbin = map(
         lambda x: np.vstack(x),
         zip(*results_map)
     )
@@ -207,7 +213,8 @@ def stacking():
     dsigma_t_num[0,:] = gt.sum(axis=0)
     dsigma_x_num[0,:] = gx.sum(axis=0)
     response_sum[0,:] = res.sum(axis=0)
-    n_sl[0,:] = nsl.sum(axis=0)
+    weight_sl[0,:] = np.sum((w_sl)**2, axis=0)
+    sq_weight_sl[0,:] = sqw_sl.sum(axis=0)
     n_bin[0,:] = nbin.sum(axis=0)
 
     # jackknife
@@ -220,13 +227,14 @@ def stacking():
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
         response_sum[j+1,:] = res[mask].sum(axis=0)
-        n_sl[j+1,:] = nsl[mask].sum(axis=0)
+        weight_sl[j+1,:] = w_sl[mask].sum(axis=0)
+        sq_weight_sl[j+1,:] = sqw_sl[mask].sum(axis=0)
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
     dsigma_t = dsigma_t_num/response_sum
     dsigma_x = dsigma_x_num/response_sum
 
-    n_eff = np.sum(res**2, axis=0)/n_sl
+    n_eff = weight_sl/sq_weight_sl
     #response = np.sum(response_sum, axis=0)
 
     # ==== Saving
