@@ -182,8 +182,8 @@ def stacking():
     dsigma_t_num = np.zeros((localNJK+1, NBINS))
     dsigma_x_num = np.zeros((localNJK+1, NBINS))
     response_sum = np.zeros((localNJK+1, NBINS))
-    n_sl_sum = np.zeros((localNJK+1, NBINS))
-    n_bin_sum = np.zeros((localNJK+1, NBINS))
+    n_sl = np.zeros((localNJK+1, NBINS))
+    n_bin = np.zeros((localNJK+1, NBINS))
 
     with Pool(processes=NCORES) as pool:
         results_map = list(
@@ -203,11 +203,12 @@ def stacking():
         zip(*results_map)
     )
 
+    #calculate sum over lenses
     dsigma_t_num[0,:] = gt.sum(axis=0)
     dsigma_x_num[0,:] = gx.sum(axis=0)
     response_sum[0,:] = res.sum(axis=0)
-    n_sl_sum[0,:] = nsl.sum(axis=0)
-    n_bin_sum[0,:] = nbin.sum(axis=0)
+    n_sl[0,:] = nsl.sum(axis=0)
+    n_bin[0,:] = nbin.sum(axis=0)
 
     # jackknife
     _, kidx = get_jackknife_kmeans(l['ra_cl'], l['dec_cl'], nlenses=nlenses, NJK=localNJK)
@@ -219,14 +220,13 @@ def stacking():
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
         response_sum[j+1,:] = res[mask].sum(axis=0)
-        n_sl_sum[j+1,:] = nsl[mask].sum(axis=0)
-        n_bin_sum[j+1,:] = nbin[mask].sum(axis=0)
+        n_sl[j+1,:] = nsl[mask].sum(axis=0)
+        n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
     dsigma_t = dsigma_t_num/response_sum
     dsigma_x = dsigma_x_num/response_sum
 
-    n_eff = np.sum(response_sum**2/n_sl_sum, axis=0)
-    n_bin = np.sum(n_bin_sum, axis=0)
+    n_eff = np.sum(res**2, axis=0)/n_sl
     #response = np.sum(response_sum, axis=0)
 
     # ==== Saving
