@@ -6,8 +6,8 @@ PLOT = false
 
 [PROFILE]
 NBINS = 15
-RIN = 0.1 #Mpc/h
-ROUT = 5.0 #Mpc/h
+RIN = 0.25 #Mpc/h
+ROUT = 15.0 #Mpc/h
 NJK = 40
 BINNING = 'log' # 'lin'
 
