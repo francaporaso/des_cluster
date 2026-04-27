@@ -172,7 +172,7 @@ def partial_profile(inp):
             
             weight_sum[n_i] += w_b[b] * np.sum(res[m_i & zbin])
             sq_weight_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
-            n_bin[n_i] += np.count_nonzero(m_i & zbin)
+            n_bin[n_i] += np.count_nonzero(m_i & zbin) if w_b[b] != 0.0 else 0.0
 
     return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
 
@@ -189,6 +189,7 @@ def stacking():
     dsigma_t_num = np.zeros((localNJK+1, NBINS))
     dsigma_x_num = np.zeros((localNJK+1, NBINS))
     response_sum = np.zeros((localNJK+1, NBINS))
+
     weight_sl = np.zeros((localNJK+1, NBINS))
     sq_weight_sl = np.zeros((localNJK+1, NBINS))
     n_bin = np.zeros((localNJK+1, NBINS))
@@ -215,7 +216,7 @@ def stacking():
     dsigma_t_num[0,:] = gt.sum(axis=0)
     dsigma_x_num[0,:] = gx.sum(axis=0)
     response_sum[0,:] = res.sum(axis=0)
-    weight_sl[0,:] = np.sum((w_sl)**2, axis=0)
+    weight_sl[0,:] = np.sum(w_sl**2, axis=0)
     sq_weight_sl[0,:] = sqw_sl.sum(axis=0)
     n_bin[0,:] = nbin.sum(axis=0)
 
