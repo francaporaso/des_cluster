@@ -182,8 +182,8 @@ def stacking():
     dsigma_t_num = np.zeros((localNJK+1, NBINS))
     dsigma_x_num = np.zeros((localNJK+1, NBINS))
     response_sum = np.zeros((localNJK+1, NBINS))
-    n_sl_sum = np.zeros((NJK+1, NBINS))
-    n_bin_sum = np.zeros((NJK+1, NBINS))
+    n_sl_sum = np.zeros((localNJK+1, NBINS))
+    n_bin_sum = np.zeros((localNJK+1, NBINS))
 
     with Pool(processes=NCORES) as pool:
         results_map = list(
