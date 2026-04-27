@@ -182,13 +182,9 @@ def stacking():
     dsigma_t_num = np.zeros((localNJK+1, NBINS))
     dsigma_x_num = np.zeros((localNJK+1, NBINS))
     response_sum = np.zeros((localNJK+1, NBINS))
-    #n_sl_sum = np.zeros((NJK+1, NBINS))
-    #n_bin_sum = np.zeros((NJK+1, NBINS))
+    n_sl_sum = np.zeros((NJK+1, NBINS))
+    n_bin_sum = np.zeros((NJK+1, NBINS))
 
-    #for i, li in enumerate(l):
-        # partial_profile([
-        #         li['ra_cl','dec_cl','redshift','wb_0','wb_1','wb_2','wb_3']
-        #     ])
     with Pool(processes=NCORES) as pool:
         results_map = list(
             tqdm(
@@ -202,7 +198,7 @@ def stacking():
     # === calculating stack
 
     # reduce
-    gt, gx, res, _, _ = map(
+    gt, gx, res, nsl, nbin = map(
         lambda x: np.vstack(x),
         zip(*results_map)
     )
@@ -210,8 +206,8 @@ def stacking():
     dsigma_t_num[0,:] = gt.sum(axis=0)
     dsigma_x_num[0,:] = gx.sum(axis=0)
     response_sum[0,:] = res.sum(axis=0)
-    #n_sl_sum[0,:] = nsl.sum(axis=0)
-    #n_bin_sum[0,:] = nbin.sum(axis=0)
+    n_sl_sum[0,:] = nsl.sum(axis=0)
+    n_bin_sum[0,:] = nbin.sum(axis=0)
 
     # jackknife
     _, kidx = get_jackknife_kmeans(l['ra_cl'], l['dec_cl'], nlenses=nlenses, NJK=localNJK)
@@ -223,14 +219,14 @@ def stacking():
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
         response_sum[j+1,:] = res[mask].sum(axis=0)
-        #n_sl_sum[j+1,:] = nsl[mask].sum(axis=0)
-        #n_bin_sum[j+1,:] = nbin[mask].sum(axis=0)
+        n_sl_sum[j+1,:] = nsl[mask].sum(axis=0)
+        n_bin_sum[j+1,:] = nbin[mask].sum(axis=0)
 
     dsigma_t = dsigma_t_num/response_sum
     dsigma_x = dsigma_x_num/response_sum
 
-    #n_eff = np.sum(response_sum**2/n_sl_sum, axis=0)
-    #n_bin = np.sum(n_bin_sum, axis=0)
+    n_eff = np.sum(response_sum**2/n_sl_sum, axis=0)
+    n_bin = np.sum(n_bin_sum, axis=0)
     #response = np.sum(response_sum, axis=0)
 
     # ==== Saving
@@ -262,19 +258,24 @@ def stacking():
     table = Table({
         'R':binspace(RIN, ROUT, NBINS),
         'DSigma_t':dsigma_t[0],
-        'DSigma_x':dsigma_x[0]
+        'DSigma_x':dsigma_x[0],
+        'N_eff':n_eff[0],
+        'N_raw':n_bin[0]
     })
 
     cov_hdu = [
         fits.ImageHDU(cov_matrix(dsigma_t[1:,:]), name='cov_DSigma_t'),
         fits.ImageHDU(cov_matrix(dsigma_x[1:,:]), name='cov_DSigma_x'),
+        fits.ImageHDU(cov_matrix(n_eff[1:,:]), name='cov_N_eff'),
+        fits.ImageHDU(cov_matrix(n_bin[1:,:]), name='cov_N_raw'),
     ]
 
     jack_hdu = [
         fits.ImageHDU(dsigma_t[1:localNJK+1, :], name='jack_DSigma_t'),
         fits.ImageHDU(dsigma_x[1:localNJK+1, :], name='jack_DSigma_x'),
+        fits.ImageHDU(n_eff[1:localNJK+1, :], name='jack_N_eff'),
+        fits.ImageHDU(n_bin[1:localNJK+1, :], name='jack_N_raw'),
     ]
-
 
     hdul = fits.HDUList([
         fits.PrimaryHDU(header=head),
