@@ -98,7 +98,7 @@ def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
     pix_idx = hp.query_disc(
         NSIDE,
         vec=hp.ang2vec(ra0, dec0, lonlat=True),
-        radius=np.deg2rad(psi*1.1)
+        radius=np.deg2rad(psi*1.5)
     )
 
     idx_arrays = np.concatenate([
