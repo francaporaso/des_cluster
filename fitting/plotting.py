@@ -24,14 +24,14 @@ def plot_chains(chain):
     plt.show()
     return fig
 
-def plot_corner(sampler, discard=100, fig=None, color=None):
+def plot_corner(sampler, discard=100, fig=None, color=None, **corner_kwargs):
 
     flat_samples = sampler.get_chain(discard=discard, flat=True)
     if fig==None:
-        fig = corner(flat_samples, color=color);
+        fig = corner(flat_samples, color=color, **corner_kwargs);
         return fig
     else:
-        corner(flat_samples, fig=fig, color=color);
+        corner(flat_samples, fig=fig, color=color, **corner_kwargs);
 
 def plot_pos(pos):
 
