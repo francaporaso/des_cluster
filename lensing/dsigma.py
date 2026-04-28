@@ -216,7 +216,7 @@ def stacking():
     dsigma_t_num[0,:] = gt.sum(axis=0)
     dsigma_x_num[0,:] = gx.sum(axis=0)
     response_sum[0,:] = res.sum(axis=0)
-    weight_sl[0,:] = np.sum(w_sl**2, axis=0)
+    weight_sl[0,:] = np.sum(w_sl, axis=0)**2
     sq_weight_sl[0,:] = sqw_sl.sum(axis=0)
     n_bin[0,:] = nbin.sum(axis=0)
 
@@ -230,7 +230,7 @@ def stacking():
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
         response_sum[j+1,:] = res[mask].sum(axis=0)
-        weight_sl[j+1,:] = w_sl[mask].sum(axis=0)
+        weight_sl[j+1,:] = w_sl[mask].sum(axis=0)**2
         sq_weight_sl[j+1,:] = sqw_sl[mask].sum(axis=0)
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
