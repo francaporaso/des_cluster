@@ -2,14 +2,10 @@ import numpy as np
 from scipy.integrate import simpson, quad, cumulative_trapezoid
 from scipy.special import erf
 import astropy.units as u
-from colossus.cosmology import cosmology
 from colossus.halo import concentration
 
 from fitting.constants import *
 
-# =======
-# COSMO
-cosmology.setCosmology('planck18')
 
 def logistic(x, x0=1, k=10):
     return (1.0+np.exp(-2.0*k*(x-x0)))**(-1)
