@@ -13,16 +13,21 @@ def run_emcee(
         data_filename, save_filename, 
         model_name='NFW', 
         observable='delta_sigma', 
+        params_fit = ['M200', 'c200'],
         cov_mode='diag',
         init_guess=np.array([1e14, 4.0])
         ):
     
     data = read_dataprofile_fits(name=data_filename)
 
+    param_limits = {'M200':(1e10, 1e16)}
+    if len(params_fit)==2:
+        param_limits['c200']=(1.0, 10.0)
+    
     L = Likelihood(
         data=data,
         model=models_dict.get(model_name)(data.redshift),
-        param_limits=default_limits.get(model_name),
+        param_limits=param_limits,
         observable=observable,
         cov_mode=cov_mode 
     )
