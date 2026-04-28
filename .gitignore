@@ -3,6 +3,7 @@
 *.png
 *.pdf
 *.dat
+*.toml
 
 # Results folder
 results/
