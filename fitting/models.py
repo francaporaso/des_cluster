@@ -2,8 +2,14 @@ import numpy as np
 from scipy.integrate import simpson, quad, cumulative_trapezoid
 from scipy.special import erf
 import astropy.units as u
+from colossus.cosmology import cosmology
+from colossus.halo import concentration
 
 from fitting.constants import *
+
+# =======
+# COSMO
+cosmology.setCosmology('planck18')
 
 def logistic(x, x0=1, k=10):
     return (1.0+np.exp(-2.0*k*(x-x0)))**(-1)
@@ -98,11 +104,7 @@ class NFW:
         return ((M200*(3.0*Msun))/(800.0*np.pi*self.roc_mpc))**(1./3.)
 
     def c_200(self, mass):
-        '''
-        Concentration value using Duffy+2008 relation.
-        mass in solar masses
-        '''
-        return 5.71*((mass/2.e12)**-0.084)*((1.+self.redshift)**(-0.47))
+        return concentration.concentration(M=mass, mdef='200c', z=self.redshift, model='diemer19')
 
     def delta_sigma(self, R, M200, c200=None):
 
