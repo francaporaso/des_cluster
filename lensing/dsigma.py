@@ -234,14 +234,22 @@ def stacking():
         sq_weight_sl[j+1,:] = sqw_sl[mask].sum(axis=0)
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
-    dsigma_t = dsigma_t_num/response_sum
-    dsigma_x = dsigma_x_num/response_sum
-
     n_eff = weight_sl/sq_weight_sl
     #response = np.sum(response_sum, axis=0)
 
-    # ==== Saving
+    # cluster contaminants correction
+    h = (ROUT-RIN)/NBINS
+    area = np.pi*np.diff(binspace(RIN, ROUT, NBINS+1))**2
+    den_n = n_eff/area
+    #cte_range = np.abs(np.diff(den_n)/(h*den_n[1:])) < 0.05
+    #den_cte = np.mean(den_n[1:][cte_range])
+    f_cl = 1.0 - den_n[-1]/den_n
+    
+    # profiles
+    dsigma_t = (1/(1-f_cl))*dsigma_t_num/response_sum
+    dsigma_x = (1/(1-f_cl))*dsigma_x_num/response_sum
 
+    # ==== Saving
     outputname = (f'results/lensing_desy3_{sample}_'
                   f'lambda{LMIN:02.0f}-{LMAX:02.0f}_'
                   f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_'
