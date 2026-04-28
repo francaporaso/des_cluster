@@ -178,7 +178,12 @@ def partial_profile(inp):
 
 def stacking():
 
-    l = LENSES[ (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) ]
+    l = LENSES[ 
+        (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & 
+        (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) &
+        (LENSES['pcen']>0.8)
+    ]
+
     nlenses = len(l)
     print(f'{nlenses =}')
     localNJK = NJK
