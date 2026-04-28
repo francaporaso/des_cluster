@@ -14,7 +14,7 @@ def run_emcee(
         model_name='NFW', 
         observable='delta_sigma', 
         cov_mode='diag',
-        init_guess=[1e14, 3.0]
+        init_guess=[1e14, 4.0]
         ):
     
     data = read_dataprofile_fits(name=data_filename)
@@ -29,8 +29,8 @@ def run_emcee(
 
     rng = np.random.default_rng(0)
     init_pos = np.array([
-        rng.uniform(init_guess[0]*(1-0.15), init_guess[0]*(1+0.15), NWALKERS),
-        rng.uniform(init_guess[1]*(1-0.15), init_guess[1]*(1+0.15), NWALKERS),
+        rng.uniform(init_guess[0]*(1-0.4), init_guess[0]*(1+0.4), NWALKERS),
+        rng.uniform(init_guess[1]*(1-0.4), init_guess[1]*(1+0.4), NWALKERS),
     ]).T
     
     group_name = f'emcee/{model_name}/{cov_mode}'
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     chain_filename = 'results/fitting_desy3_test_lambda38-55_z019-027.hdf5'
     model_name = 'NFW'
     observable = 'delta_sigma'
-    cov_mode = 'diag'
+    cov_mode = 'cov'
 
     sampler = run_emcee(
         NCORES=NCORES,NIT=NIT,NWALKERS=NWALKERS,
