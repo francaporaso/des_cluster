@@ -66,6 +66,7 @@ if __name__ == '__main__':
         save_filename=chain_filename,
         model_name=model_name,
         observable=observable,
+        params_fit = ['M200'],
         cov_mode=cov_mode,
         init_guess=np.array([1e14])
     )
