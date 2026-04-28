@@ -7,8 +7,8 @@ pc : float = pc.value # parsec in m
 Msun : float = M_sun.value # solar mass in kg
 
 h = 1.0
-cosmo = FlatLambdaCDM(H0=100*h, Om0=0.25)
-cosmology.fromAstropy(cosmo, ns=0.96, sigma8=0.811, Ob0=0.0, cosmo_name='etc')
+cosmo = FlatLambdaCDM(H0=100*h, Om0=0.25, Ob0=0.0)
+cosmology.fromAstropy(cosmo, ns=0.96, sigma8=0.811, cosmo_name='etc')
 SQPI : float = np.sqrt(np.pi)
 
 def rho_mean(z):
