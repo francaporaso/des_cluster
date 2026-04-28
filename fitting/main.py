@@ -53,7 +53,7 @@ if __name__ == '__main__':
     chain_filename = 'results/fitting_desy3_test_lambda38-55_z019-027.hdf5'
     model_name = 'NFW'
     observable = 'delta_sigma'
-    cov_mode = 'cov'
+    cov_mode = 'full'
 
     sampler = run_emcee(
         NCORES=NCORES,NIT=NIT,NWALKERS=NWALKERS,
