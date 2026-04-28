@@ -6,15 +6,21 @@ from fitting.models import default_limits
 def plot_chains(chain):
 
     nit, _, nparams = chain.shape
-    
     fig, axes = plt.subplots(nparams,1, sharex=True)
-    for i in range(nparams):
-        axes[i].plot(chain[:,:,i], 'k', alpha=0.3)
-        axes[i].set_xlim(0.0, nit)
-        axes[i].set_ylabel(f'$a_{i}$')
-        axes[i].yaxis.set_label_coords(-0.1, 0.5)
-    
-    axes[-1].set_xlabel('Step Number')
+    if nparams!=1:
+        for i in range(nparams):
+            axes[i].plot(chain[:,:,i], 'k', alpha=0.3)
+            axes[i].set_xlim(0.0, nit)
+            axes[i].set_ylabel(f'$a_{i}$')
+            axes[i].yaxis.set_label_coords(-0.1, 0.5)
+        
+        axes[-1].set_xlabel('Step Number')
+    else:
+        axes.plot(chain[:,:,0], 'k', alpha=0.3)
+        axes.set_xlim(0.0, nit)
+        axes.set_ylabel('$a_0$')
+        axes.yaxis.set_label_coords(-0.1, 0.5)
+
     plt.show()
     return fig
 
