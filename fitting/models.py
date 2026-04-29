@@ -107,29 +107,38 @@ class NFW:
         x = (R * c200) / r200
         x_sq = x*x
         
-        m1 = x <= (1.0-1.e-12)
-        m2 = x >= (1.0+1.e-12)
-        m3 = (x == 1.0)
-        m4 = (~m1)*(~m2)*(~m3)
+        m1 = x<1.0
+        m2 = x>1.0
+        m3 = ~(m1|m2) #not (m1 or m2) => not(x<1 or x>1) => not(x!=1) => x==1.0
         
-        jota  = np.zeros(len(x))
-        atanh = np.arctanh(np.sqrt((1.0-x[m1])/(1.0+x[m1])))
-        jota[m1] = (1./(x[m1]**2-1.))*(1.-(2./np.sqrt(1.-x[m1]**2))*atanh) 
+        jota  = np.zeros_like(R)
         
-        atan = np.arctan(((x[m2]-1.0)/(1.0+x[m2]))**0.5)
-        jota[m2] = (1./(x[m2]**2-1.))*(1.-(2./np.sqrt(x[m2]**2 - 1.))*atan) 
+        if np.any(m1):
+            xm = x[m1]
+            xm_sq = xm*xm
+
+            atanh = np.arctanh(np.sqrt((1.0 - xm) / (1.0 + xm)))
+            jota[m1] = (1.0 / (xm_sq - 1.0)) * (1.0 - (2.0 / np.sqrt(1.0 - xm_sq)) * atanh) 
         
-        jota[m3] = 1./3.
+        if np.any(m2):
+            xm = x[m1]
+            xm_sq = xm*xm
+            
+            atan = np.arctan(np.sqrt((xm - 1.0) / (1.0 + xm)))
+            jota[m2] = (1.0 / (xm_sq - 1.0)) * (1.0 - (2.0 / np.sqrt(xm_sq - 1.0)) * atan) 
+            
+        if np.any(m3):
+            jota[m3] = 1/3
         
-        x1 = 1.-1.e-4
-        atanh1 = np.arctanh(np.sqrt((1.0-x1)/(1.0+x1)))
-        j1 = (1./(x1**2-1.))*(1.-(2./np.sqrt(1.-x1**2))*atanh1) 
+        # x1 = 1.-1.e-4
+        # atanh1 = np.arctanh(np.sqrt((1.0-x1)/(1.0+x1)))
+        # j1 = (1./(x1**2-1.))*(1.-(2./np.sqrt(1.-x1**2))*atanh1) 
         
-        x2 = 1.+1.e-4
-        atan2 = np.arctan(((x2-1.0)/(1.0+x2))**0.5)
-        j2 = (1./(x2**2-1.))*(1.-(2./np.sqrt(x2**2 - 1.))*atan2) 
+        # x2 = 1.+1.e-4
+        # atan2 = np.arctan(((x2-1.0)/(1.0+x2))**0.5)
+        # j2 = (1./(x2**2-1.))*(1.-(2./np.sqrt(x2**2 - 1.))*atan2) 
         
-        jota[m4] = np.interp(x[m4],[x1,x2],[j1,j2])
+        # jota[m4] = np.interp(x[m4],[x1,x2],[j1,j2])
                     
         rs_m = r200/c200
         kapak = (2.*rs_m*deltac*self.roc_mpc)
@@ -151,7 +160,6 @@ class NFW:
 
         r200 = self.R_200(M200)
         x = (R * c200) / r200
-        x_sq = x*x
         
         jota = np.zeros_like(x)
 
@@ -161,7 +169,7 @@ class NFW:
 
         if np.any(m1):
             xm = x[m1]
-            xm_sq = x_sq[m1]
+            xm_sq = xm*xm
 
             sqrt_term = np.sqrt(1.0 - xm_sq)
             atanh = np.arctanh(np.sqrt((1.0 - xm) / (1.0 + xm)))
@@ -175,7 +183,7 @@ class NFW:
 
         if np.any(m2):
             xm = x[m2]
-            xm_sq = x_sq[m2]
+            xm_sq = xm*xm
 
             sqrt_term = np.sqrt(xm_sq - 1.0)
             atan = np.arctan(np.sqrt((xm - 1.0) / (1.0 + xm)))
