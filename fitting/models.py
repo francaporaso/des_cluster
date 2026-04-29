@@ -97,20 +97,18 @@ class NFW:
         return concentration.concentration(M=mass, mdef='200c', z=self.redshift, model='diemer19')
 
     def delta_sigma(self, R:np.ndarray[float], M200:float, c200:float|None=None) -> np.ndarray[float]:
-
         '''
         Projected density contrast of NFW density model.
         M200 in solar masses
         R in h^-1 Mpc
         '''
-    
-        r200 = self.R_200(M200)
         
         if c200 is None:
             c200 = self.c_200(M200*cosmo.h)
                 
         deltac = (200.0/3.0) * (c200**3)/ (np.log(1.0 + c200) - c200 / (1.0 + c200)) 
 
+        r200 = self.R_200(M200)
         x = (R * c200) / r200
         x_sq = x*x
         
@@ -135,17 +133,17 @@ class NFW:
             )
 
         if np.any(m2):
-            xp = x[m2]
-            xp_sq = x_sq[m2]
+            xm = x[m2]
+            xm_sq = x_sq[m2]
 
-            sqrt_term = np.sqrt(xp_sq - 1.0)
-            atan = np.arctan(np.sqrt((xp - 1.0) / (1.0 + xp)))
+            sqrt_term = np.sqrt(xm_sq - 1.0)
+            atan = np.arctan(np.sqrt((xm - 1.0) / (1.0 + xm)))
 
             jota[m2] = (
-                (4.0 * atan) / (xp_sq * sqrt_term)
-                + (2.0 * np.log(xp / 2.0)) / xp_sq
-                - 1.0 / (xp_sq - 1.0)
-                + (2.0 * atan) / ((xp_sq - 1.0) ** 1.5)
+                (4.0 * atan) / (xm_sq * sqrt_term)
+                + (2.0 * np.log(xm / 2.0)) / xm_sq
+                - 1.0 / (xm_sq - 1.0)
+                + (2.0 * atan) / ((xm_sq - 1.0) ** 1.5)
             )
 
         if np.any(m3):
