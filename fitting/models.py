@@ -121,7 +121,7 @@ class NFW:
             jota[m1] = (1.0 / (xm_sq - 1.0)) * (1.0 - (2.0 / np.sqrt(1.0 - xm_sq)) * atanh) 
         
         if np.any(m2):
-            xm = x[m1]
+            xm = x[m2]
             xm_sq = xm*xm
             
             atan = np.arctan(np.sqrt((xm - 1.0) / (1.0 + xm)))
