@@ -129,7 +129,7 @@ class NFW:
 
         jota[m4] = np.interp(x[m4],[x1,x2],[j1,j2])
 
-        rs_m = R200/c200
+        rs_m = r200/c200
         kapak = (2.*rs_m*deltac*roc_mpc)
         # Units M_sun/pc2
         return (kapak*jota)/(1.e6**2)
