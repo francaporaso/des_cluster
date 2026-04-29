@@ -209,10 +209,6 @@ class NFWMiss(NFW):
         if s_off is None:
             s_off = tau*self.R_200(M200*cosmo.h)
 
-        def SNFW(r):
-            # return Sigma_NFW_2h(r,z,M200,c200,cosmo_params=params,terms='1h')
-            return /1.e12
-
         def S_RRs(Rs,R):
             # F_Eq13
             #argumento = lambda x: monopole(np.sqrt(R**2+Rs**2-2.*Rs*R*np.cos(x)))
