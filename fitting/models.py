@@ -97,7 +97,45 @@ class NFW:
         return concentration.concentration(M=M200, mdef='200c', z=self.redshift, model='diemer19')
 
     def sigma(self, R, M200, c200):
-        pass
+            
+        if c200 is None:
+            c200 = self.c_200(M200*cosmo.h)
+         
+        deltac = (200.0/3.0) * ((c200**3) / (np.log(1.0 + c200) - (c200 / (1 + c200))))
+        
+        r200 = self.R_200(M200)
+        x = (R * c200) / r200
+        x_sq = x*x
+        
+        m1 = x <= (1.0-1.e-12)
+        m2 = x >= (1.0+1.e-12)
+        m3 = (x == 1.0)
+        m4 = (~m1)*(~m2)*(~m3)
+        
+        jota  = np.zeros(len(x))
+        atanh = np.arctanh(np.sqrt((1.0-x[m1])/(1.0+x[m1])))
+        jota[m1] = (1./(x[m1]**2-1.))*(1.-(2./np.sqrt(1.-x[m1]**2))*atanh) 
+        
+        atan = np.arctan(((x[m2]-1.0)/(1.0+x[m2]))**0.5)
+        jota[m2] = (1./(x[m2]**2-1.))*(1.-(2./np.sqrt(x[m2]**2 - 1.))*atan) 
+        
+        jota[m3] = 1./3.
+        
+        x1 = 1.-1.e-4
+        atanh1 = np.arctanh(np.sqrt((1.0-x1)/(1.0+x1)))
+        j1 = (1./(x1**2-1.))*(1.-(2./np.sqrt(1.-x1**2))*atanh1) 
+        
+        x2 = 1.+1.e-4
+        atan2 = np.arctan(((x2-1.0)/(1.0+x2))**0.5)
+        j2 = (1./(x2**2-1.))*(1.-(2./np.sqrt(x2**2 - 1.))*atan2) 
+        
+        jota[m4] = np.interp(x[m4],[x1,x2],[j1,j2])
+                    
+        rs_m = r200/c200
+        kapak = (2.*rs_m*deltac*self.roc_mpc)
+        # Units M_sun/pc2
+        return (kapak*jota)/(1.e6**2)
+        
 
     def delta_sigma(self, R:np.ndarray[float], M200:float, c200:float|None=None) -> np.ndarray[float]:
         '''
