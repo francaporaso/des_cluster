@@ -4,7 +4,7 @@ from scipy.special import erf
 import astropy.units as u
 from colossus.halo import concentration
 
-from fitting.constants import *
+from fitting.constants import pc, Msun, cosmo, SQPI 
 
 # ==================== 
 # Auxiliary functions
@@ -93,8 +93,11 @@ class NFW:
     def R_200(self, M200:float) -> float | list[float]:
         return ((M200*(3.0*Msun))/(800.0*np.pi*self.roc_mpc))**(1./3.)
 
-    def c_200(self, mass:float) -> float:
-        return concentration.concentration(M=mass, mdef='200c', z=self.redshift, model='diemer19')
+    def c_200(self, M200:float) -> float:
+        return concentration.concentration(M=M200, mdef='200c', z=self.redshift, model='diemer19')
+
+    def sigma(self, R, M200, c200):
+        pass
 
     def delta_sigma(self, R:np.ndarray[float], M200:float, c200:float|None=None) -> np.ndarray[float]:
         '''
@@ -155,85 +158,58 @@ class NFW:
         return kapak * jota
 
 
-class NFWMiss:
+class NFWMiss(NFW):
     def __init__(self, redshift, miss_dist = rayleigh_dist):
-        self.redshift = redshift
-        self.roc_mpc = cosmo.critical_density(redshift).to(u.kg/(u.Mpc)**3).value
+        super().__init__(redshift)
         self.miss_dist = miss_dist
 
-    def R_200(self, M200):
-        return ((M200*(3.0*Msun))/(800.0*np.pi*self.roc_mpc))**(1./3.)
+    def sigma_miss(self, R, M200, c200=None, s_off=None, tau=0.2):
 
-    def c_200(self, M200):
-        return concentration.concentration(M=M200, mdef='200c', z=self.redshift, model='diemer19')
-
-    def dsigma_cen(self, R, M200, c200):
-
-        '''
-        Projected density contrast of NFW density model.
-        M200 in solar masses
-        R in h^-1 Mpc
-        '''
-    
-        r200 = self.R_200(M200)
-        
-        if not c200:
+        if c200 is None:
             c200 = self.c_200(M200*cosmo.h)
-        
-        ####################################################
-        
-        deltac = (200./3.)*( (c200**3) / (np.log(1.+c200) - c200/(1+c200)) )
-        x = np.round((R*c200)/r200, 12)
-        m1 = (x < 1.0)
-        m2 = (x > 1.0) 
-        m3 = (x == 1.0)
-        
-        try: 
-            jota = np.zeros_like(x)
-            
-            atanh = np.arctanh( ( (1.0-x[m1])/(1.0+x[m1]) )**0.5 )
-            
-            jota[m1] = (4.0*atanh)/((x[m1]**2.0)*((1.0-x[m1]**2.0)**0.5)) \
-                + (2.0*np.log(x[m1]/2.0))/(x[m1]**2.0) - 1.0/(x[m1]**2.0-1.0) \
-                + (2.0*atanh)/((x[m1]**2.0-1.0)*((1.0-x[m1]**2.0)**0.5))    
-            
-            atan = np.arctan( ( (x[m2]-1.0)/(1.0+x[m2]) )**0.5 )
-            
-            jota[m2]=(4.0*atan)/((x[m2]**2.0)*((x[m2]**2.0-1.0)**0.5)) \
-                + (2.0*np.log(x[m2]/2.0))/(x[m2]**2.0) - 1.0/(x[m2]**2.0-1.0) \
-                + (2.0*atan)/((x[m2]**2.0-1.0)**1.5)
-            
-            jota[m3]=2.0*np.log(0.5)+5.0/3.0
-        
-        except:
-        
-            if m1:
-                atanh = np.arctanh( ( (1.0-x[m1])/(1.0+x[m1]) )**0.5 )
-        
-                jota = (4.0*atanh)/((x[m1]**2.0)*((1.0-x[m1]**2.0)**0.5)) \
-                    + (2.0*np.log(x[m1]/2.0))/(x[m1]**2.0) - 1.0/(x[m1]**2.0-1.0) \
-                    + (2.0*atanh)/((x[m1]**2.0-1.0)*((1.0-x[m1]**2.0)**0.5))   
-        
-            if m2:
-                atan = np.arctan( ( (x[m2]-1.0)/(1.0+x[m2]) )**0.5 )
-        
-                jota = (4.0*atan)/((x[m2]**2.0)*((x[m2]**2.0-1.0)**0.5)) \
-                    + (2.0*np.log(x[m2]/2.0))/(x[m2]**2.0) - 1.0/(x[m2]**2.0-1.0) \
-                    + (2.0*atan)/((x[m2]**2.0-1.0)**1.5)
-        
-            if m3:
-                jota = 2.0*np.log(0.5)+5.0/3.0
-            
-        rs_m=(r200*1.e6*pc)/c200
-        kapak=( (2.0*rs_m*deltac*self.roc_mpc)*(pc**2/Msun) )/( (pc*1.0e6)**3.0 )
-        return kapak*jota
 
-    def dsigma_miss(self, R, M200, c200, s_off, tau):
-        pass
+        if s_off is None:
+            s_off = tau*self.R_200(M200*cosmo.h)
+
+        def SNFW(r):
+            # return Sigma_NFW_2h(r,z,M200,c200,cosmo_params=params,terms='1h')
+            return super().sigma(r, M200, c200)/1.e12
+
+        def S_RRs(Rs,R):
+            # F_Eq13
+            #argumento = lambda x: monopole(np.sqrt(R**2+Rs**2-2.*Rs*R*np.cos(x)))
+            #integral  = integrate.quad(argumento, 0, 2.*np.pi, epsabs=1.e-01, epsrel=1.e-01)[0]
+            x = np.linspace(0.,2.*np.pi,500)
+            integral = simpson(SNFW(np.sqrt(R**2 + Rs**2 -2.0 * Rs * R * np.cos(x))), x, even='first')
+            return integral/(2.0 * np.pi)
+        
+        integral = np.zeros_like(R)
+        for i,r in enumerate(R):
+            argumento = lambda x: S_RRs(x, r) * self.miss_dist(x, s_off)
+            integral[i] = quad(argumento, 0, np.inf, epsabs=1.e-02, epsrel=1.e-02)[0]
+            
+        return integral
+
+    def dsigma_miss(self, R, M200, c200=None, s_off=None, tau=0.2):
+
+        if c200 is None:
+            c200 = self.c_200(M200*cosmo.h)
+
+        if s_off is None:
+            s_off = tau*self.R_200(M200*cosmo.h)
+
+        integral = np.zeros_like(R)
+        for i, r in enumerate(R):
+            argumento = lambda x: self.sigma_miss([x], M200, s_off, tau, c200)[0]*x
+            integral[i] = quad(argumento, 0, r, epsabs=1.e-02, epsrel=1.e-02)[0]
+
+        DS_off = (2./R**2)*integral - self.sigma_miss(R, M200, s_off, tau, c200)
+
+        return DS_off
 
     def delta_sigma(self, R, M200, c200, pcc, s_off, tau):
 
-        ds_cen = self.dsigma_cen(R, M200, c200)
+        ds_cen = super().delta_sigma(R, M200, c200)
         ds_miss = self.dsigma_miss(R, M200, c200, s_off, tau)
         #ds_2h = self.dsigma_2h(R, M200, c200, '2h')
 
