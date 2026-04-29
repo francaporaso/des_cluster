@@ -214,7 +214,7 @@ class NFWMiss(NFW):
             #argumento = lambda x: monopole(np.sqrt(R**2+Rs**2-2.*Rs*R*np.cos(x)))
             #integral  = integrate.quad(argumento, 0, 2.*np.pi, epsabs=1.e-01, epsrel=1.e-01)[0]
             x = np.linspace(0.,2.*np.pi,500)
-            integral = simpson(self.sigma(np.sqrt(R**2 + Rs**2 -2.0 * Rs * R * np.cos(x)), M200, c200), x, even='first')
+            integral = simpson(self.sigma(np.sqrt(R**2 + Rs**2 -2.0 * Rs * R * np.cos(x)), M200, c200), x)
             return integral/(2.0 * np.pi)
         
         integral = np.zeros_like(R)
