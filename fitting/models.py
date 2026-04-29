@@ -6,9 +6,18 @@ from colossus.halo import concentration
 
 from fitting.constants import *
 
+# ==================== 
+# Auxiliary functions
+# ==================== 
 
 def logistic(x, x0=1, k=10):
     return (1.0+np.exp(-2.0*k*(x-x0)))**(-1)
+
+def gamma_dist(Roff,s_off):
+    return (Roff/s_off**2)*np.exp(-1.*(Roff/s_off))
+
+def rayleigh_dist(Roff,s_off):
+    return (Roff/s_off**2)*np.exp(-0.5*(Roff/s_off)**2)
 
 # ==================== 
 # Base models: sigma, delta_sigma with integration
@@ -76,33 +85,165 @@ class BaseModelQuad:
 #  DENSITY MODELS FOR CLUSTERS
 # ============================= 
 
+class NFW_Eli:
+    def __init__(self, redshift):
+        self.redshift = redshift
+        self.roc_mpc = cosmo.critical_density(redshift).to(u.kg/(u.Mpc)**3).value
+
+    # def density(self):
+    #     pass
+
+    def R_200(self, M200:float) -> float | list[float]:
+        return ((M200*(3.0*Msun))/(800.0*np.pi*self.roc_mpc))**(1./3.)
+
+    def c_200(self, mass:float) -> float:
+        return concentration.concentration(M=mass, mdef='200c', z=self.redshift, model='diemer19')
+
+    def delta_sigma(self, R:np.ndarray[float], M200:float, c200:float|None=None) -> np.ndarray[float]:
+
+        '''
+        Projected density contrast of NFW density model.
+        M200 in solar masses
+        R in h^-1 Mpc
+        '''
+    
+        r200 = self.R_200(M200)
+        
+        if c200 is None:
+            c200 = self.c_200(M200*cosmo.h)
+                
+        deltac = (200.0/3.0) * (c200**3)/ (np.log(1.0 + c200) - c200 / (1.0 + c200)) 
+        x = np.round((R*c200)/r200, 12)
+        m1 = (x < 1.0)
+        m2 = (x > 1.0) 
+        m3 = (x == 1.0)
+        
+        try: 
+            jota = np.zeros_like(x)
+            
+            atanh = np.arctanh( ( (1.0-x[m1])/(1.0+x[m1]) )**0.5 )
+            
+            jota[m1] = (4.0*atanh)/((x[m1]**2.0)*((1.0-x[m1]**2.0)**0.5)) \
+                + (2.0*np.log(x[m1]/2.0))/(x[m1]**2.0) - 1.0/(x[m1]**2.0-1.0) \
+                + (2.0*atanh)/((x[m1]**2.0-1.0)*((1.0-x[m1]**2.0)**0.5))    
+            
+            atan = np.arctan( ( (x[m2]-1.0)/(1.0+x[m2]) )**0.5 )
+            
+            jota[m2]=(4.0*atan)/((x[m2]**2.0)*((x[m2]**2.0-1.0)**0.5)) \
+                + (2.0*np.log(x[m2]/2.0))/(x[m2]**2.0) - 1.0/(x[m2]**2.0-1.0) \
+                + (2.0*atan)/((x[m2]**2.0-1.0)**1.5)
+            
+            jota[m3]=2.0*np.log(0.5)+5.0/3.0
+        
+        except:
+        
+            if m1:
+                atanh = np.arctanh( ( (1.0-x[m1])/(1.0+x[m1]) )**0.5 )
+        
+                jota = (4.0*atanh)/((x[m1]**2.0)*((1.0-x[m1]**2.0)**0.5)) \
+                    + (2.0*np.log(x[m1]/2.0))/(x[m1]**2.0) - 1.0/(x[m1]**2.0-1.0) \
+                    + (2.0*atanh)/((x[m1]**2.0-1.0)*((1.0-x[m1]**2.0)**0.5))   
+        
+            if m2:
+                atan = np.arctan( ( (x[m2]-1.0)/(1.0+x[m2]) )**0.5 )
+        
+                jota = (4.0*atan)/((x[m2]**2.0)*((x[m2]**2.0-1.0)**0.5)) \
+                    + (2.0*np.log(x[m2]/2.0))/(x[m2]**2.0) - 1.0/(x[m2]**2.0-1.0) \
+                    + (2.0*atan)/((x[m2]**2.0-1.0)**1.5)
+        
+            if m3:
+                jota = 2.0*np.log(0.5)+5.0/3.0
+            
+        rs_m=(r200*1.e6*pc)/c200
+        kapak=( (2.0*rs_m*deltac*self.roc_mpc)*(pc**2/Msun) )/( (pc*1.0e6)**3.0 )
+        return kapak*jota
+
+
 class NFW:
     def __init__(self, redshift):
         self.redshift = redshift
         self.roc_mpc = cosmo.critical_density(redshift).to(u.kg/(u.Mpc)**3).value
 
-    def density(self):
-        pass
-
     def R_200(self, M200:float) -> float | list[float]:
-        '''    
-        Returns the R_200
-        ------------------------------------------------------------------
-        INPUT:
-        M200         (float or array of floats) M_200 mass in solar masses
-        roc_mpc      (float or array of floats) Critical density at the z 
-                    of the halo in units of kg/Mpc**3
-        ------------------------------------------------------------------
-        OUTPUT:
-        R_200         (float or array of floats) 
-        '''
-
         return ((M200*(3.0*Msun))/(800.0*np.pi*self.roc_mpc))**(1./3.)
 
-    def c_200(self, mass):
+    def c_200(self, mass:float) -> float:
         return concentration.concentration(M=mass, mdef='200c', z=self.redshift, model='diemer19')
 
-    def delta_sigma(self, R, M200, c200=None):
+    def delta_sigma(self, R:np.ndarray[float], M200:float, c200:float|None=None) -> np.ndarray[float]:
+
+        '''
+        Projected density contrast of NFW density model.
+        M200 in solar masses
+        R in h^-1 Mpc
+        '''
+    
+        r200 = self.R_200(M200)
+        
+        if c200 is None:
+            c200 = self.c_200(M200*cosmo.h)
+                
+        deltac = (200.0/3.0) * (c200**3)/ (np.log(1.0 + c200) - c200 / (1.0 + c200)) 
+
+        x = (R * c200) / r200
+        x_sq = x*x
+        
+        jota = np.zeros_like(x)
+
+        m1 = x<1.0
+        m2 = x>1.0
+        m3 = ~(m1|m2) #not (m1 or m2) => not(x<1 or x>1) => not(x!=1) => x==1.0
+
+        if np.any(m1):
+            xm = x[m1]
+            xm_sq = x_sq[m1]
+
+            sqrt_term = np.sqrt(1.0 - xm_sq)
+            atanh = np.arctanh(np.sqrt((1.0 - xm) / (1.0 + xm)))
+
+            jota[m1] = (
+                (4.0 * atanh) / (xm_sq * sqrt_term)
+                + (2.0 * np.log(xm / 2.0)) / xm_sq
+                - 1.0 / (xm_sq - 1.0)
+                + (2.0 * atanh) / ((xm_sq - 1.0) * sqrt_term)
+            )
+
+        if np.any(m2):
+            xp = x[m2]
+            xp_sq = x_sq[m2]
+
+            sqrt_term = np.sqrt(xp_sq - 1.0)
+            atan = np.arctan(np.sqrt((xp - 1.0) / (1.0 + xp)))
+
+            jota[m2] = (
+                (4.0 * atan) / (xp_sq * sqrt_term)
+                + (2.0 * np.log(xp / 2.0)) / xp_sq
+                - 1.0 / (xp_sq - 1.0)
+                + (2.0 * atan) / ((xp_sq - 1.0) ** 1.5)
+            )
+
+        if np.any(m3):
+            jota[m3] = 2.0 * np.log(0.5) + 5.0 / 3.0
+
+        rs_m = (r200*1.e6*pc)/c200
+        kapak = ((2.0 * rs_m * deltac * self.roc_mpc) * (pc**2 / Msun)) / ((pc * 1.0e6)**3)
+        
+        return kapak * jota
+
+
+class NFWMiss:
+    def __init__(self, redshift, miss_dist = rayleigh_dist):
+        self.redshift = redshift
+        self.roc_mpc = cosmo.critical_density(redshift).to(u.kg/(u.Mpc)**3).value
+        self.miss_dist = miss_dist
+
+    def R_200(self, M200):
+        return ((M200*(3.0*Msun))/(800.0*np.pi*self.roc_mpc))**(1./3.)
+
+    def c_200(self, M200):
+        return concentration.concentration(M=M200, mdef='200c', z=self.redshift, model='diemer19')
+
+    def dsigma_cen(self, R, M200, c200):
 
         '''
         Projected density contrast of NFW density model.
@@ -163,8 +304,21 @@ class NFW:
         kapak=( (2.0*rs_m*deltac*self.roc_mpc)*(pc**2/Msun) )/( (pc*1.0e6)**3.0 )
         return kapak*jota
 
+    def dsigma_miss(self, R, M200, c200, s_off, tau):
+        pass
+
+    def delta_sigma(self, R, M200, c200, pcc, s_off, tau):
+
+        ds_cen = self.dsigma_cen(R, M200, c200)
+        ds_miss = self.dsigma_miss(R, M200, c200, s_off, tau)
+        #ds_2h = self.dsigma_2h(R, M200, c200, '2h')
+
+        return pcc*ds_cen + (1.0-pcc)*ds_miss
+
+
 models_dict = {
     'NFW':NFW,
+    'NFWMiss':NFWMiss
 }
 default_limits = {
     'NFW':{'M200':(1e10, 1e16), 'c200':(1.0, 10.0)}
