@@ -202,7 +202,8 @@ class NFWMiss(NFW):
             c200 = self.c_200(M200)
 
         if s_off is None:
-            s_off = tau * self.R_200(M200)
+            s_off = 0.4
+            #s_off = tau * self.R_200(M200)
 
         # --- integration grids ---
         theta = np.linspace(0, 2*np.pi, Ntheta)
