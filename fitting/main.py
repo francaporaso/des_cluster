@@ -20,10 +20,11 @@ def run_emcee(
     
     data = read_dataprofile_fits(name=data_filename)
 
-    param_limits = {'M200':(1e10, 1e16)}
-    if len(params_fit)==2:
-        param_limits['c200']=(1.0, 10.0)
-    
+    # param_limits = {'M200':(1e10, 1e16)}
+    # if len(params_fit)==2:
+    #     param_limits['c200']=(1.0, 10.0)
+    param_limits = default_limits.get(model_name)
+
     L = Likelihood(
         data=data,
         model=models_dict.get(model_name)(data.redshift),
@@ -51,7 +52,7 @@ def run_emcee(
 if __name__ == '__main__':
     
     NCORES = 32
-    NIT = 5_000
+    NIT = 1_000
     NWALKERS = 64
 
     data_filename = 'results/lensing_desy3_test_lambda38-55_z019-027_binlog.fits'
@@ -66,9 +67,9 @@ if __name__ == '__main__':
         save_filename=chain_filename,
         model_name=model_name,
         observable=observable,
-        params_fit = ['M200'],
+        params_fit = ['M200', 'c200', 'pcc', 's_off'],
         cov_mode=cov_mode,
-        init_guess=np.array([1e14])
+        init_guess=np.array([1e14, 4, 0.8, 0.4])
     )
     # TODO: que guarde los valores de mejor ajuste!
 
