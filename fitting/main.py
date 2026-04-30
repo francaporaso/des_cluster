@@ -55,7 +55,7 @@ if __name__ == '__main__':
     
     NCORES = 32
     NIT = 1_000
-    NWALKERS = 64
+    NWALKERS = 32
 
     data_filename = 'results/lensing_desy3_test_lambda38-55_z019-027_binlog.fits'
     chain_filename = 'results/fitting_desy3_misscentering_lambda38-55_z019-027.hdf5'
