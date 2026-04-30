@@ -57,7 +57,7 @@ if __name__ == '__main__':
     NIT = 1_000
     NWALKERS = 64
 
-    data_filename = 'results/lensing_desy3_test_lambda38-55_z019-027_binlog.fits'
+    data_filename = 'results/lensing_desy3_test_lambda50-150_z020-040_binlog.fits'
     chain_filename = 'results/fitting_desy3_misscentering_lambda38-55_z019-027.hdf5'
     model_name = 'NFWMiss'
     observable = 'delta_sigma'
