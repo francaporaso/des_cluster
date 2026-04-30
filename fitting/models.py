@@ -11,13 +11,13 @@ from fitting.constants import pc, Msun, cosmo, SQPI
 # ====================
 
 def logistic(x, x0=1, k=10):
-    return (1.0+np.exp(-2.0*k*(x-x0)))**(-1)
+    return (1.0 + np.exp(-2.0 * k * (x - x0)))**(-1)
 
-def gamma_dist(Roff,s_off):
-    return (Roff/s_off**2)*np.exp(-1.*(Roff/s_off))
+def gamma_pdf(Rs, sigma):
+    return (Rs / sigma**2) * np.exp(-1.0 * (Rs / sigma))
 
-def rayleigh_dist(Roff,s_off):
-    return (Roff/s_off**2)*np.exp(-0.5*(Roff/s_off)**2)
+def rayleigh_pdf(Rs, sigma):
+    return (Rs / sigma**2) * np.exp(-0.5 * (Rs / sigma)**2)
 
 # ====================
 # Base models: sigma, delta_sigma with integration
@@ -40,7 +40,7 @@ class BaseModelFast:
         return result
 
     def delta_sigma(self, R, *params):
-
+        ''' integration from density contrast as eq B.16 of Cromer+2022 '''
         num_theta=200
         num_x=1000
 
@@ -88,29 +88,33 @@ class BaseModelQuad:
 class NFW:
     def __init__(self, redshift):
         self.redshift = redshift
-        self.roc_mpc = cosmo.critical_density(redshift).to(u.kg/(u.Mpc)**3).value
+        self.rho_c = cosmo.critical_density(redshift).to('M_sun/Mpc^3').value
 
     def R_200(self, M200:float) -> float | list[float]:
-        return ((M200*(3.0*Msun))/(800.0*np.pi*self.roc_mpc))**(1./3.)
+        ''' R_200 in Mpc/h '''
+        return (M200 * (3.0 / (4.0 * np.pi)) * 1.0 / (200.0 * self.rho_c))**(1/3)
 
     def c_200(self, M200:float) -> float:
+        ''' c_200 [adim]'''
         return concentration.concentration(M=M200, mdef='200c', z=self.redshift, model='diemer19')
 
     def sigma(self, R, M200, c200):
+        eps = 1e-6
 
         if c200 is None:
-            c200 = self.c_200(M200*cosmo.h)
+            c200 = self.c_200(M200)
 
         deltac = (200.0/3.0) * ((c200**3) / (np.log(1.0 + c200) - (c200 / (1 + c200))))
 
         r200 = self.R_200(M200)
         x = (R * c200) / r200
-        m1 = x <= (1.0-1.e-12)
-        m2 = x >= (1.0+1.e-12)
-        m3 = (x == 1.0)
-        m4 = (~m1)*(~m2)*(~m3)
+        
+        m1 = x < 1 - eps
+        m2 = x > 1 + eps
+        m3 = np.abs(x - 1) <= eps
 
         jota  = np.zeros_like(R)
+        
         atanh = np.arctanh(np.sqrt((1.0 - x[m1]) / (1.0 + x[m1])))
         jota[m1] = (1.0 / (x[m1]**2 -1.0)) * (1.0 - (2.0 / np.sqrt(1.0 - x[m1]**2)) * atanh)
 
@@ -119,20 +123,10 @@ class NFW:
 
         jota[m3] = 1/3
 
-        x1 = 1.0 - 1.e-4
-        atanh1 = np.arctanh(np.sqrt((1.0-x1)/(1.0+x1)))
-        j1 = (1.0 / (x1**2 - 1.0)) * (1.0 - (2.0 / np.sqrt(1.0 - x1**2)) * atanh1)
-
-        x2 = 1.0 + 1.e-4
-        atan2 = np.arctan(np.sqrt((x2 - 1.0) / (1.0 + x2)))
-        j2 = (1.0 / (x2**2 - 1.0)) * (1.0 - (2.0 / np.sqrt(x2**2 - 1.0)) * atan2)
-
-        jota[m4] = np.interp(x[m4],[x1,x2],[j1,j2])
-
-        rs_m = r200/c200
-        kapak = (2.*rs_m*deltac*self.roc_mpc)
+        rs_m = r200/c200 # Mpc/h
+        kapak = (2.0 * rs_m * deltac * self.rho_c) * (1e-12) #Msun/pc^2
         # Units M_sun/pc2
-        return (kapak*jota)/(1.e6**2)
+        return kapak * jota
 
     def delta_sigma(self, R:np.ndarray[float], M200:float, c200:float|None=None) -> np.ndarray[float]:
         '''
@@ -142,7 +136,7 @@ class NFW:
         '''
 
         if c200 is None:
-            c200 = self.c_200(M200*cosmo.h)
+            c200 = self.c_200(M200)
 
         deltac = (200.0/3.0) * (c200**3)/ (np.log(1.0 + c200) - c200 / (1.0 + c200))
 
@@ -186,64 +180,71 @@ class NFW:
         if np.any(m3):
             jota[m3] = 2.0 * np.log(0.5) + 5.0 / 3.0
 
-        rs_m = (r200*1.e6*pc)/c200
-        kapak = ((2.0 * rs_m * deltac * self.roc_mpc) * (pc**2 / Msun)) / ((pc * 1.0e6)**3)
+        rs_m = r200/c200
+        kapak = (2.0 * rs_m * deltac * self.rho_c) * (1e-12) # Msun/pc^2
 
         return kapak * jota
 
 
 class NFWMiss(NFW):
-    def __init__(self, redshift, miss_dist = rayleigh_dist):
+    def __init__(self, redshift, miss_pdf = rayleigh_pdf):
         super().__init__(redshift)
-        self.miss_dist = miss_dist
+        self.miss_pdf = miss_pdf
 
     def sigma_miss(self, R, M200, c200=None, s_off=None, tau=0.2):
 
+        Ntheta = 100
+        NRs = 100
+
         if c200 is None:
-            c200 = self.c_200(M200*cosmo.h)
+            c200 = self.c_200(M200)
 
         if s_off is None:
-            s_off = tau*self.R_200(M200*cosmo.h)
+            s_off = tau * self.R_200(M200)
 
-        def S_RRs(Rs,R):
-            # F_Eq13
-            #argumento = lambda x: monopole(np.sqrt(R**2+Rs**2-2.*Rs*R*np.cos(x)))
-            #integral  = integrate.quad(argumento, 0, 2.*np.pi, epsabs=1.e-01, epsrel=1.e-01)[0]
-            x = np.linspace(0.,2.*np.pi,500)
-            integral = simpson(self.sigma(np.sqrt(R**2 + Rs**2 -2.0 * Rs * R * np.cos(x)), M200, c200), x)
-            return integral/(2.0 * np.pi)
+        # --- integration grids ---
+        theta = np.linspace(0, 2*np.pi, Ntheta)
+        Rs = np.linspace(0, 5.0 * s_off, NRs)
 
-        integral = np.zeros_like(R)
-        for i,r in enumerate(R):
-            argumento = lambda x: S_RRs(x, r) * self.miss_dist(x, s_off)
-            integral[i] = quad(argumento, 0, np.inf, epsabs=1.e-02, epsrel=1.e-02)[0]
+        Rg = R[:, None, None]
+        Rsg = Rs[None, :, None]
+        thetag = theta[None, None, :]
+        Rtrue = np.sqrt(Rg**2 + Rsg**2 + 2.0 * Rg * Rsg * np.cos(thetag))
 
-        return integral
+        Sigma_vals = self.sigma(Rtrue, M200, c200)
+
+        #angular average
+        Sigma_theta = simpson(Sigma_vals, theta, axis=2) / (2.0 * np.pi)
+        
+        #miscentering pdf
+        P = self.miss_pdf(Rs, s_off)
+
+        Sigma_miss = simpson(Sigma_theta * P[None, :], Rs, axis=1)
+
+        return Sigma_miss
+
 
     def dsigma_miss(self, R, M200, c200=None, s_off=None, tau=0.2):
 
-        if c200 is None:
-            c200 = self.c_200(M200*cosmo.h)
+        num_x = 1000
+        x_grid = np.linspace(1e-5, R.max(), num_x)
 
-        if s_off is None:
-            s_off = tau*self.R_200(M200*cosmo.h)
+        integrand = x_grid * self.sigma_miss(x_grid, M200=M200, c200=c200, s_off=s_off, tau=tau)
+        cumulative = cumulative_trapezoid(integrand, x_grid, initial=0.0)
+        interp = np.interp(R, x_grid, cumulative)
 
-        integral = np.zeros_like(R)
-        for i, r in enumerate(R):
-            argumento = lambda x: self.sigma_miss([x], M200, s_off, tau, c200)[0]*x
-            integral[i] = quad(argumento, 0, r, epsabs=1.e-02, epsrel=1.e-02)[0]
+        Sigma_miss = self.sigma_miss(R, M200, c200, s_off, tau)
+        
+        Sigma_bar = (2.0/R**2) * interp
+        return Sigma_bar - Sigma_miss
 
-        DS_off = (2./R**2)*integral - self.sigma_miss(R, M200, s_off, tau, c200)
-
-        return DS_off
-
-    def delta_sigma(self, R, M200, c200, pcc, s_off, tau):
+    def delta_sigma(self, R, M200, c200=None, pcc=0.8, s_off=None, tau=0.2):
 
         ds_cen = super().delta_sigma(R, M200, c200)
-        ds_miss = self.dsigma_miss(R, M200, c200, s_off, tau)
-        #ds_2h = self.dsigma_2h(R, M200, c200, '2h')
 
-        return pcc*ds_cen + (1.0-pcc)*ds_miss
+        ds_miss = self.dsigma_miss(R, M200, c200, s_off, tau)
+
+        return pcc * ds_cen + (1.0 - pcc) * ds_miss
 
 
 models_dict = {
