@@ -180,8 +180,8 @@ def stacking():
 
     l = LENSES[ 
         (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & 
-        (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) &
-        (LENSES['pcen']>0.8)
+        (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX)
+        # (LENSES['pcen']>0.8)
     ]
 
     nlenses = len(l)

@@ -55,7 +55,7 @@ if __name__ == '__main__':
     
     NCORES = 32
     NIT = 1_000
-    NWALKERS = 32
+    NWALKERS = 64
 
     data_filename = 'results/lensing_desy3_test_lambda38-55_z019-027_binlog.fits'
     chain_filename = 'results/fitting_desy3_misscentering_lambda38-55_z019-027.hdf5'
@@ -69,9 +69,9 @@ if __name__ == '__main__':
         save_filename=chain_filename,
         model_name=model_name,
         observable=observable,
-        fix_params = ['s_off'],
+        fix_params = ['s_off', 'c200'],
         cov_mode=cov_mode,
-        init_guess=np.array([1e14, 4, 0.8])
+        init_guess=np.array([1e14, 0.8])
     )
     # TODO: que guarde los valores de mejor ajuste!
 

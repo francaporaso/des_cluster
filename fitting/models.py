@@ -241,7 +241,10 @@ class NFWMiss(NFW):
         Sigma_bar = (2.0/R**2) * interp
         return Sigma_bar - Sigma_miss
 
-    def delta_sigma(self, R, M200, c200=None, pcc=0.8, s_off=None, tau=0.2):
+    def delta_sigma(self, R, M200, c200=None, pcc=None, s_off=None, tau=0.2):
+
+        if pcc is None:
+            pcc = 0.75
 
         ds_cen = super().delta_sigma(R, M200, c200)
 
