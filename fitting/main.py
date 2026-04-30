@@ -13,7 +13,7 @@ def run_emcee(
         data_filename, save_filename, 
         model_name='NFW', 
         observable='delta_sigma', 
-        params_fit = ['M200', 'c200'],
+        fix_params = ['c200'],
         cov_mode='diag',
         init_guess=np.array([1e14, 4.0])
         ):
@@ -24,6 +24,8 @@ def run_emcee(
     # if len(params_fit)==2:
     #     param_limits['c200']=(1.0, 10.0)
     param_limits = default_limits.get(model_name)
+    for p in fix_params:
+        param_limits.pop(p)
 
     L = Likelihood(
         data=data,
@@ -67,9 +69,9 @@ if __name__ == '__main__':
         save_filename=chain_filename,
         model_name=model_name,
         observable=observable,
-        params_fit = ['M200', 'c200', 'pcc', 's_off'],
+        fix_params = ['s_off'],
         cov_mode=cov_mode,
-        init_guess=np.array([1e14, 4, 0.8, 0.4])
+        init_guess=np.array([1e14, 4, 0.8])
     )
     # TODO: que guarde los valores de mejor ajuste!
 
