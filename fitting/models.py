@@ -193,6 +193,8 @@ class NFWMiss(NFW):
 
     def sigma_miss(self, R, M200, c200=None, s_off=None, tau=0.2):
 
+        R = np.atleast_1d(R) # for compatibility with eli funcs
+
         Ntheta = 100
         NRs = 100
 
@@ -226,7 +228,7 @@ class NFWMiss(NFW):
 
     def dsigma_miss(self, R, M200, c200=None, s_off=None, tau=0.2):
 
-        num_x = 1000
+        num_x = 200
         x_grid = np.linspace(1e-5, R.max(), num_x)
 
         integrand = x_grid * self.sigma_miss(x_grid, M200=M200, c200=c200, s_off=s_off, tau=tau)
