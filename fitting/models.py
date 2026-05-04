@@ -3,6 +3,9 @@ from scipy.integrate import simpson, quad, cumulative_trapezoid
 from scipy.special import erf
 import astropy.units as u
 from colossus.halo import concentration
+from colossus.lss import bias
+from colossus.halo import profile_nfw
+from colossus.halo import profile_outer
 
 from fitting.constants import pc, Msun, cosmo, SQPI
 
@@ -86,9 +89,10 @@ class BaseModelQuad:
 # =============================
 
 class NFW:
-    def __init__(self, redshift):
+    def __init__(self, redshift:float, miss_pdf : function = rayleigh_pdf):
         self.redshift = redshift
-        self.rho_c = cosmo.critical_density(redshift).to('M_sun/Mpc^3').value
+        self.rho_c : float = cosmo.critical_density(redshift).to('M_sun/Mpc^3').value
+        self.miss_pdf = miss_pdf
 
     def R_200(self, M200:float) -> float | list[float]:
         ''' R_200 in Mpc/h '''
@@ -98,7 +102,7 @@ class NFW:
         ''' c_200 [adim]'''
         return concentration.concentration(M=M200, mdef='200c', z=self.redshift, model='diemer19')
 
-    def sigma(self, R, M200, c200):
+    def sigma_1h(self, R, M200, c200):
         eps = 1e-6
 
         if c200 is None:
@@ -128,7 +132,7 @@ class NFW:
         # Units M_sun/pc2
         return kapak * jota
 
-    def delta_sigma(self, R:np.ndarray[float], M200:float, c200:float|None=None) -> np.ndarray[float]:
+    def dsigma_1h(self, R:np.ndarray[float], M200:float, c200:float|None=None) -> np.ndarray[float]:
         '''
         Projected density contrast of NFW density model.
         M200 in solar masses
@@ -185,12 +189,6 @@ class NFW:
 
         return kapak * jota
 
-
-class NFWMiss(NFW):
-    def __init__(self, redshift, miss_pdf = rayleigh_pdf):
-        super().__init__(redshift)
-        self.miss_pdf = miss_pdf
-
     def sigma_miss(self, R, M200, c200=None, s_off=None, tau=0.2):
 
         R = np.atleast_1d(R) # for compatibility with eli funcs
@@ -214,7 +212,7 @@ class NFWMiss(NFW):
         thetag = theta[None, None, :]
         Rtrue = np.sqrt(Rg**2 + Rsg**2 + 2.0 * Rg * Rsg * np.cos(thetag))
 
-        Sigma_vals = self.sigma(Rtrue, M200, c200)
+        Sigma_vals = self.sigma_1h(Rtrue, M200, c200)
 
         #angular average
         Sigma_theta = simpson(Sigma_vals, theta, axis=2) / (2.0 * np.pi)
@@ -241,29 +239,39 @@ class NFWMiss(NFW):
         Sigma_bar = (2.0/R**2) * interp
         return Sigma_bar - Sigma_miss
 
+    def dsigma_2h(self, R, M200, c200):
+        '''
+        NFW contrast density from colossus
+        units Msun/pc2
+        '''
+        b = bias.haloBias(M200, model='tinker10', z=self.redshift, mdef='200c')
+        outer_term = profile_outer.OuterTermCorrelationFunction(z=self.redshift, bias=b)
+        pNFW = profile_nfw.NFWProfile(M=M200, mdef='200c', z=self.redshift, c=c200, outer_terms=[outer_term])    
+        
+        # Outer term integrated up to 50Mpc (Luo et al. 2017, Niemic et al 2017)
+        ds_out = pNFW.deltaSigmaOuter(R*1.e3, interpolate=False, interpolate_surface_density=False, accuracy=0.01, max_r_integrate=100e3)
+        return ds_out/(1.e3**2)
+
     def delta_sigma(self, R, M200, c200=None, pcc=None, s_off=None, tau=0.2):
 
         if pcc is None:
             pcc = 0.75
 
-        ds_cen = super().delta_sigma(R, M200, c200)
-
+        ds_cen = self.dsigma_1h(R, M200, c200)
         ds_miss = self.dsigma_miss(R, M200, c200, s_off, tau)
+        ds_2h = self.dsigma_2h(R, M200, c200)
 
-        return pcc * ds_cen + (1.0 - pcc) * ds_miss
+        return pcc * ds_cen + (1.0 - pcc) * ds_miss + ds_2h 
 
 
 models_dict = {
     'NFW':NFW,
-    'NFWMiss':NFWMiss
 }
 default_limits = {
-    'NFW':{'M200':(1e10, 1e16), 'c200':(1.0, 10.0)},
-    'NFWMiss':{'M200':(1e10, 1e16), 'c200':(1.0, 10.0), 'pcc':(0.1,1.0), 's_off':(0.01,1.0)}
+    'NFW':{'M200':(1e10, 1e16), 'c200':(1.0, 10.0), 'pcc':(0.1,1.0), 's_off':(0.01,1.0)}
 }
 default_guess = {
-    'NFW':{'M200':1e14, 'c200':3.0},
-    'NFWMiss':{'M200':1e14, 'c200':4.0, 'pcc':0.8, 's_off':0.4},
+    'NFW':{'M200':1e14, 'c200':4.0, 'pcc':0.8, 's_off':0.4},
 }
 
 # ==========================
