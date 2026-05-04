@@ -89,8 +89,8 @@ class BaseModelQuad:
 # =============================
 
 class NFW:
-    def __init__(self, redshift:float, miss_pdf : function = rayleigh_pdf):
-        self.redshift = redshift
+    def __init__(self, redshift, miss_pdf = rayleigh_pdf):
+        self.redshift : float = redshift
         self.rho_c : float = cosmo.critical_density(redshift).to('M_sun/Mpc^3').value
         self.miss_pdf = miss_pdf
 
@@ -244,6 +244,10 @@ class NFW:
         NFW contrast density from colossus
         units Msun/pc2
         '''
+
+        if c200 is None:
+            c200 = self.c_200(M200)
+
         b = bias.haloBias(M200, model='tinker10', z=self.redshift, mdef='200c')
         outer_term = profile_outer.OuterTermCorrelationFunction(z=self.redshift, bias=b)
         pNFW = profile_nfw.NFWProfile(M=M200, mdef='200c', z=self.redshift, c=c200, outer_terms=[outer_term])    
