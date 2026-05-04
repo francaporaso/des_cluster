@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from multiprocessing import Pool
 import emcee
 
@@ -37,7 +38,7 @@ def run_emcee(
 
     rng = np.random.default_rng(0)
     init_pos = np.array([
-        rng.uniform(ig*(1-0.4), ig*(1+0.4), NWALKERS) for ig in init_guess
+        rng.uniform(ig*(1-0.2), ig*(1+0.2), NWALKERS) for ig in init_guess
         #rng.uniform(init_guess[1]*(1-0.4), init_guess[1]*(1+0.4), NWALKERS),
     ]).T
     
@@ -53,23 +54,41 @@ def run_emcee(
 
 if __name__ == '__main__':
     
-    NCORES = 32
-    NIT = 1_000
-    NWALKERS = 64
+    parser = ArgumentParser()
+    parser.add_argument('--dataname', type=str, action='store', required=True)
+    parser.add_argument('--savename', type=str, action='store', required=True)
+    parser.add_argument('-c','--NCORES', type=int, default=32, action='store')
+    parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--NIT', type=int, default=1_000, action='store')
+    parser.add_argument('--NWALKERS', type=int, default=64, action='store')
+    parser.add_argument('--model', type=str, default='NFW', action='store')
+    parser.add_argument('--cov', action='store_true')
+    #parser.add_argument('--config', type=str, default='config.toml', action='store')
+    #parser.add_argument('--use08', action='store_true')
+    #parser.add_argument('--addnoise', action='store_true')
+    #parser.add_argument('--nback', type=float, default=26.9, action='store')
+    args = parser.parse_args()
 
-    data_filename = 'results/lensing_desy3_test_lambda50-150_z020-040_binlog.fits'
-    chain_filename = 'results/fitting_desy3_misscentering_lambda50-150_z020-040.hdf5'
-    model_name = 'NFWMiss'
+    folder = 'results/'
+
+    data_filename = folder + args.dataname #'lensing_desy3_test_lambda50-150_z020-040_binlog.fits'
+    chain_filename = folder + args.savename #'fitting_desy3_misscentering_lambda50-150_z020-040.hdf5'
+    model_name = args.model #'NFWMiss'
     observable = 'delta_sigma'
-    cov_mode = 'full'
+    if args.cov:
+        cov_mode = 'full'
+    else:
+        cov_mode = 'diag'
 
     sampler = run_emcee(
-        NCORES=NCORES,NIT=NIT,NWALKERS=NWALKERS,
+        NCORES=args.NCORES,
+        NIT=args.NIT,
+        NWALKERS=args.NWALKERS,
         data_filename=data_filename,
         save_filename=chain_filename,
         model_name=model_name,
         observable=observable,
-        fix_params = ['s_off', 'c200'],
+        fix_params=['s_off'],
         cov_mode=cov_mode,
         init_guess=np.array([1e14, 0.8])
     )
@@ -78,5 +97,5 @@ if __name__ == '__main__':
     plot_chains(sampler.get_chain())
     plt.show()
 
-    plot_corner(sampler, discard=int(NIT*0.35));
+    plot_corner(sampler, discard=int(args.NIT*0.15));
     plt.show()
