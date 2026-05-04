@@ -63,6 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('--NWALKERS', type=int, default=64, action='store')
     parser.add_argument('--model', type=str, default='NFW', action='store')
     parser.add_argument('--cov', action='store_true')
+    parser.add_argument('--fix', nargs='*', type=str)
     #parser.add_argument('--config', type=str, default='config.toml', action='store')
     #parser.add_argument('--use08', action='store_true')
     #parser.add_argument('--addnoise', action='store_true')
@@ -80,6 +81,10 @@ if __name__ == '__main__':
     else:
         cov_mode = 'diag'
 
+    init_guess = default_guess.get(model_name)
+    for p in args.fix:
+        init_guess.pop(p)
+
     sampler = run_emcee(
         NCORES=args.NCORES,
         NIT=args.NIT,
@@ -88,9 +93,9 @@ if __name__ == '__main__':
         save_filename=chain_filename,
         model_name=model_name,
         observable=observable,
-        fix_params=['s_off'],
+        fix_params=args.fix,
         cov_mode=cov_mode,
-        init_guess=np.array([1e14, 0.8])
+        init_guess=init_guess
     )
     # TODO: que guarde los valores de mejor ajuste!
 
