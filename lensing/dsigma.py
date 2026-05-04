@@ -48,7 +48,7 @@ ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
 #BINNING = 'log'
 #PLOT = False
 #OVERWRITE = True
-sample=config['PROFILE']['savename']
+sample=config['PROFILE']['SAVENAME']
 lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
 sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
 
