@@ -21,9 +21,6 @@ def run_emcee(
     
     data = read_dataprofile_fits(name=data_filename)
 
-    # param_limits = {'M200':(1e10, 1e16)}
-    # if len(params_fit)==2:
-    #     param_limits['c200']=(1.0, 10.0)
     param_limits = default_limits.get(model_name)
     for p in fix_params:
         param_limits.pop(p)
@@ -39,8 +36,7 @@ def run_emcee(
     rng = np.random.default_rng(0)
     init_pos = np.array([
         rng.uniform(ig*(1-0.2), ig*(1+0.2), NWALKERS) for ig in init_guess.values()
-        #rng.uniform(init_guess[1]*(1-0.4), init_guess[1]*(1+0.4), NWALKERS),
-    ]).T
+    ]).T #ordering of dict is asserted in python >3.7
     
     group_name = f'emcee/{model_name}/{cov_mode}'
     backend = emcee.backends.HDFBackend(save_filename, name=group_name)
