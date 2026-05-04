@@ -82,8 +82,9 @@ if __name__ == '__main__':
         cov_mode = 'diag'
 
     init_guess = default_guess.get(model_name)
-    for p in args.fix:
-        init_guess.pop(p)
+    if args.fix is not None:
+        for p in args.fix:
+            init_guess.pop(p)
 
     sampler = run_emcee(
         NCORES=args.NCORES,
