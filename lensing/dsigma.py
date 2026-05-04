@@ -1,5 +1,6 @@
+#from argparse import ArgumentParser
 import numpy as np
-import h5py
+#import h5py
 from astropy.cosmology import FlatLambdaCDM
 #from astropy.constants import c, G, pc, M_sun
 from astropy.table import Table
@@ -47,7 +48,7 @@ ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
 #BINNING = 'log'
 #PLOT = False
 #OVERWRITE = True
-sample='test'
+sample=config['PROFILE']['savename']
 lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
 sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
 
@@ -180,8 +181,8 @@ def stacking():
 
     l = LENSES[ 
         (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & 
-        (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX)
-        # (LENSES['pcen']>0.8)
+        (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) &
+        (LENSES['pcen']>0.8)
     ]
 
     nlenses = len(l)
