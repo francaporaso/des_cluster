@@ -63,7 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('--NWALKERS', type=int, default=64, action='store')
     parser.add_argument('--model', type=str, default='NFW', action='store')
     parser.add_argument('--cov', action='store_true')
-    parser.add_argument('--fix', nargs='*', type=str)
+    parser.add_argument('--fix', nargs='*')
     #parser.add_argument('--config', type=str, default='config.toml', action='store')
     #parser.add_argument('--use08', action='store_true')
     #parser.add_argument('--addnoise', action='store_true')
