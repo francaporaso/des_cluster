@@ -38,7 +38,7 @@ def run_emcee(
 
     rng = np.random.default_rng(0)
     init_pos = np.array([
-        rng.uniform(ig*(1-0.2), ig*(1+0.2), NWALKERS) for ig in init_guess
+        rng.uniform(ig*(1-0.2), ig*(1+0.2), NWALKERS) for ig in init_guess.values()
         #rng.uniform(init_guess[1]*(1-0.4), init_guess[1]*(1+0.4), NWALKERS),
     ]).T
     
