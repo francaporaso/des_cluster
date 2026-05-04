@@ -256,13 +256,16 @@ class NFW:
         ds_out = pNFW.deltaSigmaOuter(R*1.e3, interpolate=False, interpolate_surface_density=False, accuracy=0.01, max_r_integrate=100e3)
         return ds_out/(1.e3**2)
 
-    def delta_sigma(self, R, M200, c200=None, pcc=None, s_off=None, tau=0.2):
+    def delta_sigma(self, R, M200, c200=None, pcc=None):
+
+        s_off=0.4
+        tau=0.2
 
         if pcc is None:
             pcc = 0.75
 
-        ds_cen = self.dsigma_1h(R, M200, c200)
-        ds_miss = self.dsigma_miss(R, M200, c200, s_off, tau)
+        ds_cen = self.dsigma_1h(R, M200=M200, c200=c200)
+        ds_miss = self.dsigma_miss(R, M200=M200, c200=c200, s_off=s_off, tau=tau)
         #ds_2h = self.dsigma_2h(R, M200, c200)
 
         return pcc * ds_cen + (1.0 - pcc) * ds_miss #+ ds_2h 
