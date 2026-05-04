@@ -85,6 +85,8 @@ if __name__ == '__main__':
     if args.fix is not None:
         for p in args.fix:
             init_guess.pop(p)
+    else:
+        args.fix = []
 
     sampler = run_emcee(
         NCORES=args.NCORES,
