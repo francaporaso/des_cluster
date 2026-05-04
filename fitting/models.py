@@ -263,9 +263,9 @@ class NFW:
 
         ds_cen = self.dsigma_1h(R, M200, c200)
         ds_miss = self.dsigma_miss(R, M200, c200, s_off, tau)
-        ds_2h = self.dsigma_2h(R, M200, c200)
+        #ds_2h = self.dsigma_2h(R, M200, c200)
 
-        return pcc * ds_cen + (1.0 - pcc) * ds_miss + ds_2h 
+        return pcc * ds_cen + (1.0 - pcc) * ds_miss #+ ds_2h 
 
 
 models_dict = {
