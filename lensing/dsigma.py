@@ -48,7 +48,7 @@ ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
 #BINNING = 'log'
 #PLOT = False
 #OVERWRITE = True
-sample=config['PROFILE']['savename']
+sample=config['PROFILE']['SAVENAME']
 lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
 sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
 
@@ -168,9 +168,9 @@ def partial_profile(inp):
 
             dsigma_t_num[n_i] += w_b[b]**2 * np.sum(et[m_i & zbin])
             dsigma_x_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin])
-            
+
             response_sum[n_i] += w_b[b]**3 * np.sum(res[m_i & zbin])
-            
+
             weight_sum[n_i] += w_b[b] * np.sum(res[m_i & zbin])
             sq_weight_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin) if w_b[b] != 0.0 else 0.0
@@ -179,8 +179,8 @@ def partial_profile(inp):
 
 def stacking():
 
-    l = LENSES[ 
-        (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) & 
+    l = LENSES[
+        (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) &
         (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) &
         (LENSES['pcen']>0.8)
     ]
@@ -250,7 +250,7 @@ def stacking():
     #cte_range = np.abs(np.diff(den_n)/(h*den_n[1:])) < 0.05
     #den_cte = np.mean(den_n[1:][cte_range])
     f_cl = 1.0 - den_n[-1]/den_n
-    
+
     # profiles
     dsigma_t = (1/(1-f_cl))*dsigma_t_num/response_sum
     dsigma_x = (1/(1-f_cl))*dsigma_x_num/response_sum
