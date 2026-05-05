@@ -35,7 +35,7 @@ def run_emcee(
 
     rng = np.random.default_rng(0)
     init_pos = np.zeros((NWALKERS, len(init_guess.keys())), dtype=object)
-    for i, ig in enumerae(init_guess.values()):
+    for i, ig in enumerate(init_guess.values()):
         if ig is not None:
             init_pos[:,i] = rng.uniform(ig*(1.0-0.2), ig*(1.0+0.2), NWALKERS)
         else:
