@@ -102,11 +102,11 @@ class NFW:
         ''' c_200 [adim]'''
         return concentration.concentration(M=M200, mdef='200c', z=self.redshift, model='diemer19')
 
-    def sigma_1h(self, R, M200):
+    def sigma_1h(self, R, M200, c200):
         eps = 1e-6
 
         # if c200 is None:
-        c200 = self.c_200(M200)
+            # c200 = self.c_200(M200)
 
         deltac = (200.0/3.0) * ((c200**3) / (np.log(1.0 + c200) - (c200 / (1 + c200))))
 
@@ -132,7 +132,7 @@ class NFW:
         # Units M_sun/pc2
         return kapak * jota
 
-    def dsigma_1h(self, R:np.ndarray[float], M200:float) -> np.ndarray[float]:
+    def dsigma_1h(self, R:np.ndarray[float], M200:float, c200) -> np.ndarray[float]:
         '''
         Projected density contrast of NFW density model.
         M200 in solar masses
@@ -140,7 +140,7 @@ class NFW:
         '''
 
         # if c200 is None:
-        c200 = self.c_200(M200)
+            # c200 = self.c_200(M200)
 
         deltac = (200.0/3.0) * (c200**3)/ (np.log(1.0 + c200) - c200 / (1.0 + c200))
 
@@ -189,7 +189,7 @@ class NFW:
 
         return kapak * jota
 
-    def sigma_miss(self, R, M200):
+    def sigma_miss(self, R, M200, c200):
 
         R = np.atleast_1d(R) # for compatibility with eli funcs
 
@@ -197,7 +197,7 @@ class NFW:
         NRs = 100
 
         # if c200 is None:
-        c200 = self.c_200(M200)
+        # c200 = self.c_200(M200)
 
         # if s_off is None:
         s_off = 0.4
@@ -212,7 +212,7 @@ class NFW:
         thetag = theta[None, None, :]
         Rtrue = np.sqrt(Rg**2 + Rsg**2 + 2.0 * Rg * Rsg * np.cos(thetag))
 
-        Sigma_vals = self.sigma_1h(Rtrue, M200)
+        Sigma_vals = self.sigma_1h(Rtrue, M200=M200, c200=c200)
 
         #angular average
         Sigma_theta = simpson(Sigma_vals, theta, axis=2) / (2.0 * np.pi)
@@ -225,28 +225,28 @@ class NFW:
         return Sigma_miss
 
 
-    def dsigma_miss(self, R, M200):
+    def dsigma_miss(self, R, M200, c200):
 
         num_x = 200
         x_grid = np.linspace(1e-5, R.max(), num_x)
 
-        integrand = x_grid * self.sigma_miss(x_grid, M200=M200)
+        integrand = x_grid * self.sigma_miss(x_grid, M200=M200, c200=c200)
         cumulative = cumulative_trapezoid(integrand, x_grid, initial=0.0)
         interp = np.interp(R, x_grid, cumulative)
 
-        Sigma_miss = self.sigma_miss(R, M200)
+        Sigma_miss = self.sigma_miss(R, M200, c200=c200)
         
         Sigma_bar = (2.0/R**2) * interp
         return Sigma_bar - Sigma_miss
 
-    def dsigma_2h(self, R, M200):
+    def dsigma_2h(self, R, M200, c200):
         '''
         NFW contrast density from colossus
         units Msun/pc2
         '''
 
         # if c200 is None:
-        c200 = self.c_200(M200)
+            # c200 = self.c_200(M200)
 
         b = bias.haloBias(M200, model='tinker10', z=self.redshift, mdef='200c')
         outer_term = profile_outer.OuterTermCorrelationFunction(z=self.redshift, bias=b)
@@ -258,8 +258,10 @@ class NFW:
 
     def delta_sigma(self, R, M200, pcc):
 
-        ds_cen = self.dsigma_1h(R, M200=M200)
-        ds_miss = self.dsigma_miss(R, M200=M200)
+        c200 = self.c_200(M200)
+
+        ds_cen = self.dsigma_1h(R, M200=M200, c200=c200)
+        ds_miss = self.dsigma_miss(R, M200=M200, c200=c200)
         #ds_2h = self.dsigma_2h(R, M200, c200)
 
         return pcc * ds_cen + (1.0 - pcc) * ds_miss #+ ds_2h 
