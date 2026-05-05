@@ -16,14 +16,14 @@ def run_emcee(
         observable='delta_sigma',
         fix_params = ['c200'],
         cov_mode='diag',
-        init_guess={}
         ):
 
     data = read_dataprofile_fits(name=data_filename)
 
     param_limits = default_limits.get(model_name)
-    #for p in fix_params:
-    #    param_limits.pop(p)
+    init_guess = default_guess.get(model_name)
+    for p in fix_params:
+        init_guess[p] = np.nan
 
     L = Likelihood(
         data=data,
@@ -84,11 +84,7 @@ if __name__ == '__main__':
     else:
         cov_mode = 'diag'
 
-    init_guess = default_guess.get(model_name)
-    if args.fix is not None:
-        for p in args.fix:
-            init_guess.pop(p)
-    else:
+    if args.fix is None:
         args.fix = []
 
     sampler = run_emcee(
@@ -101,7 +97,6 @@ if __name__ == '__main__':
         observable=observable,
         fix_params=args.fix,
         cov_mode=cov_mode,
-        init_guess=init_guess
     )
     # TODO: que guarde los valores de mejor ajuste!
 
