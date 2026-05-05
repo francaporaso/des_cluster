@@ -22,6 +22,8 @@ def run_emcee(
 
     param_limits = default_limits.get(model_name)
     init_guess = default_guess.get(model_name)
+    for p in fix_params:
+        init_guess[p] = None
 
     L = Likelihood(
         data=data,
@@ -32,9 +34,15 @@ def run_emcee(
     )
 
     rng = np.random.default_rng(0)
-    init_pos = np.array([
-        rng.uniform(ig*(1-0.2), ig*(1+0.2), NWALKERS) for ig in init_guess.values()
-    ]).T #ordering of dict is asserted in python >3.7
+    init_pos = np.zeros((NWALKERS, len(init_guess.keys())), dtype=object)
+    for i, ig in enumerae(init_guess.values()):
+        if ig is not None:
+            init_pos[:,i] = rng.uniform(ig*(1.0-0.2), ig*(1.0+0.2), NWALKERS)
+        else:
+            init_pos[:,i] = np.full(NWALKERS, None)
+    #init_pos = np.array([
+    #    rng.uniform(ig*(1-0.2), ig*(1+0.2), NWALKERS) for ig in init_guess.values()
+    #]).T #ordering of dict is asserted in python >3.7
 
     group_name = f'emcee/{model_name}/{cov_mode}'
     backend = emcee.backends.HDFBackend(save_filename, name=group_name)
