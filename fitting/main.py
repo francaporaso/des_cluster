@@ -10,34 +10,41 @@ from fitting.utilfuncs import *
 from fitting.plotting import *
 
 def run_emcee(
-        NCORES, NIT, NWALKERS, 
-        data_filename, save_filename, 
-        model_name='NFW', 
-        observable='delta_sigma', 
+        NCORES, NIT, NWALKERS,
+        data_filename, save_filename,
+        model_name='NFW',
+        observable='delta_sigma',
         fix_params = ['c200'],
         cov_mode='diag',
-        init_guess=np.array([1e14, 4.0])
+        init_guess={}
         ):
-    
+
     data = read_dataprofile_fits(name=data_filename)
 
     param_limits = default_limits.get(model_name)
-    for p in fix_params:
-        param_limits.pop(p)
+    #for p in fix_params:
+    #    param_limits.pop(p)
 
     L = Likelihood(
         data=data,
         model=models_dict.get(model_name)(data.redshift),
         param_limits=param_limits,
         observable=observable,
-        cov_mode=cov_mode 
+        cov_mode=cov_mode
     )
 
     rng = np.random.default_rng(0)
-    init_pos = np.array([
-        rng.uniform(ig*(1-0.2), ig*(1+0.2), NWALKERS) for ig in init_guess.values()
-    ]).T #ordering of dict is asserted in python >3.7
-    
+    init_pos = np.zeros((NWALKERS, len(init_guess.values())))
+    for i, ig in enumerate(init_guess.values()):
+        if np.isnan(ig):
+            init_pos[:,i] = np.full(NWALKERS, np.nan)
+        else:
+            init_pos[:,i] = rng.uniform(ig*(1.0-0.2), ig*(1.0+0.2), NWALKERS)
+
+    #init_pos = np.array([
+    #    rng.uniform(ig*(1-0.2), ig*(1+0.2), NWALKERS) for ig in init_guess.values()
+    #]).T #ordering of dict is asserted in python >3.7
+
     group_name = f'emcee/{model_name}/{cov_mode}'
     backend = emcee.backends.HDFBackend(save_filename, name=group_name)
     with Pool(processes=NCORES) as pool:
@@ -49,7 +56,7 @@ def run_emcee(
     return sampler
 
 if __name__ == '__main__':
-    
+
     parser = ArgumentParser()
     parser.add_argument('--dataname', type=str, action='store', required=True)
     parser.add_argument('--savename', type=str, action='store', required=True)
