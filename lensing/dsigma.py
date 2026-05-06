@@ -171,7 +171,8 @@ def partial_profile(inp):
             n_bin[n_i] += np.count_nonzero(m_i & zbin) if w_b[b] != 0.0 else 0.0
 
 
-    assert ~np.any(np.isnan(response_sum)), 'is response_sum (in partial_profile)'
+    assert ~np.any(np.isnan(weight_sum)), 'is weight_sum (in partial_profile)'
+    assert ~np.any(np.isnan(sq_weight_sum)), 'is sq_weight_sum (in partial_profile)'
 
     return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
 
