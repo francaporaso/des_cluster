@@ -128,6 +128,7 @@ def partial_profile(inp):
 
     # get masked data
     mask, w_b = get_masked_idx_fast(psi, ra0, dec0, z0, w_b)
+    assert mask.sum()!=0
     catdata = SOURCE[mask]
 
     # calculate transformation to polar coords
