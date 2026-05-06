@@ -177,6 +177,10 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     l = read_redmapper(lensname, zmin, zmax, lmin, lmax, pcen) # redmapper
 
     nlenses = len(l)
+    print(f'>> ZMIN = {zmin}')
+    print(f'>> ZMAX = {zmax}')
+    print(f'>> LMIN = {lmin}')
+    print(f'>> LMAX = {lmax}')
     print(f'>> NLENSES = {nlenses}')
     localNJK = NJK
     if localNJK < int(NBINS**(3/2)):
