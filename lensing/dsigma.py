@@ -1,17 +1,15 @@
 #from argparse import ArgumentParser
 import numpy as np
-#import h5py
 from astropy.cosmology import FlatLambdaCDM
-#from astropy.constants import c, G, pc, M_sun
 from astropy.table import Table
 from astropy.io import fits
 import healpy as hp
-#from scipy.integrate import simpson
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 from time import time, asctime
 from tqdm import tqdm
 import toml
+from itertools import product
 
 from lensing.funcs import eq2p2, cov_matrix, get_jackknife_kmeans
 #from io import *
