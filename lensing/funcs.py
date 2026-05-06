@@ -13,17 +13,17 @@ from kmeans_radec import kmeans_sample
 # Msun = M_sun.value # Solar mass (kg)
 
 def cov_matrix(array):
-        
+
     K = len(array)
     Kmean = np.average(array,axis=0)
     bins = array.shape[1]
-    
+
     COV = np.zeros((bins,bins))
-    
+
     for k in range(K):
         dif = (array[k]- Kmean)
-        COV += np.outer(dif,dif)        
-    
+        COV += np.outer(dif,dif)
+
     COV *= (K-1)/K
     return COV
 
@@ -51,18 +51,19 @@ def eq2p2(ra_gal, dec_gal, RA0,DEC0):
 
 def get_jackknife_kmeans(ra_cl, dec_cl, nlenses, NJK):
 
-    K = np.zeros((NJK+1, nlenses), dtype=bool)
-    K[0] = True
+    #K = np.zeros((NJK+1, nlenses), dtype=bool)
+    #K[0] = True
 
     L = np.column_stack([ra_cl, dec_cl])
 
     km = kmeans_sample(L, ncen=NJK, verbose=0)
     labels = km.find_nearest(L)
 
-    for j in range(1, NJK+1):
-        K[j] = ~(labels==j-1)
+    #for j in range(1, NJK+1):
+    #    K[j] = ~(labels==j-1)
 
-    return K, labels
+    # return K, labels
+    return labels
 
 ## TODO
 ## agregar de nuevo option for octant
@@ -77,12 +78,12 @@ def lenscat_load(name,
     ## 0:Rv, 1:ra, 2:dec, 3:z, 4:xv, 5:yv, 6:zv, 7:rho1, 8:rho2, 9:logp, 10:diff CdM y CdV, 11:flag
     ## CdM: centro de masa
     ## CdV: centro del void
-    try: 
+    try:
         L = np.loadtxt("/home/fcaporaso/cats/L768/"+name, dtype='f4').T
     except:
         L = np.loadtxt(name, dtype='f4').T
-    
-    if octant: 
+
+    if octant:
         print(' Using octant '.center(40,'#'), flush=True)
         # selecciono los void en un octante
         eps = 6.0 ## sale de tomar el angulo substendido por el void más grande al redshift más bajo
@@ -101,10 +102,10 @@ def lenscat_load(name,
     ddec   = ((np.max(cdec)+1.e-5) - decmin)/sqrt_Nk
 
     c = 1
-    for a in range(sqrt_Nk): 
-        for d in range(sqrt_Nk): 
-            mra  = (ra  >= ramin + a*dra)&(ra < ramin + (a+1)*dra) 
-            mdec = (cdec >= decmin + d*ddec)&(cdec < decmin + (d+1)*ddec) 
+    for a in range(sqrt_Nk):
+        for d in range(sqrt_Nk):
+            mra  = (ra  >= ramin + a*dra)&(ra < ramin + (a+1)*dra)
+            mdec = (cdec >= decmin + d*ddec)&(cdec < decmin + (d+1)*ddec)
             K[c] = ~(mra&mdec)
             c += 1
 
