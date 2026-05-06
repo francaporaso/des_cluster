@@ -179,7 +179,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     nlenses = len(l)
     print(f'{nlenses =}')
     localNJK = NJK
-    if localNJK > int(NBINS**(3/2)):
+    if localNJK < int(NBINS**(3/2)):
         localNJK = int(NBINS**(3/2))
     print(f'>> Using NJK ={localNJK}')
 
