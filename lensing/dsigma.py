@@ -23,7 +23,7 @@ NSIDE = 128
 ZMED = np.array([0.285, 0.476, 0.743, 0.942]) # median redshift of source distribution
 REDSHIFT = 'redshift' # name of the redshift col in source table
 SOURCE = None
-LENSES = None
+#LENSES = None
 PIX_TO_IDX : dict = {}
 binspace = None
 
@@ -35,32 +35,26 @@ PLOT = config['RUN']['PLOT']
 OVERWRITE = config['RUN']['OVERWRITE']
 RIN, ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
 NBINS = config['PROFILE']['NBINS']
-NJK = config['PROFILE']['NJK'] # kmeans_radec allows up to a tenth of the # of lenses
+NJK = config['PROFILE']['NJK']
 BINNING = config['PROFILE']['BINNING']
 LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
 ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
-#NCORES = 16
-#NBINS = 15
-#RIN, ROUT = 0.1, 5.0 #Mpc/h
-#LMIN, LMAX = 38.0, 55.0
-#ZMIN, ZMAX = 0.19, 0.27
-#NJK = 40 # kmeans_radec allows up to a tenth of the # of lenses
-#BINNING = 'log'
-#PLOT = False
-#OVERWRITE = True
 sample=config['PROFILE']['SAVENAME']
 lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
 sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
 
-def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits'):
-    return Table.read(filename, format='fits', memmap=True)
+def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
+                   ZMIN=0.2, ZMAX=0.3, LMIN=10, LMAX=50, PCEN=0.5):
+    l = Table.read(filename, format='fits', memmap=True)
+    mask = (l['redshift'] > ZMIN & l['redshift'] <= ZMAX)&(l['lambda'] > LMIN & l['lambda'] <= LMAX) & (LENSES['pcen']>PCEN)
+    return l[mask]
 
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
     return Table.read(filename, format='fits', memmap=True)
 
 def init_globals():
     global binspace
-    global SOURCE, LENSES
+    global SOURCE#, LENSES
     global PIX_TO_IDX
 
     if BINNING=='log':
@@ -72,7 +66,7 @@ def init_globals():
 
     # reading catalogs
     SOURCE = read_source(sourcename) # metacal file
-    LENSES = read_redmapper(lensname) # redmapper
+    #LENSES = read_redmapper(lensname) # redmapper
 
     # making a dict of healpix idx for fast query
     upix, split_idx = np.unique(SOURCE['pix'], return_index=True)
@@ -119,14 +113,14 @@ def partial_profile(inp):
     Profile of reduced shear g_t(r) as in eq. 6 of Grandis et al. (2024)
     '''
 
+    ra0, dec0, z0, *w_b = inp
+
     dsigma_t_num = np.zeros(NBINS)
     dsigma_x_num = np.zeros(NBINS)
     response_sum = np.zeros(NBINS)
     n_bin = np.zeros(NBINS)
     sq_weight_sum = np.zeros(NBINS)
     weight_sum = np.zeros(NBINS)
-
-    ra0, dec0, z0, *w_b = inp
 
     DEGxMPC = COSMO.arcsec_per_kpc_proper(z0).to('deg/Mpc').value
     psi = DEGxMPC*ROUT
@@ -179,18 +173,20 @@ def partial_profile(inp):
 
 def stacking():
 
-    l = LENSES[
-        (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) &
-        (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) &
-        (LENSES['pcen']>0.8)
-    ]
+    #l = LENSES[
+    #    (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) &
+    #    (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) &
+    #    (LENSES['pcen']>0.8)
+    #]
+
+    l = read_redmapper(lensname, ZMIN, ZMAX, LMIN, LMAX, PCEN) # redmapper
 
     nlenses = len(l)
     print(f'{nlenses =}')
     localNJK = NJK
-    if localNJK > (nlenses//10):
-        localNJK = nlenses//10
-    print(f'{localNJK =}')
+    if localNJK > int(NBINS**(3/2)):
+        localNJK = int(NBINS**(3/2))
+    print(f'>> Using NJK ={localNJK}')
 
     dsigma_t_num = np.zeros((localNJK+1, NBINS))
     dsigma_x_num = np.zeros((localNJK+1, NBINS))
@@ -227,7 +223,7 @@ def stacking():
     n_bin[0,:] = nbin.sum(axis=0)
 
     # jackknife
-    _, kidx = get_jackknife_kmeans(l['ra_cl'], l['dec_cl'], nlenses=nlenses, NJK=localNJK)
+    _, kidx = get_jackknife_kmeans(SOURCE['ra_gal'], SOURCE['dec_gal'], nlenses=nlenses, NJK=localNJK)
     kunq = np.unique(kidx)
 
     for j, k in enumerate(kunq):
@@ -247,8 +243,6 @@ def stacking():
     h = (ROUT-RIN)/NBINS
     area = np.pi*np.diff(binspace(RIN, ROUT, NBINS+1))**2
     den_n = n_eff/area
-    #cte_range = np.abs(np.diff(den_n)/(h*den_n[1:])) < 0.05
-    #den_cte = np.mean(den_n[1:][cte_range])
     f_cl = 1.0 - den_n[-1]/den_n
 
     # profiles
@@ -259,7 +253,7 @@ def stacking():
     outputname = (f'results/lensing_desy3_{sample}_'
                   f'lambda{LMIN:02.0f}-{LMAX:02.0f}_'
                   f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_'
-                  f'bin{BINNING}.fits')
+                  f'bin{NBINS}{BINNING}.fits')
 
     head=fits.Header()
     head.update({
@@ -338,11 +332,12 @@ def main():
     print('Start'.center(15,'-'))
 
     t1 = time()
+
     init_globals()
     stacking()
 
-    print('End'.center(17,'-'))
-    print(f'Took {time()-t1:.2f} s')
+    print(' End '.center(17,'-'))
+    print(f'>> Took {time()-t1:.2f} s')
 
 if __name__ == '__main__':
     main()
