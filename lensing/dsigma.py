@@ -213,8 +213,12 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         zip(*results_map)
     )
 
-    assert ~np.any(np.isnan(w_sl)), 'nan in w_sl'
-    assert ~np.any(np.isnan(sqw_sl)), 'nan in sqw_sl'
+    assert ~np.any(gt==0), 'zero in gt!'
+    assert ~np.any(gx==0), 'zero in gx!'
+    assert ~np.any(res==0), 'zero in res!'
+    assert ~np.any(w_sl==0), 'zero in w_sl!'
+    assert ~np.any(sqw_sl==0), 'zero in sqw_sl!'
+    assert ~np.any(nbin==0), 'zero in nbin!'
 
     #calculate sum over lenses
     dsigma_t_num[0,:] = gt.sum(axis=0)
