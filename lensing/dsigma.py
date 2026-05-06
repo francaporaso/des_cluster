@@ -303,6 +303,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     if PLOT:
         plot_profile(binspace(RIN, ROUT, NBINS), dsigma_t, dsigma_x)
 
+    return 0
+
 def plot_profile(r, dsigma_t, dsigma_x):
 
     fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
@@ -338,8 +340,8 @@ def main():
 
     for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins, lbins), start=1):
         print(f'  \n[{i}/{total}]  ', flush=True)
-        stacking(zmin, zmax, lmin, lmax)
-
+        check = stacking(zmin, zmax, lmin, lmax)
+        assert check == 0, '>>> Something went wrong. <<<'
 
     print(' End '.center(17,'-'))
     print(f'>>> Took {time()-t1:.2f} s <<<')
