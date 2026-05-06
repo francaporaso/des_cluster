@@ -56,7 +56,7 @@ LMAX_LIST = _to_list(config['LENSES']['LMAX'])
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
                    ZMIN=0.2, ZMAX=0.3, LMIN=10, LMAX=50, PCEN=0.5):
     l = Table.read(filename, format='fits', memmap=True)
-    mask = (l['redshift'] > ZMIN)&(l['redshift'] <= ZMAX)&(l['lambda'] > LMIN)&(l['lambda'] <= LMAX)&(LENSES['pcen']>PCEN)
+    mask = (l['redshift'] > ZMIN)&(l['redshift'] <= ZMAX)&(l['lambda'] > LMIN)&(l['lambda'] <= LMAX)&(l['pcen']>PCEN)
     return l[mask]
 
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
