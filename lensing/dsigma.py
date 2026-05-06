@@ -172,7 +172,7 @@ def partial_profile(inp):
 
     return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
 
-def stacking(zmin, zmax, lmin, lmax, pcen):
+def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
 
     l = read_redmapper(lensname, zmin, zmax, lmin, lmax, pcen) # redmapper
 
