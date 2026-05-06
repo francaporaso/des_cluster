@@ -222,7 +222,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         ra_sample=SOURCE['ra_gal'][:10*(localNJK+1)],
         dec_sample=SOURCE['dec_gal'][:10*(localNJK+1)],
         ra_cl=l['ra_cl'],
-        dec_cl=l['dec_cl']
+        dec_cl=l['dec_cl'],
         nlenses=nlenses,
         NJK=localNJK
     )
