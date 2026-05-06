@@ -1,6 +1,8 @@
 [RUN]
 SAMPLE = 'test'
-NCORES = 16
+LENSNAME = '../cats/DESY3/desy3_redmapper_cluster-ws.fits'
+SOURCENAME = '../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
+NCORES = 32
 OVERWRITE = true
 PLOT = false
 
@@ -12,8 +14,8 @@ NJK = 40
 BINNING = 'log' # 'lin'
 
 [LENSES]
-LMIN = 38.0
-LMAX = 55.0
-ZMIN = 0.19
-ZMAX = 0.27
+ZMIN = [0.25, 0.33, 0.43]
+ZMAX = [0.33, 0.43, 0.94]
+LMIN = [0.0, 65.0, 120.0]
+LMAX = [65.0, 120.0, 250.0]
 
