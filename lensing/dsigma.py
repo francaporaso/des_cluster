@@ -170,10 +170,6 @@ def partial_profile(inp):
             sq_weight_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin) if w_b[b] != 0.0 else 0.0
 
-
-    assert ~np.any(np.isnan(weight_sum)), 'is weight_sum (in partial_profile)'
-    assert ~np.any(np.isnan(sq_weight_sum)), 'is sq_weight_sum (in partial_profile)'
-
     return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
 
 def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
@@ -217,7 +213,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         zip(*results_map)
     )
 
-    assert ~np.any(np.isnan(gt))
+    assert ~np.any(np.isnan(w_sl)), 'nan in w_sl'
+    assert ~np.any(np.isnan(sqw_sl)), 'nan in sqw_sl'
 
     #calculate sum over lenses
     dsigma_t_num[0,:] = gt.sum(axis=0)
@@ -249,7 +246,9 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
     n_eff = weight_sl/sq_weight_sl
-
+    assert ~np.any(np.isnan(weight_sl)), 'nan in weight_sl (numerator)'
+    assert ~np.any(np.isnan(sq_weight_sl)), 'nan in sq_weight_sl (denominator)'
+    assert ~np.any(weight_sl==0), 'zero in sq_weight_sl (denominator)'
     assert ~np.any(np.isnan(n_eff)), 'is n_eff'
     #response = np.sum(response_sum, axis=0)
 
