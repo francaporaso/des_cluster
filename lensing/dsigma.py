@@ -17,7 +17,7 @@ from lensing.funcs import eq2p2, cov_matrix, get_jackknife_kmeans
 #from io import *
 #from nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
 
-# Fixed globals
+# === Fixed globals
 COSMO = FlatLambdaCDM(H0=100, Om0=0.3)
 NSIDE = 128
 ZMED = np.array([0.285, 0.476, 0.743, 0.942]) # median redshift of source distribution
@@ -27,9 +27,13 @@ SOURCE = None
 PIX_TO_IDX : dict = {}
 binspace = None
 
-# Input globals
-# now read from config file
+# ==== Input globals
+# read from config file
 config = toml.load('lensing/config.toml')
+lensname=config['RUN']['LENSNAME']
+sourcename=config['RUN']['SOURCENAME']
+sample=config['RUN']['SAMPLE']
+
 NCORES = config['RUN']['NCORES']
 PLOT = config['RUN']['PLOT']
 OVERWRITE = config['RUN']['OVERWRITE']
@@ -37,11 +41,19 @@ RIN, ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
 NBINS = config['PROFILE']['NBINS']
 NJK = config['PROFILE']['NJK']
 BINNING = config['PROFILE']['BINNING']
-LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
-ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
-sample=config['PROFILE']['SAVENAME']
-lensname='../cats/DESY3/desy3_redmapper_cluster-ws.fits'
-sourcename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
+#LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
+#ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
+
+# Lens bin lists — each pair (ZMIN[i], ZMAX[i]) and (LMIN[j], LMAX[j])
+# is read as a list; scalars are wrapped so the rest of the code is uniform.
+def _to_list(val):
+    return val if isinstance(val, list) else [val]
+
+ZMIN_LIST = _to_list(config['LENSES']['ZMIN'])
+ZMAX_LIST = _to_list(config['LENSES']['ZMAX'])
+LMIN_LIST = _to_list(config['LENSES']['LMIN'])
+LMAX_LIST = _to_list(config['LENSES']['LMAX'])
+
 
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
                    ZMIN=0.2, ZMAX=0.3, LMIN=10, LMAX=50, PCEN=0.5):
@@ -73,15 +85,6 @@ def init_globals():
     split_idx = np.append(split_idx, len(SOURCE))
     for i, pix in enumerate(upix):
         PIX_TO_IDX[int(pix)] = np.arange(split_idx[i], split_idx[i+1])
-
-def get_masked_square(psi, ra0, dec0, z0, wb):
-    mask_sky = (SOURCE['ra_gal'] < (ra0+psi))&(SOURCE['ra_gal'] > (ra0-psi))&(SOURCE['dec_gal'] < (dec0+psi))&(SOURCE['dec_gal'] > (dec0-psi))
-    #drop the first redshift bin altogether
-    wb[0] = 0.0
-    for i in range(1,4):
-        if z0 > ZMED[i]:
-            wb[i] = 0.0
-    return mask_sky, wb
 
 def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
     '''
@@ -171,15 +174,9 @@ def partial_profile(inp):
 
     return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
 
-def stacking():
+def stacking(zmin, zmax, lmin, lmax, pcen):
 
-    #l = LENSES[
-    #    (LENSES['lambda']>LMIN) & (LENSES['lambda']<=LMAX) &
-    #    (LENSES['redshift']>ZMIN) & (LENSES['redshift']<=ZMAX) &
-    #    (LENSES['pcen']>0.8)
-    #]
-
-    l = read_redmapper(lensname, ZMIN, ZMAX, LMIN, LMAX, PCEN) # redmapper
+    l = read_redmapper(lensname, zmin, zmax, lmin, lmax, pcen) # redmapper
 
     nlenses = len(l)
     print(f'{nlenses =}')
@@ -192,9 +189,9 @@ def stacking():
     dsigma_x_num = np.zeros((localNJK+1, NBINS))
     response_sum = np.zeros((localNJK+1, NBINS))
 
-    weight_sl = np.zeros((localNJK+1, NBINS))
+    weight_sl    = np.zeros((localNJK+1, NBINS))
     sq_weight_sl = np.zeros((localNJK+1, NBINS))
-    n_bin = np.zeros((localNJK+1, NBINS))
+    n_bin        = np.zeros((localNJK+1, NBINS))
 
     with Pool(processes=NCORES) as pool:
         results_map = list(
@@ -240,7 +237,6 @@ def stacking():
     #response = np.sum(response_sum, axis=0)
 
     # cluster contaminants correction
-    h = (ROUT-RIN)/NBINS
     area = np.pi*np.diff(binspace(RIN, ROUT, NBINS+1))**2
     den_n = n_eff/area
     f_cl = 1.0 - den_n[-1]/den_n
@@ -251,8 +247,8 @@ def stacking():
 
     # ==== Saving
     outputname = (f'results/lensing_desy3_{sample}_'
-                  f'lambda{LMIN:02.0f}-{LMAX:02.0f}_'
-                  f'z{100*ZMIN:03.0f}-{100*ZMAX:03.0f}_'
+                  f'z{100*zmin:03.0f}-{100*zmax:03.0f}_'
+                  f'lambda{lmin:02.0f}-{lmax:02.0f}_'
                   f'bin{NBINS}{BINNING}.fits')
 
     head=fits.Header()
@@ -329,15 +325,42 @@ def plot_profile(r, dsigma_t, dsigma_x):
     #fig.savefig('results/test-des_dsigma.png')
 
 def main():
-    print('Start'.center(15,'-'))
+    print(' Start '.center(15,'-'))
 
     t1 = time()
 
     init_globals()
-    stacking()
+
+    # Build the list of (zmin, zmax) pairs and (lmin, lmax) pairs
+    zbins = list(zip(ZMIN_LIST, ZMAX_LIST))
+    lbins = list(zip(LMIN_LIST, LMAX_LIST))
+
+    total = len(zbins) * len(lbins)
+    print(f'>> Running {len(zbins)} redshift bin(s) x {len(lbins)} richness bin(s) = {total} combination(s)')
+
+    for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins, lbins), start=1):
+        print(f'  \n[{i}/{total}]  ', flush=True)
+        stacking(zmin, zmax, lmin, lmax)
+
 
     print(' End '.center(17,'-'))
-    print(f'>> Took {time()-t1:.2f} s')
+    print(f'>>> Took {time()-t1:.2f} s <<<')
 
 if __name__ == '__main__':
     main()
+
+
+#def get_masked_square(psi, ra0, dec0, z0, wb):
+#    '''
+#    deprecated
+#    square mask using binary comparisons.
+#    too slow for big queries. use get_masked_idx_fast instead.
+#    '''
+#    mask_sky = (SOURCE['ra_gal'] < (ra0+psi))&(SOURCE['ra_gal'] > (ra0-psi))&(SOURCE['dec_gal'] < (dec0+psi))&(SOURCE['dec_gal'] > (dec0-psi))
+#    #drop the first redshift bin altogether
+#    wb[0] = 0.0
+#    for i in range(1,4):
+#        if z0 > ZMED[i]:
+#            wb[i] = 0.0
+#    return mask_sky, wb
+
