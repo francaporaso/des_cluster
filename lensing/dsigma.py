@@ -171,7 +171,7 @@ def partial_profile(inp):
             n_bin[n_i] += np.count_nonzero(m_i & zbin) if w_b[b] != 0.0 else 0.0
 
 
-    #assert ~np.any(np.isnan(dsigma_t_num))
+    assert ~np.any(np.isnan(response_sum)), 'is response_sum (in partial_profile)'
 
     return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
 
@@ -248,12 +248,16 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
     n_eff = weight_sl/sq_weight_sl
+
+    assert ~np.any(np.isnan(n_eff)), 'is n_eff'
     #response = np.sum(response_sum, axis=0)
 
     # cluster contaminants correction
     area = np.pi*np.diff(binspace(RIN, ROUT, NBINS+1))**2
     den_n = n_eff/area
     f_cl = 1.0 - den_n[-1]/den_n
+
+    assert ~np.isnan(f_cl), 'is f_cl'
 
     # profiles
     dsigma_t = (1/(1-f_cl))*dsigma_t_num/response_sum
