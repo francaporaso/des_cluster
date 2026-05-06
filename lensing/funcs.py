@@ -49,14 +49,14 @@ def eq2p2(ra_gal, dec_gal, RA0,DEC0):
 
     return rad, theta
 
-def get_jackknife_kmeans(ra_cl, dec_cl, nlenses, NJK):
+def get_jackknife_kmeans(ra_sample, dec_sample, ra_cl, dec_cl, nlenses, NJK):
 
     #K = np.zeros((NJK+1, nlenses), dtype=bool)
     #K[0] = True
-
+    sam = np.column_stack([ra_sample, dec_sample])
     L = np.column_stack([ra_cl, dec_cl])
 
-    km = kmeans_sample(L, ncen=NJK, verbose=0)
+    km = kmeans_sample(sam, ncen=NJK, verbose=0)
     labels = km.find_nearest(L)
 
     #for j in range(1, NJK+1):

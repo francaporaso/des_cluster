@@ -218,7 +218,14 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     n_bin[0,:] = nbin.sum(axis=0)
 
     # jackknife
-    kidx = get_jackknife_kmeans(SOURCE['ra_gal'][:10*(localNJK+1)], SOURCE['dec_gal'][:10*(localNJK+1)], nlenses=nlenses, NJK=localNJK)
+    kidx = get_jackknife_kmeans(
+        ra_sample=SOURCE['ra_gal'][:10*(localNJK+1)],
+        dec_sample=SOURCE['dec_gal'][:10*(localNJK+1)],
+        ra_cl=l['ra_cl'],
+        dec_cl=l['dec_cl']
+        nlenses=nlenses,
+        NJK=localNJK
+    )
     kunq = np.unique(kidx)
 
     for j, k in enumerate(kunq):
