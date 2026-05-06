@@ -128,7 +128,6 @@ def partial_profile(inp):
 
     # get masked data
     mask, w_b = get_masked_idx_fast(psi, ra0, dec0, z0, w_b)
-    assert mask.sum()!=0
     catdata = SOURCE[mask]
 
     # calculate transformation to polar coords
@@ -214,12 +213,12 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         zip(*results_map)
     )
 
-    assert ~np.any(gt==0), 'zero in gt!'
-    assert ~np.any(gx==0), 'zero in gx!'
-    assert ~np.any(res==0), 'zero in res!'
-    assert ~np.any(w_sl==0), 'zero in w_sl!'
-    assert ~np.any(sqw_sl==0), 'zero in sqw_sl!'
-    assert ~np.any(nbin==0), 'zero in nbin!'
+    assert ~np.any(gt==0), 'all zeros in gt!'
+    assert ~np.any(gx==0), 'all zeros in gx!'
+    assert ~np.any(res==0), 'all zeros in res!'
+    assert ~np.any(w_sl==0), 'all zeros in w_sl!'
+    assert ~np.any(sqw_sl==0), 'all zeros in sqw_sl!'
+    assert ~np.any(nbin==0), 'all zeros in gt!'
 
     #calculate sum over lenses
     dsigma_t_num[0,:] = gt.sum(axis=0)
