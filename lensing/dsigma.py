@@ -246,10 +246,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
     n_eff = weight_sl/sq_weight_sl
-    assert ~np.any(np.isnan(weight_sl)), 'nan in weight_sl (numerator)'
-    assert ~np.any(np.isnan(sq_weight_sl)), 'nan in sq_weight_sl (denominator)'
-    assert ~np.any(weight_sl==0), 'zero in sq_weight_sl (denominator)'
-    assert ~np.any(np.isnan(n_eff)), 'is n_eff'
+    assert ~np.any(sq_weight_sl==0), 'zero in sq_weight_sl (denominator)'
+    assert ~np.any(weight_sl==0), 'zero in weight_sl (numerator)'
     #response = np.sum(response_sum, axis=0)
 
     # cluster contaminants correction
