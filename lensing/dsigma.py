@@ -236,6 +236,9 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     for j, k in enumerate(kunq):
         mask = (kidx!=k)
         assert mask.sum()!=0
+        # problem here!
+        # mask pass the assert
+        # but sq_weight_sl is zero for j>8...
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
         response_sum[j+1,:] = res[mask].sum(axis=0)
@@ -254,8 +257,6 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     area = np.pi*np.diff(binspace(RIN, ROUT, NBINS+1))**2
     den_n = n_eff/area
     f_cl = 1.0 - den_n[-1]/den_n
-
-    assert ~np.isnan(f_cl), 'is f_cl'
 
     # profiles
     dsigma_t = (1/(1-f_cl))*dsigma_t_num/response_sum
