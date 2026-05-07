@@ -115,7 +115,7 @@ def main():
         fitpar, errpar = get_fitted_params(sampler.get_chain(discard=int(NIT*0.15)), param_names)
 
         with h5py.File(chain_filename, 'a') as f:
-            group_path = f'fitedparams/{MODEL}/{cov_mode}'
+            group_path = f'fitedparams/{MODEL}/{COVMODE}'
 
             # Overwrite if exists
             if group_path in f:
