@@ -244,7 +244,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
     n_eff = weight_sl/sq_weight_sl
-    print(np.sum(np.isnan(n_eff))
+    print(np.sum(np.isnan(n_eff)))
     for i in range(1,localNJK+1):
         print(np.sum(sq_weight_sl[j,:]))
     return 1
