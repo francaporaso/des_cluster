@@ -223,7 +223,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     n_bin[0,:] = nbin.sum(axis=0)
 
     print(np.sum(dsigma_t_num))
-    print(np.sum(weigth_sl))
+    print(np.sum(weight_sl))
     print(np.sum(sq_weight_sl))
     return 1
     # jackknife
