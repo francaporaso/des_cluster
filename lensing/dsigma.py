@@ -215,7 +215,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     )
 
     print(w_sl)
-    print(sq_wl)
+    print(sqw_sl)
     return 1
 
     #calculate sum over lenses
