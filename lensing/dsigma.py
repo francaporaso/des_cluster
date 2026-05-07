@@ -232,7 +232,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         nlenses=nlenses,
         NJK=localNJK
     )
-    for j, k in enumerate(localNJK):
+    for j, k in enumerate(range(localNJK)):
         mask = (kidx!=k)
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
