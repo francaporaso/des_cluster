@@ -132,8 +132,8 @@ def main():
 
 if __name__ == '__main__':
 
-    print('  Start  '.center('-',15))
+    print('  Start  '.center(15, '-'))
     t1 = time.time()
     main()
-    print('  End   '.center('-',15))
+    print('  End   '.center(15, '-'))
     print(f'>> Took {(t1-time.time())/60.0:2.0f} s')
