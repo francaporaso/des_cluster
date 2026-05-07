@@ -237,10 +237,6 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
 
     for j, k in enumerate(kunq):
         mask = (kidx!=k)
-        assert mask.sum()!=0
-        # problem here!
-        # mask pass the assert
-        # but sq_weight_sl is zero for j>8...
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
         response_sum[j+1,:] = res[mask].sum(axis=0)
@@ -249,10 +245,6 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
     n_eff = weight_sl/sq_weight_sl
-    print(np.sum(np.isnan(n_eff)))
-    for i in range(1,localNJK+1):
-        print(np.sum(sq_weight_sl[i,:]))
-    return 1
     #response = np.sum(response_sum, axis=0)
 
     # cluster contaminants correction
