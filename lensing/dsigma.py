@@ -222,9 +222,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     sq_weight_sl[0,:] = sqw_sl.sum(axis=0)
     n_bin[0,:] = nbin.sum(axis=0)
 
-    print(np.sum(dsigma_t_num))
-    print(np.sum(weight_sl))
-    print(np.sum(sq_weight_sl))
+    print(np.sum(sq_weight_sl[0,:]))
+    print(sq_weight_sl[0,:])
     return 1
     # jackknife
     kidx = get_jackknife_kmeans(
