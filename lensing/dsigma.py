@@ -131,9 +131,6 @@ def partial_profile(inp):
     mask, w_b = get_masked_idx_fast(psi, ra0, dec0, z0, w_b)
     catdata = SOURCE[mask]
 
-    print(catdata.info, flush=True)
-    return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
-
     # calculate transformation to polar coords
     rads, theta = eq2p2(
         np.deg2rad(catdata['ra_gal']), np.deg2rad(catdata['dec_gal']),
@@ -174,6 +171,8 @@ def partial_profile(inp):
             sq_weight_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin) if w_b[b] != 0.0 else 0.0
 
+    print('dst_num', dsigma_t_num, flush=True)
+    print('weight_sum', weigth_sum, flush=True)
     return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
 
 def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
