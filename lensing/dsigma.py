@@ -223,9 +223,11 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     n_bin[0,:] = nbin.sum(axis=0)
 
     # jackknife
+    rng = np.random.default_rng(0)
+    jran = rng.choice(len(SOURCE), 10*(localNJK+1))
     kidx = get_jackknife_kmeans(
-        ra_sample=SOURCE['ra_gal'][:10*(localNJK+1)],
-        dec_sample=SOURCE['dec_gal'][:10*(localNJK+1)],
+        ra_sample=SOURCE['ra_gal'][jran],
+        dec_sample=SOURCE['dec_gal'][jran],
         ra_cl=l['ra_cl'],
         dec_cl=l['dec_cl'],
         nlenses=nlenses,
