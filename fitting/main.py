@@ -89,7 +89,7 @@ def main():
     print('>> Fitting {len(zbins)} redshift bins x {len(lbins)} lambda bins = {tot} profiles')
 
     for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins,lbins), start=1):
-        print(f'>> \n[{i}/{total}]', flush=True)
+        print(f'>> \n[{i}/{tot}]', flush=True)
         zstr = f'z{100*zmin:03.0f}-{100*zmax:03.0f}'
         lstr = f'lambda{lmin:02.0f}-{lmax:02.0f}'
 
