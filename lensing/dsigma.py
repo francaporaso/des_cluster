@@ -251,8 +251,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     den_n = n_eff/area
     f_cl = 1.0 - den_n[-1]/den_n
 
-    print('den_n:', den_n, flush=True)
-    print('f_cl:', f_cl, flush=True)
+    print('sq_weight:', sq_weight_sl, flush=True)
+    #print('f_cl:', f_cl, flush=True)
     return 1
     # profiles
     dsigma_t = (1/(1-f_cl))*dsigma_t_num/response_sum
