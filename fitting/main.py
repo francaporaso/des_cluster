@@ -110,9 +110,18 @@ def main():
         fitpar, errpar = get_fitted_params(sampler.get_chain(discard=int(NIT*0.15)), param_names)
 
         with h5py.File(chain_filename, 'a') as f:
-            ngroup = f.create_group(f'fitedparams/{MODEL}')
-            ngroup.create_dataset('params', fitpar)
-            ngroup.create_dataset('err', errpar)
+            group_path = f'fitedparams/{MODEL}/{cov_mode}'
+
+            # Overwrite if exists
+            if group_path in f:
+                del f[group_path]
+
+            grp = f.create_group(group_path)
+
+            for pname in param_names:
+                pgrp = grp.create_group(pname)
+                pgrp.create_dataset('median', data=fitpar[pname])
+                pgrp.create_dataset('errs', data=np.array(errpar[pname]))
 
         if PLOT:
             plot_chains(sampler.get_chain())
