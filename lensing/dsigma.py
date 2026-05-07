@@ -224,7 +224,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
 
     # jackknife
     rng = np.random.default_rng(0)
-    jran = rng.choice(len(SOURCE), 10*(localNJK+1))
+    jran = rng.choice(len(SOURCE), 100*(localNJK+1))
     kidx = get_jackknife_kmeans(
         ra_sample=SOURCE['ra_gal'][jran],
         dec_sample=SOURCE['dec_gal'][jran],
@@ -234,7 +234,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         NJK=localNJK
     )
     kunq = np.unique(kidx)
-
+    assert kunq == nlenses, 'kunq is not the same as nlenses!'
     for j, k in enumerate(kunq):
         mask = (kidx!=k)
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
