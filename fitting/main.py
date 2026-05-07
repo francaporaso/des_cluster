@@ -20,6 +20,8 @@ ZMIN = config['LENSES']['ZMIN']
 ZMAX = config['LENSES']['ZMAX']
 LMIN = config['LENSES']['LMIN']
 LMAX = config['LENSES']['LMAX']
+NBINS = config['LENSES']['NBINS']
+BINNING = config['LENSES']['BINNING']
 
 NCORES = config['RUN']['NCORES']
 NIT = config['RUN']['NIT']
@@ -32,7 +34,7 @@ PLOT = config['RUN']['PLOT']
 
 # ===
 def run_emcee(
-        NCORES, NIT, NWALKERS,
+        ncores, nit, nwalkers,
         data_filename, save_filename,
         model_name='NFW',
         observable='delta_sigma',
@@ -56,23 +58,18 @@ def run_emcee(
     )
 
     rng = np.random.default_rng(0)
-    init_pos = np.zeros((NWALKERS, len(init_guess.keys())), dtype=object)
-    # for i, ig in enumerate(init_guess.values()):
-    #     if ig is not None:
-    #         init_pos[:,i] = rng.uniform(ig*(1.0-0.2), ig*(1.0+0.2), NWALKERS)
-    #     else:
-    #         init_pos[:,i] = np.full(NWALKERS, None)
+    init_pos = np.zeros((nwalkers, len(init_guess.keys())), dtype=object)
     init_pos = np.array([
-       rng.uniform(ig*(1-0.2), ig*(1+0.2), NWALKERS) for ig in init_guess.values()
+       rng.uniform(ig*(1-0.2), ig*(1+0.2), nwalkers) for ig in init_guess.values()
     ]).T #ordering of dict is asserted in python >3.7
 
     group_name = f'emcee/{model_name}/{cov_mode}'
     backend = emcee.backends.HDFBackend(save_filename, name=group_name)
-    with Pool(processes=NCORES) as pool:
+    with Pool(processes=ncores) as pool:
         sampler = emcee.EnsembleSampler(
             NWALKERS, L.nparams, L.log_probability, pool=pool, backend=backend
         )
-        sampler.run_mcmc(init_pos, NIT, progress=True, store=True)
+        sampler.run_mcmc(init_pos, nit, progress=True, store=True)
 
     return sampler
 
@@ -94,12 +91,12 @@ def main():
         lstr = f'lambda{lmin:02.0f}-{lmax:02.0f}'
 
         data_filename = FOLDER + f'{DATANAME}_{SAMPLE}_{zstr}_{lstr}_bin{NBINS}{BINNING}.fits'
-        chain_filename = FOLDER + f'{CHAINNAME}_{SAMPLE}_{zstr}_{lstr}_model{MODEL}_nit{NIT}xnw{NWALKERS}.hdf5'
+        chain_filename = FOLDER + f'{CHAINNAME}_{SAMPLE}_{zstr}_{lstr}.hdf5'
 
         sampler = run_emcee(
-            NCORES=NCORES,
-            NIT=NIT,
-            NWALKERS=NWALKERS,
+            ncores=NCORES,
+            nit=NIT,
+            nwalkers=NWALKERS,
             data_filename=data_filename,
             save_filename=chain_filename,
             model_name=MODEL,
@@ -107,7 +104,15 @@ def main():
             fix_params=FIXPARAM,
             cov_mode=COVMODE,
         )
-        # TODO: que guarde los valores de mejor ajuste!
+
+        param_names = list(default_limits.get(MODEL).keys())
+        # not possible to fix params for now
+        fitpar, errpar = get_fitted_params(sampler.get_chain(discard=int(NIT*0.15)), param_names)
+
+        with h5py.File(chain_filename, 'a') as f:
+            ngroup = f.create_group(f'fitedparams/{MODEL}')
+            ngroup.create_dataset('params', fitpar)
+            ngroup.create_dataset('err', errpar)
 
         if PLOT:
             plot_chains(sampler.get_chain())
