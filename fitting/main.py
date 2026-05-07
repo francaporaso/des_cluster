@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from multiprocessing import Pool
 import emcee
+import toml
 
 from fitting.constants import *
 from fitting.inference import *
@@ -9,6 +10,27 @@ from fitting.models import *
 from fitting.utilfuncs import *
 from fitting.plotting import *
 
+# ==== Fix globals
+
+# === Input globals
+config = toml.load('fitting/config.toml')
+DATANAME = config['NAMES']['DATANME']
+FOLDER = config['NAMES']['FOLDER']
+ZMIN = config['LENSES']['ZMIN']
+ZMAX = config['LENSES']['ZMAX']
+LMIN = config['LENSES']['LMIN']
+LMAX = config['LENSES']['LMAX']
+
+NCORES = config['RUN']['NCORES']
+NIT = config['RUN']['NIT']
+NWALKERS = config['RUN']['NWALKERS']
+COVMODE = config['RUN']['COVMODE']
+MODEL = config['RUN']['MODEL']
+FIXPARAM = config['RUN']['FIXPARAM']
+OBSERVABLE = config['RUN']['OBSERVABLE']
+PLOT = config['RUN']['PLOT']
+
+# ===
 def run_emcee(
         NCORES, NIT, NWALKERS,
         data_filename, save_filename,
@@ -54,53 +76,50 @@ def run_emcee(
 
     return sampler
 
-if __name__ == '__main__':
+def main():
 
     parser = ArgumentParser()
-    parser.add_argument('--dataname', type=str, action='store', required=True)
-    parser.add_argument('--savename', type=str, action='store', required=True)
-    parser.add_argument('-c','--NCORES', type=int, default=32, action='store')
     parser.add_argument('--overwrite', action='store_true')
-    parser.add_argument('--NIT', type=int, default=1_000, action='store')
-    parser.add_argument('--NWALKERS', type=int, default=64, action='store')
-    parser.add_argument('--model', type=str, default='NFW', action='store')
-    parser.add_argument('--cov', action='store_true')
-    parser.add_argument('--fix', nargs='*')
-    #parser.add_argument('--config', type=str, default='config.toml', action='store')
-    #parser.add_argument('--use08', action='store_true')
-    #parser.add_argument('--addnoise', action='store_true')
-    #parser.add_argument('--nback', type=float, default=26.9, action='store')
+    parser.add_argument('--config', type=str, default='config.toml', action='store')
     args = parser.parse_args()
 
-    folder = 'results/'
+    zbins = list(zip(ZMIN, ZMAX))
+    lbins = list(zip(LMIN, LMAX))
+    tot = len(zbins)*len(lbins)
+    print('>> Fitting {len(zbins)} redshift bins x {len(lbins)} lambda bins = {tot} profiles')
 
-    data_filename = folder + args.dataname #'lensing_desy3_test_lambda50-150_z020-040_binlog.fits'
-    chain_filename = folder + args.savename #'fitting_desy3_misscentering_lambda50-150_z020-040.hdf5'
-    model_name = args.model #'NFWMiss'
-    observable = 'delta_sigma'
-    if args.cov:
-        cov_mode = 'full'
-    else:
-        cov_mode = 'diag'
+    for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins,lbins), start=1):
+        print(f'>> \n[{i}/{total}]', flush=True)
+        zstr = f'z{100*zmin:03.0f}-{100*zmax:03.0f}'
+        lstr = f'lambda{lmin:02.0f}-{lmax:02.0f}'
 
-    if args.fix is None:
-        args.fix = []
+        data_filename = FOLDER + f'{DATANAME}_{SAMPLE}_{zstr}_{lstr}_bin{NBINS}{BINNING}.fits'
+        chain_filename = FOLDER + f'{CHAINNAME}_{SAMPLE}_{zstr}_{lstr}_model{MODEL}_nit{NIT}xnw{NWALKERS}.hdf5'
 
-    sampler = run_emcee(
-        NCORES=args.NCORES,
-        NIT=args.NIT,
-        NWALKERS=args.NWALKERS,
-        data_filename=data_filename,
-        save_filename=chain_filename,
-        model_name=model_name,
-        observable=observable,
-        fix_params=args.fix,
-        cov_mode=cov_mode,
-    )
-    # TODO: que guarde los valores de mejor ajuste!
+        sampler = run_emcee(
+            NCORES=NCORES,
+            NIT=NIT,
+            NWALKERS=NWALKERS,
+            data_filename=data_filename,
+            save_filename=chain_filename,
+            model_name=MODEL,
+            observable=OBSERVABLE,
+            fix_params=FIXPARAM,
+            cov_mode=COVMODE,
+        )
+        # TODO: que guarde los valores de mejor ajuste!
 
-    plot_chains(sampler.get_chain())
-    plt.show()
+        if PLOT:
+            plot_chains(sampler.get_chain())
+            plt.show()
 
-    plot_corner(sampler, discard=int(args.NIT*0.15));
-    plt.show()
+            plot_corner(sampler, discard=int(args.NIT*0.15));
+            plt.show()
+
+if __name__ == '__main__':
+
+    print('  Start  '.center('-',15))
+    t1 = time.time()
+    main()
+    print('  End   '.center('-',15))
+    print(f'>> Took {(t1-time.time())/60.0:2.0f} s')
