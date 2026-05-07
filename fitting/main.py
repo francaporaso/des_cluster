@@ -20,6 +20,7 @@ config = toml.load('fitting/config.toml')
 DATANAME = config['NAMES']['DATANME']
 FOLDER = config['NAMES']['FOLDER']
 SAMPLE = config['NAMES']['SAMPLE']
+CHAINNAME = config['NAMES']['CHAINNAME']
 ZMIN = config['LENSES']['ZMIN']
 ZMAX = config['LENSES']['ZMAX']
 LMIN = config['LENSES']['LMIN']
