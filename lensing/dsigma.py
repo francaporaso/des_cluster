@@ -214,10 +214,6 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         zip(*results_map)
     )
 
-    print(np.isnan(w_sl).sum())
-    print(np.isnan(sqw_sl).sum())
-    return 1
-
     #calculate sum over lenses
     dsigma_t_num[0,:] = gt.sum(axis=0)
     dsigma_x_num[0,:] = gx.sum(axis=0)
@@ -226,6 +222,10 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     sq_weight_sl[0,:] = sqw_sl.sum(axis=0)
     n_bin[0,:] = nbin.sum(axis=0)
 
+    print(np.sum(dsigma_t_num))
+    print(np.sum(weigth_sl))
+    print(np.sum(sq_weight_sl))
+    return 1
     # jackknife
     kidx = get_jackknife_kmeans(
         ra_sample=SOURCE['ra_gal'][:10*(localNJK+1)],
