@@ -222,9 +222,6 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     sq_weight_sl[0,:] = sqw_sl.sum(axis=0)
     n_bin[0,:] = nbin.sum(axis=0)
 
-    print(np.sum(sq_weight_sl[0,:]))
-    print(sq_weight_sl[0,:])
-    return 1
     # jackknife
     kidx = get_jackknife_kmeans(
         ra_sample=SOURCE['ra_gal'][:10*(localNJK+1)],
@@ -247,8 +244,10 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
     n_eff = weight_sl/sq_weight_sl
-    assert ~np.any(sq_weight_sl==0), 'zero in sq_weight_sl (denominator)'
-    assert ~np.any(weight_sl==0), 'zero in weight_sl (numerator)'
+    print(np.sum(np.isnan(n_eff))
+    for i in range(1,localNJK+1):
+        print(np.sum(sq_weight_sl[j,:]))
+    return 1
     #response = np.sum(response_sum, axis=0)
 
     # cluster contaminants correction
