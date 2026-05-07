@@ -214,8 +214,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         zip(*results_map)
     )
 
-    print(w_sl)
-    print(sqw_sl)
+    print(np.isnan(w_sl).sum())
+    print(np.isnan(sqw_wl).sum())
     return 1
 
     #calculate sum over lenses
