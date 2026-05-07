@@ -171,7 +171,6 @@ def partial_profile(inp):
             sq_weight_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin) if w_b[b] != 0.0 else 0.0
 
-    print('sq_eight_sum', sq_weight_sum, flush=True)
     return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
 
 def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
@@ -215,12 +214,9 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         zip(*results_map)
     )
 
-    assert ~np.any(gt==0), 'all zeros in gt!'
-    assert ~np.any(gx==0), 'all zeros in gx!'
-    assert ~np.any(res==0), 'all zeros in res!'
-    assert ~np.any(w_sl==0), 'all zeros in w_sl!'
-    assert ~np.any(sqw_sl==0), 'all zeros in sqw_sl!'
-    assert ~np.any(nbin==0), 'all zeros in gt!'
+    print(gt)
+    return
+    return 1
 
     #calculate sum over lenses
     dsigma_t_num[0,:] = gt.sum(axis=0)
