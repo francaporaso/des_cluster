@@ -4,6 +4,7 @@ import emcee
 import toml
 import time
 import h5py
+from functools import product
 
 from fitting.constants import *
 from fitting.inference import *
