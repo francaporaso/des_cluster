@@ -103,7 +103,8 @@ def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
         if p in PIX_TO_IDX
     ])
 
-    for i in range(4):
+    wb[0] = 0.0 # not using bin0 althogether
+    for i in range(1,4):
         if z0 > ZMED[i]:
             wb[i] = 0.0
 
