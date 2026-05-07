@@ -234,7 +234,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         NJK=localNJK
     )
     kunq = np.unique(kidx)
-    assert kunq == nlenses, 'kunq is not the same as nlenses!'
+    assert len(kunq) == nlenses, 'kunq is not the same as nlenses!'
     for j, k in enumerate(kunq):
         mask = (kidx!=k)
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
