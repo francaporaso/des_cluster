@@ -88,7 +88,7 @@ def main():
     zbins = list(zip(ZMIN, ZMAX))
     lbins = list(zip(LMIN, LMAX))
     tot = len(zbins)*len(lbins)
-    print('>> Fitting {len(zbins)} redshift bins x {len(lbins)} lambda bins = {tot} profiles')
+    print(f'>> Fitting {len(zbins)} redshift bins x {len(lbins)} lambda bins = {tot} profiles')
 
     for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins,lbins), start=1):
         print(f'>> \n[{i}/{tot}]', flush=True)
