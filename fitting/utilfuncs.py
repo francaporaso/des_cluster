@@ -1,4 +1,5 @@
 import numpy as np
+import h5py
 
 from fitting.models import default_limits
 
