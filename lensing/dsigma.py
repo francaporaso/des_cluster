@@ -97,11 +97,15 @@ def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
         radius=np.deg2rad(psi*1.5)
     )
 
-    idx_arrays = np.concatenate([
-        PIX_TO_IDX[p]
-        for p in pix_idx
-        if p in PIX_TO_IDX
-    ])
+    try:
+        idx_arrays = np.concatenate([
+            PIX_TO_IDX[p]
+            for p in pix_idx
+            if p in PIX_TO_IDX
+        ])
+    except ValueError:
+        print(ra0, dec0, z0, flush=True)
+        raise ValueError('aaaaa')
 
     wb[0] = 0.0 # not using bin0 althogether
     for i in range(1,4):
@@ -128,13 +132,8 @@ def partial_profile(inp):
     psi = DEGxMPC*ROUT
 
     # get masked data
-    try:
-        mask, w_b = get_masked_idx_fast(psi, ra0, dec0, z0, w_b)
-        catdata = SOURCE[mask]
-    except ValueError:
-        print(ra0, dec0, z0)
-        raise
-
+    mask, w_b = get_masked_idx_fast(psi, ra0, dec0, z0, w_b)
+    catdata = SOURCE[mask]
     # calculate transformation to polar coords
     rads, theta = eq2p2(
         np.deg2rad(catdata['ra_gal']), np.deg2rad(catdata['dec_gal']),
