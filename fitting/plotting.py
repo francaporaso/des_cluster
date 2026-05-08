@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 from corner import corner
+from emcee.backends import HDFBackend
 
-from fitting.models import default_limits
+from fitting.models import default_limits, models_dict
+from fitting.io import read_dataprofile_fits
 
 def plot_chains(chain):
 
@@ -13,7 +15,7 @@ def plot_chains(chain):
             axes[i].set_xlim(0.0, nit)
             axes[i].set_ylabel(f'$a_{i}$')
             axes[i].yaxis.set_label_coords(-0.1, 0.5)
-        
+
         axes[-1].set_xlabel('Step Number')
     else:
         axes.plot(chain[:,:,0], 'k', alpha=0.3)
@@ -70,3 +72,43 @@ def plot_getdist(labels, names, discard, model, samplers, samplename):
 
     g = gdplots.get_subplot_plotter()
     g.triangle_plot(list(samples.values()), filled=True);
+
+
+def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
+
+    data = read_dataprofile_fits(datafile)
+    mcmc = HDFBackend(chainfile, name=f'emcee/{model_name}/{cov_mode}')
+    fit, err = load_fitted_param(chainame, model_name=model_name, cov_mode=cov_mode)
+    model = models_dict[model_name](redshift=data.redshift)
+    r = np.geomspace(data.R.min(), data.R.max(), 100)
+    if ax is None:
+        fig, ax = plt.subplots(1,1)
+    ax.errorbar(
+        data.R,
+        data.DSigma_t,
+        np.sqrt(np.diag(data.covDSt)),
+        fmt='.k',
+        capsize=2,
+    )
+    ax.plot(
+        r,
+        model.delta_sigma(r, **fit),
+        c='r'
+    )
+    if components and model_name=='NFW':
+        ax.plot(
+            r,
+            fit['pcc']*model.dsigma_1h(
+                r, fit['M200'], model.c_200(fit['M200'])
+            ),
+            c='r',
+            ls='--'
+        )
+        ax.plot(
+            r,
+            (1-fit['pcc'])*model.dsigma_miss(
+                r, fit['M200'], model.c_200(fit['M200'])
+            )
+        )
+    return ax
+
