@@ -111,7 +111,7 @@ def plot_fittedmodel(chainfile, ax=None, model_name='NFW', cov_mode='full', comp
         )
     return ax
 
-def plot_data(datafile, ax=None):
+def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
 
     data = read_dataprofile_fits(datafile)
 
@@ -124,10 +124,7 @@ def plot_data(datafile, ax=None):
         fmt='.k',
         capsize=2,
     )
-
-    return ax
-
-def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
-    plot_data(datafile, ax=ax)
-    plot_fittedmodel(chainfile, ax=ax, model_name=model_name, cov_mode=cov_mode, components=components)
-    return ax
+    try:
+        plot_fittedmodel(chainfile, ax=ax, model_name=model_name, cov_mode=cov_mode, components=components)
+    finally:
+        return ax
