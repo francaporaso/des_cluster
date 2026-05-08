@@ -17,7 +17,7 @@ from fitting.plotting import *
 
 # === Input globals
 config = toml.load('fitting/config.toml')
-DATANAME = config['NAMES']['DATANME']
+DATANAME = config['NAMES']['DATANAME']
 FOLDER = config['NAMES']['FOLDER']
 SAMPLE = config['NAMES']['SAMPLE']
 CHAINNAME = config['NAMES']['CHAINNAME']
