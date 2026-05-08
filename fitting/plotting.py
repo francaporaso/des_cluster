@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 from corner import corner
 from emcee.backends import HDFBackend
