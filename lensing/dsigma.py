@@ -53,11 +53,53 @@ LMIN_LIST = _to_list(config['LENSES']['LMIN'])
 LMAX_LIST = _to_list(config['LENSES']['LMAX'])
 
 
+def _footprint_mask(ra, dec, z, padding=1.5):
+    '''
+    Returns a boolean mask (True = keep) for an array of lens positions.
+    A lens is rejected if any healpix pixel within its search disc
+    (ROUT * padding in angular size) is missing from the source footprint.
+
+    This removes lenses at the survey edge whose background source annulus
+    would be incomplete, which otherwise causes empty-array crashes and
+    biased profiles.
+
+    Parameters
+    ----------
+    ra, dec  : array-like, degrees
+    z        : array-like, lens redshifts (used to convert ROUT to angle)
+    padding  : float, same multiplier used in get_masked_idx_fast (default 1.5)
+    '''
+    keep     = np.ones(len(ra), dtype=bool)
+    occupied = set(PIX_TO_IDX.keys())
+
+    for i, (ra0, dec0, z0) in enumerate(zip(ra, dec, z)):
+        DEGxMPC     = COSMO.arcsec_per_kpc_proper(z0).to('deg/Mpc').value
+        search_rad  = np.deg2rad(DEGxMPC * ROUT * padding)
+        pix_in_disc = hp.query_disc(
+            NSIDE,
+            vec=hp.ang2vec(ra0, dec0, lonlat=True),
+            radius=search_rad
+        )
+        if not occupied.issuperset(pix_in_disc):
+            keep[i] = False
+
+    n_cut = (~keep).sum()
+    if n_cut:
+        print(f'  Footprint cut: removed {n_cut}/{len(ra)} edge lenses '
+              f'(ROUT={ROUT} Mpc/h, padding={padding}x)', flush=True)
+    return keep
+
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
                    ZMIN=0.2, ZMAX=0.3, LMIN=10, LMAX=50, PCEN=0.5):
     l = Table.read(filename, format='fits', memmap=True)
-    mask = (l['redshift'] > ZMIN)&(l['redshift'] <= ZMAX)&(l['lambda'] > LMIN)&(l['lambda'] <= LMAX)&(l['pcen']>PCEN)
-    return l[mask]
+    mask = (
+        (l['redshift'] >  ZMIN) & (l['redshift'] <= ZMAX) &
+        (l['lambda']   >  LMIN) & (l['lambda']   <= LMAX) &
+        (l['pcen']     >  PCEN)
+    )
+    l = l[mask]
+    footprint = _footprint_mask(l['ra_cl'], l['dec_cl'], l['redshift'], padding=1.5)
+    return l[footprint]
 
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
     return Table.read(filename, format='fits', memmap=True)
@@ -105,7 +147,7 @@ def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
         ])
     except ValueError:
         print(ra0, dec0, z0, flush=True)
-        raise ValueError('aaaaa')
+        raise ValueError('no deberia entrar aca...')
 
     wb[0] = 0.0 # not using bin0 althogether
     for i in range(1,4):
