@@ -95,7 +95,7 @@ def main():
         zstr = f'z{100*zmin:03.0f}-{100*zmax:03.0f}'
         lstr = f'lambda{lmin:02.0f}-{lmax:02.0f}'
 
-        data_filename = FOLDER + f'{DATANAME}_{SAMPLE}_{zstr}_{lstr}_bin{NBINS}{BINNING}.fits'
+        data_filename = FOLDER + f'{DATANAME}_{zstr}_{lstr}_bin{NBINS}{BINNING}.fits'
         chain_filename = FOLDER + f'{CHAINNAME}_{SAMPLE}_{zstr}_{lstr}.hdf5'
 
         sampler = run_emcee(
