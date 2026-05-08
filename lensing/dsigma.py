@@ -85,7 +85,7 @@ def _footprint_mask(ra, dec, z, padding=1.5):
 
     n_cut = (~keep).sum()
     if n_cut:
-        print(f'  Footprint cut: removed {n_cut}/{len(ra)} edge lenses '
+        print(f'>> Footprint cut: removed {n_cut}/{len(ra)} edge lenses '
               f'(ROUT={ROUT} Mpc/h, padding={padding}x)', flush=True)
     return keep
 
@@ -219,10 +219,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     l = read_redmapper(lensname, zmin, zmax, lmin, lmax, pcen) # redmapper
 
     nlenses = len(l)
-    print(f'>> ZMIN = {zmin}')
-    print(f'>> ZMAX = {zmax}')
-    print(f'>> LMIN = {lmin}')
-    print(f'>> LMAX = {lmax}')
+    print(f'>> Z = [{zmin}, {zmax})')
+    print(f'>> LAMBDA = [{lmin}, {lmax})')
     print(f'>> NLENSES = {nlenses}')
     localNJK = NJK
     if localNJK < int(NBINS**(3/2)):
@@ -388,6 +386,10 @@ def main():
 
     total = len(zbins) * len(lbins)
     print(f'>> Running {len(zbins)} redshift bin(s) x {len(lbins)} richness bin(s) = {total} combination(s)')
+
+    print('>> RIN '+f'{"= ": >14}{RIN:.2f}')
+    print('>> ROUT '+f'{"= ": >14}{ROUT:.2f}')
+    print('>> NBINS '+f'{"= ": >17}{NBINS:<2d}')
 
     for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins, lbins), start=1):
         print(f'  \n[{i}/{total}]  ', flush=True)
