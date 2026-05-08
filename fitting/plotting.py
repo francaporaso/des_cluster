@@ -76,27 +76,22 @@ def plot_getdist(labels, names, discard, model, samplers, samplename):
     g.triangle_plot(list(samples.values()), filled=True);
 
 
-def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
+def plot_fittedmodel(chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
 
-    data = read_dataprofile_fits(datafile)
     mcmc = HDFBackend(chainfile, name=f'emcee/{model_name}/{cov_mode}', read_only=True)
     fit, err = load_fitted_params(chainfile, model_name=model_name, cov_mode=cov_mode)
     model = models_dict[model_name](redshift=data.redshift)
     r = np.geomspace(data.R.min(), data.R.max(), 100)
+
     if ax is None:
         fig, ax = plt.subplots(1,1)
-    ax.errorbar(
-        data.R,
-        data.DSigma_t,
-        np.sqrt(np.diag(data.covDSt)),
-        fmt='.k',
-        capsize=2,
-    )
+
     ax.plot(
         r,
         model.delta_sigma(r, **fit),
         c='r'
     )
+
     if components and model_name=='NFW':
         ax.plot(
             r,
@@ -116,3 +111,20 @@ def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full'
         )
     return ax
 
+def plot_profile(datafile, chainfile=None, ax=None, model_name='NFW', cov_mode='full', components=True):
+
+    data = read_dataprofile_fits(datafile)
+    if ax is None:
+        fig, ax = plt.subplots(1,1)
+    ax.errorbar(
+        data.R,
+        data.DSigma_t,
+        np.sqrt(np.diag(data.covDSt)),
+        fmt='.k',
+        capsize=2,
+    )
+    if chainfile is None:
+        return ax
+
+    plot_fittedmodel(chainfile, ax=ax, model_name=model_name, cov_mode=cov_mode, components=components)
+    return ax
