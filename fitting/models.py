@@ -112,13 +112,13 @@ class NFW:
 
         r200 = self.R_200(M200)
         x = (R * c200) / r200
-        
+
         m1 = x < 1 - eps
         m2 = x > 1 + eps
         m3 = np.abs(x - 1) <= eps
 
         jota  = np.zeros_like(R)
-        
+
         atanh = np.arctanh(np.sqrt((1.0 - x[m1]) / (1.0 + x[m1])))
         jota[m1] = (1.0 / (x[m1]**2 -1.0)) * (1.0 - (2.0 / np.sqrt(1.0 - x[m1]**2)) * atanh)
 
@@ -216,7 +216,7 @@ class NFW:
 
         #angular average
         Sigma_theta = simpson(Sigma_vals, theta, axis=2) / (2.0 * np.pi)
-        
+
         #miscentering pdf
         P = self.miss_pdf(Rs, s_off)
 
@@ -235,7 +235,7 @@ class NFW:
         interp = np.interp(R, x_grid, cumulative)
 
         Sigma_miss = self.sigma_miss(R, M200, c200=c200)
-        
+
         Sigma_bar = (2.0/R**2) * interp
         return Sigma_bar - Sigma_miss
 
@@ -250,8 +250,8 @@ class NFW:
 
         b = bias.haloBias(M200, model='tinker10', z=self.redshift, mdef='200c')
         outer_term = profile_outer.OuterTermCorrelationFunction(z=self.redshift, bias=b)
-        pNFW = profile_nfw.NFWProfile(M=M200, mdef='200c', z=self.redshift, c=c200, outer_terms=[outer_term])    
-        
+        pNFW = profile_nfw.NFWProfile(M=M200, mdef='200c', z=self.redshift, c=c200, outer_terms=[outer_term])
+
         # Outer term integrated up to 50Mpc (Luo et al. 2017, Niemic et al 2017)
         ds_out = pNFW.deltaSigmaOuter(R*1.e3, interpolate=False, interpolate_surface_density=False, accuracy=0.01, max_r_integrate=100e3)
         return ds_out/(1.e3**2)
@@ -262,9 +262,9 @@ class NFW:
 
         ds_cen = self.dsigma_1h(R, M200=M200, c200=c200)
         ds_miss = self.dsigma_miss(R, M200=M200, c200=c200)
-        #ds_2h = self.dsigma_2h(R, M200, c200)
+        ds_2h = self.dsigma_2h(R, M200, c200)
 
-        return pcc * ds_cen + (1.0 - pcc) * ds_miss #+ ds_2h 
+        return pcc * ds_cen + (1.0 - pcc) * ds_miss + ds_2h
 
 
 models_dict = {
@@ -272,17 +272,17 @@ models_dict = {
 }
 default_limits = {
     'NFW':{
-        'M200':(1e10, 1e16), 
-        # 'c200':(1.0, 10.0), 
-        'pcc':(0.1,1.0), 
+        'M200':(1e10, 1e16),
+        # 'c200':(1.0, 10.0),
+        'pcc':(0.1,1.0),
         # 's_off':(0.01,1.0)
     }
 }
 default_guess = {
     'NFW':{
-        'M200':1e14, 
-        # 'c200':4.0, 
-        'pcc':0.8, 
+        'M200':1e14,
+        # 'c200':4.0,
+        'pcc':0.8,
         # 's_off':0.4
     },
 }
