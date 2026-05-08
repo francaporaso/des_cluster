@@ -139,15 +139,11 @@ def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
         radius=np.deg2rad(psi*1.5)
     )
 
-    try:
-        idx_arrays = np.concatenate([
-            PIX_TO_IDX[p]
-            for p in pix_idx
-            if p in PIX_TO_IDX
-        ])
-    except ValueError:
-        print(ra0, dec0, z0, flush=True)
-        raise ValueError('no deberia entrar aca...')
+    idx_arrays = np.concatenate([
+        PIX_TO_IDX[p]
+        for p in pix_idx
+        if p in PIX_TO_IDX
+    ])
 
     wb[0] = 0.0 # not using bin0 althogether
     for i in range(1,4):
