@@ -111,9 +111,10 @@ def plot_fittedmodel(chainfile, ax=None, model_name='NFW', cov_mode='full', comp
         )
     return ax
 
-def plot_profile(datafile, chainfile=None, ax=None, model_name='NFW', cov_mode='full', components=True):
+def plot_data(datafile, ax=None):
 
     data = read_dataprofile_fits(datafile)
+
     if ax is None:
         fig, ax = plt.subplots(1,1)
     ax.errorbar(
@@ -123,8 +124,10 @@ def plot_profile(datafile, chainfile=None, ax=None, model_name='NFW', cov_mode='
         fmt='.k',
         capsize=2,
     )
-    if chainfile is None:
-        return ax
 
+    return ax
+
+def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
+    plot_data(datafile, ax=ax)
     plot_fittedmodel(chainfile, ax=ax, model_name=model_name, cov_mode=cov_mode, components=components)
     return ax
