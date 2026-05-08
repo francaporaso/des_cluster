@@ -79,7 +79,7 @@ def plot_getdist(labels, names, discard, model, samplers, samplename):
 def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
 
     data = read_dataprofile_fits(datafile)
-    mcmc = HDFBackend(chainfile, name=f'emcee/{model_name}/{cov_mode}')
+    mcmc = HDFBackend(chainfile, name=f'emcee/{model_name}/{cov_mode}', read_only=True)
     fit, err = load_fitted_params(chainfile, model_name=model_name, cov_mode=cov_mode)
     model = models_dict[model_name](redshift=data.redshift)
     r = np.geomspace(data.R.min(), data.R.max(), 100)
