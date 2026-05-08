@@ -1,0 +1,22 @@
+[RUN]
+NCORES = 32
+NIT = 1000
+NWALKERS = 64
+COVMODE = 'full' #or 'diag'
+MODEL = 'NFW'
+OBSERVABLE = 'delta_sigma'
+FIXPARAM = ['c200']
+PLOT = false
+
+[NAMES]
+FOLDER = 'results/'
+DATANAME = 'lensing_desy3'
+SAMPLE = 'one'
+
+[LENSES]
+NBINS = 15
+BINNING = 'log' # or 'lin'
+ZMIN = [0.1, 0.34, 0.47]
+ZMAX = [0.34, 0.47, 0.58]
+LMIN = [20, 30, 45, 60]
+LMAX = [30, 45, 60, 250]
