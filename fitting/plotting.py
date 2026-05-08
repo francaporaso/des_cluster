@@ -76,41 +76,6 @@ def plot_getdist(labels, names, discard, model, samplers, samplename):
     g.triangle_plot(list(samples.values()), filled=True);
 
 
-def plot_fittedmodel(chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
-
-    mcmc = HDFBackend(chainfile, name=f'emcee/{model_name}/{cov_mode}', read_only=True)
-    fit, err = load_fitted_params(chainfile, model_name=model_name, cov_mode=cov_mode)
-    model = models_dict[model_name](redshift=data.redshift)
-    r = np.geomspace(data.R.min(), data.R.max(), 100)
-
-    if ax is None:
-        fig, ax = plt.subplots(1,1)
-
-    ax.plot(
-        r,
-        model.delta_sigma(r, **fit),
-        c='r'
-    )
-
-    if components and model_name=='NFW':
-        ax.plot(
-            r,
-            fit['pcc']*model.dsigma_1h(
-                r, fit['M200'], model.c_200(fit['M200'])
-            ),
-            c='r',
-            ls='--'
-        )
-        ax.plot(
-            r,
-            (1-fit['pcc'])*model.dsigma_miss(
-                r, fit['M200'], model.c_200(fit['M200'])
-            ),
-            c='r',
-            ls='--'
-        )
-    return ax
-
 def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
 
     data = read_dataprofile_fits(datafile)
@@ -125,6 +90,38 @@ def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full'
         capsize=2,
     )
     try:
-        plot_fittedmodel(chainfile, ax=ax, model_name=model_name, cov_mode=cov_mode, components=components)
+        mcmc = HDFBackend(chainfile, name=f'emcee/{model_name}/{cov_mode}', read_only=True)
+        fit, err = load_fitted_params(chainfile, model_name=model_name, cov_mode=cov_mode)
+        model = models_dict[model_name](redshift=data.redshift)
+        r = np.geomspace(data.R.min(), data.R.max(), 100)
+
+        if ax is None:
+            fig, ax = plt.subplots(1,1)
+
+        ax.plot(
+            r,
+            model.delta_sigma(r, **fit),
+            c='r'
+        )
+
+        if components and model_name=='NFW':
+            ax.plot(
+                r,
+                fit['pcc']*model.dsigma_1h(
+                    r, fit['M200'], model.c_200(fit['M200'])
+                ),
+                c='r',
+                ls='--'
+            )
+            ax.plot(
+                r,
+                (1-fit['pcc'])*model.dsigma_miss(
+                    r, fit['M200'], model.c_200(fit['M200'])
+                ),
+                c='r',
+                ls='--'
+            )
+        return ax
+
     finally:
         return ax
