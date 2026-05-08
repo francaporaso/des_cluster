@@ -452,6 +452,7 @@ models_dict = {
     'NFW':NFW,
     'NFWFull':NFWFull,
 }
+
 default_limits = {
     'NFW':{
         'M200':(1e10, 1e16),
@@ -465,6 +466,7 @@ default_limits = {
         'pcc':(0.1,1.0),
         # 's_off':(0.01,1.0) }
     }
+}
 
 default_guess = {
     'NFW':{
