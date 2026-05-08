@@ -40,3 +40,15 @@ def get_fitted_params(chain, params):
         error_params[p] = tuple(percentil[[0,2]]-percentil[1])
 
     return fitted_params, error_params
+
+def load_fitted_params(chain_filename, model_name, cov_mode='diag'):
+    fitpar = {}
+    errpar = {}
+
+    with h5py.File(chain_filename, 'r') as f:
+        grp = f[f'fitedparams/{model_name}/{cov_mode}']
+        for pname in grp:
+            fitpar[pname] = grp[pname]['median'][()]
+            errpar[pname] = tuple(grp[pname]['err'][()])
+
+    return fitpar, errpar
