@@ -110,7 +110,9 @@ def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full'
             r,
             (1-fit['pcc'])*model.dsigma_miss(
                 r, fit['M200'], model.c_200(fit['M200'])
-            )
+            ),
+            c='r',
+            ls='--'
         )
     return ax
 
