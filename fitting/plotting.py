@@ -4,6 +4,7 @@ from emcee.backends import HDFBackend
 
 from fitting.models import default_limits, models_dict
 from fitting.io import read_dataprofile_fits
+from fitting.utilfuncs import load_fitted_params
 
 def plot_chains(chain):
 
