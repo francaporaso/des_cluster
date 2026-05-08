@@ -50,6 +50,6 @@ def load_fitted_params(chain_filename, model_name, cov_mode='diag'):
         grp = f[f'fitedparams/{model_name}/{cov_mode}']
         for pname in grp:
             fitpar[pname] = grp[pname]['median'][()]
-            errpar[pname] = tuple(grp[pname]['err'][()])
+            errpar[pname] = tuple(grp[pname]['errs'][()])
 
     return fitpar, errpar
