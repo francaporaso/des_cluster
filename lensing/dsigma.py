@@ -128,8 +128,12 @@ def partial_profile(inp):
     psi = DEGxMPC*ROUT
 
     # get masked data
-    mask, w_b = get_masked_idx_fast(psi, ra0, dec0, z0, w_b)
-    catdata = SOURCE[mask]
+    try:
+        mask, w_b = get_masked_idx_fast(psi, ra0, dec0, z0, w_b)
+        catdata = SOURCE[mask]
+    except ValueError:
+        print(ra0, dec0, z0)
+        raise
 
     # calculate transformation to polar coords
     rads, theta = eq2p2(
