@@ -38,16 +38,23 @@ class Likelihood:
                 pass
 
         else:
-            raise ValueError('observable must be either "sigma" or "delta_sigma"')
+            try:
+                self.func = model.__dict__.get(observable)
+            except:
+                raise ValueError(f'observable method {observable} not found in model {model}')
 
         if cov_mode == 'full':
+        
             self.yerr = np.linalg.inv(self.cov)*self.hartlap_factor
+        
         elif cov_mode == 'diag':
+        
             # this allows to use log_likelihood with both diag or full covariance!
             self.yerr = np.zeros_like(self.cov)
             np.fill_diagonal(self.yerr, 1.0/np.diag(self.cov))
+        
         else:
-            raise ValueError('cov_mode must be either "full" or "diag"')
+            raise ValueError(f'cov_mode must be either "full" or "diag". got {cov_mode}')
 
         self.param_name = list(self.limits.keys())
         self.nparams = len(self.param_name)
