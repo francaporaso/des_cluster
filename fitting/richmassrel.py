@@ -39,7 +39,7 @@ class LamMassRelation:
         dist = self.richness - model
         
         err = np.zeros_like((self.lam_err, self.lam_err))
-        np.fill_diagonal(err, 1.0/np.hypot(self.lam_err, sigma_logl))
+        np.fill_diagonal(err, 1.0/sigma_logl)
         
         return -0.5*np.dot(dist, np.dot(err, dist))
     
