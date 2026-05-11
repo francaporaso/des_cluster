@@ -26,7 +26,7 @@ class LamMassRelation:
         self.mass = mass
         self.redshift = redshift
         self.richness = richness
-        self.err = richness_err
+        self.lam_err = richness_err
         self.nparams = 4
         self.param_name = ['lam0', 'lamM', 'lamZ', 's_logl']
         self.limits = {'lam0':(1,100), 'lamM':(0.01,100.0), 'lamZ':(-5.0,5.0), 's_logl':(0.01,0.5)}
@@ -38,8 +38,8 @@ class LamMassRelation:
         model = ln_lambda_Mz(self.mass, self.redshift, lam0, lamM, lamZ)
         dist = self.richness - model
         
-        err = np.zeros_like((self.mass, self.mass))
-        np.fill_diagonal(err, 1.0/np.hypot(self.err, sigma_logl))
+        err = np.zeros_like((self.lam_err, self.lam_err))
+        np.fill_diagonal(err, 1.0/np.hypot(self.lam_err, sigma_logl))
         
         return -0.5*np.dot(dist, np.dot(err, dist))
     
