@@ -37,11 +37,8 @@ class LamMassRelation:
         
         model = ln_lambda_Mz(self.mass, self.redshift, lam0, lamM, lamZ)
         dist = self.richness - model
-        
-        err = np.zeros_like((self.lam_err, self.lam_err))
-        np.fill_diagonal(err, 1.0/sigma_logl)
-        
-        return -0.5*np.dot(dist, np.dot(err, dist))
+        return -0.5*np.sum(dist**2 / sigma_logl**2 + 4*np.pi*np.log(sigma_logl))
+        # return -0.5*np.dot(dist, np.dot(err, dist))
     
     def log_prior(self, theta):
         ### tener cuidado con el orden de lims!
