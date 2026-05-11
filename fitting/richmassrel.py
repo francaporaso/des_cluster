@@ -27,7 +27,7 @@ class LamMassRelation:
         self.redshift = redshift
         self.richness = richness
         self.err = richness_err
-        self.nparam = 4
+        self.nparams = 4
         self.param_name = ['lam0', 'lamM', 'lamZ', 's_logl']
         self.limits = {'lam0':(1,100), 'lamM':(0.01,100.0), 'lamZ':(-5.0,5.0), 's_logl':(0.01,0.5)}
 
