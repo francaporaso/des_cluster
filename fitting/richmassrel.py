@@ -93,7 +93,7 @@ def run_fit(
 
     with Pool(processes=ncores) as pool:
         sampler = emcee.EnsembleSampler(
-            nwalkers=nwalkers, ndim=L.nparam, log_prob_fn=L.log_probability, pool=pool, backend=backend
+            nwalkers=nwalkers, ndim=L.nparams, log_prob_fn=L.log_probability, pool=pool, backend=backend
         )
         sampler.run_mcmc(init_pos.T, nit, progress=True, store=True)
 
