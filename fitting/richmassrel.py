@@ -82,9 +82,14 @@ def run_fit(
     backend = emcee.backends.HDFBackend(savefilename, name=group_name)
 
     rng = np.random.default_rng(0)
-    init_pos = np.array([
-        rng.uniform(ig*(1-0.2), ig*(1+0.2), nwalkers) for ig in init_guess
-    ])
+    init_pos = np.zeros((len(init_guess), nwalkers))
+    for i, ig in enumerate(init_guess):
+        l1 = ig*(1-0.2)
+        l2 = ig*(1+0.2)
+        if l1<l2:
+            init_pos[i,:] = rng.uniform(l1, l2, nwalkers)
+        else:
+            init_pos[i,:] = rng.uniform(l2, l1, nwalkers)
 
     with Pool(processes=ncores) as pool:
         sampler = emcee.EnsembleSampler(
