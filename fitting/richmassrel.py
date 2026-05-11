@@ -110,7 +110,7 @@ def main():
     savefilename = f'massrichness_relation_{SAMPLE}.hdf5'
 
     m200 = np.zeros((3,4))
-    e_m200 = np.zeros((3,4))    
+    e_m200 = np.zeros((2,3,4))    
     richness = np.zeros((3,4))
     meanz = np.zeros((3,4))
     for z, (zmin,zmax) in enumerate(zip(ZMIN, ZMAX)):
