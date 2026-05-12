@@ -19,17 +19,22 @@ class LamMassRelation:
 
     def __init__(self,
                  mass,
+                 mass_err,
                  redshift,
                  richness,
-                 richness_err
+                 richness_err=None
         ):
         self.mass = mass
         self.redshift = redshift
         self.richness = richness
-        self.lam_err = richness_err
+        if richness_err is not None:
+            self.richness_err = richness_err
+        else:
+            self.richness_err = np.zeros_like(self.richness)
+        self.sigma_logM = 0.5*()
         self.nparams = 4
         self.param_name = ['lam0', 'lamM', 'lamZ', 's_logl']
-        self.limits = {'lam0':(25.0,100.0), 'lamM':(0.01,10.0), 'lamZ':(-1.0,1.0), 's_logl':(0.01,0.5)}
+        self.limits = {'lam0':(5.0,250.0), 'lamM':(0.01,10.0), 'lamZ':(-5.0,5.0), 's_logl':(0.01,1.0)}
 
     def log_likelihood(self, theta):
 
@@ -37,7 +42,9 @@ class LamMassRelation:
 
         model = ln_lambda_Mz(self.mass, self.redshift, lam0, lamM, lamZ)
         dist = self.richness - model
-        s2 = sigma_logl**2
+
+        s2 = sigma_logl**2 + 1.0/self.richness + (lamM*self.sigma_logM)**2 + self.richness_err
+
         return -0.5 * np.sum(dist**2 / s2 + np.log(2.0*np.pi*s2))
         # return -0.5*np.dot(dist, np.dot(err, dist))
 
@@ -116,7 +123,7 @@ def main():
     PLOT = config['RUN']['PLOT']
     MODEL = config['RUN']['MODEL']
     COVMODE = config['RUN']['COVMODE']
-    savefilename = f'massrichness_relation_{SAMPLE}.hdf5'
+    savefilename = f'rich-mass_rel_{SAMPLE}.hdf5'
 
     m200 = np.zeros((3,4))
     e_m200 = np.zeros((2,3,4))
