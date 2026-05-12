@@ -56,6 +56,20 @@ class LamMassRelation:
         return lp + self.log_likelihood(theta)
 
 # ==================
+def make_init_pos(init_guess, nwalkers, seed=0):
+
+    rng = np.random.default_rng(0)
+    init_pos = np.zeros((len(init_guess), nwalkers))
+    for i, ig in enumerate(init_guess):
+        l1 = ig*(1-0.2)
+        l2 = ig*(1+0.2)
+        if l1<l2:
+            init_pos[i,:] = rng.uniform(l1, l2, nwalkers)
+        else:
+            init_pos[i,:] = rng.uniform(l2, l1, nwalkers)
+
+    return init_pos
+
 def run_fit(
         mass,
         redshift,
@@ -79,15 +93,7 @@ def run_fit(
 
     backend = emcee.backends.HDFBackend(savefilename, name=group_name)
 
-    rng = np.random.default_rng(0)
-    init_pos = np.zeros((len(init_guess), nwalkers))
-    for i, ig in enumerate(init_guess):
-        l1 = ig*(1-0.2)
-        l2 = ig*(1+0.2)
-        if l1<l2:
-            init_pos[i,:] = rng.uniform(l1, l2, nwalkers)
-        else:
-            init_pos[i,:] = rng.uniform(l2, l1, nwalkers)
+    init_pos = make_init_pos(init_guess, nwalkers)
 
     with Pool(processes=ncores) as pool:
         sampler = emcee.EnsembleSampler(
