@@ -144,7 +144,7 @@ def main():
     sampler = run_fit(
         mass=m200,
         redshift=meanz,
-        richness=richness,
+        richness=np.log(richness),
         richness_err=np.zeros_like(richness),
         nwalkers=NWALKERS,
         nit=NIT,
