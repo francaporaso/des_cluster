@@ -29,7 +29,7 @@ class LamMassRelation:
         self.lam_err = richness_err
         self.nparams = 4
         self.param_name = ['lam0', 'lamM', 'lamZ', 's_logl']
-        self.limits = {'lam0':(1.0,300.0), 'lamM':(0.01,100.0), 'lamZ':(-5.0,5.0), 's_logl':(0.01,0.9)}
+        self.limits = {'lam0':(25.0,100.0), 'lamM':(0.01,10.0), 'lamZ':(-1.0,1.0), 's_logl':(0.01,0.5)}
 
     def log_likelihood(self, theta):
 
@@ -142,7 +142,9 @@ def main():
 
 
     sampler = run_fit(
-        m200, meanz, richness,
+        mass=m200,
+        redshift=meanz,
+        richness=richness,
         richness_err=np.zeros_like(richness),
         nwalkers=NWALKERS,
         nit=NIT,
