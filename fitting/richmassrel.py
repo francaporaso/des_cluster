@@ -31,7 +31,7 @@ class LamMassRelation:
             self.richness_err = richness_err
         else:
             self.richness_err = np.zeros_like(self.richness)
-        self.sigma_logM = 0.5*()
+        self.mass_err = mass_err
         self.nparams = 4
         self.param_name = ['lam0', 'lamM', 'lamZ', 's_logl']
         self.limits = {'lam0':(5.0,250.0), 'lamM':(0.01,10.0), 'lamZ':(-5.0,5.0), 's_logl':(0.01,1.0)}
@@ -43,7 +43,7 @@ class LamMassRelation:
         model = ln_lambda_Mz(self.mass, self.redshift, lam0, lamM, lamZ)
         dist = self.richness - model
 
-        s2 = sigma_logl**2 + 1.0/self.richness + (lamM*self.sigma_logM)**2 + self.richness_err
+        s2 = sigma_logl**2 + self.mass+_err**2 + 1.0/self.richness + self.richness_err
 
         return -0.5 * np.sum(dist**2 / s2 + np.log(2.0*np.pi*s2))
         # return -0.5*np.dot(dist, np.dot(err, dist))
@@ -82,6 +82,7 @@ def run_fit(
         redshift,
         richness,
         richness_err,
+        mass_err,
         init_guess = [50.0, 1.3, -0.3, 0.2],
         nwalkers=10,
         nit=100,
@@ -91,6 +92,7 @@ def run_fit(
 
     L = LamMassRelation(
         mass=mass,
+        mass_err=mass_err,
         redshift=redshift,
         richness=richness,
         richness_err=richness_err
@@ -147,12 +149,14 @@ def main():
                 richness[z,l] = f[0].header['L_MEAN']
                 meanz[z,l] = f[0].header['Z_MEAN']
 
+    mass_err_mean = 0.5*(e_m200[0,:,:] + e_m200[1,:,:])
 
     sampler = run_fit(
         mass=m200,
+        mass_err=e_m200
         redshift=meanz,
         richness=np.log(richness),
-        richness_err=np.zeros_like(richness),
+        richness_err=None,
         nwalkers=NWALKERS,
         nit=NIT,
         ncores=NCORES,
