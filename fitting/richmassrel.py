@@ -153,7 +153,7 @@ def main():
 
     sampler = run_fit(
         mass=m200,
-        mass_err=e_m200
+        mass_err=e_m200,
         redshift=meanz,
         richness=np.log(richness),
         richness_err=None,
