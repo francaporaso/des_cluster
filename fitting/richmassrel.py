@@ -43,7 +43,7 @@ class LamMassRelation:
         model = ln_lambda_Mz(self.mass, self.redshift, lam0, lamM, lamZ)
         dist = self.richness - model
 
-        s2 = sigma_logl**2 + self.mass_err**2 + 1.0/self.richness + self.richness_err
+        s2 = sigma_logl**2 + self.mass_err**2 #+ 1.0/self.richness + self.richness_err
 
         return -0.5 * np.sum(dist**2 / s2 + np.log(2.0*np.pi*s2))
         # return -0.5*np.dot(dist, np.dot(err, dist))
