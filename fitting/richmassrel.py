@@ -17,10 +17,10 @@ def ln_lambda_Mz(mass, redshift, lam0, lamM, lamZ):
 
 class LamMassRelation:
 
-    def __init__(self, 
-                 mass, 
-                 redshift, 
-                 richness, 
+    def __init__(self,
+                 mass,
+                 redshift,
+                 richness,
                  richness_err
         ):
         self.mass = mass
@@ -29,17 +29,18 @@ class LamMassRelation:
         self.lam_err = richness_err
         self.nparams = 4
         self.param_name = ['lam0', 'lamM', 'lamZ', 's_logl']
-        self.limits = {'lam0':(1,100), 'lamM':(0.01,100.0), 'lamZ':(-5.0,5.0), 's_logl':(0.01,0.5)}
+        self.limits = {'lam0':(1.0,300.0), 'lamM':(0.01,100.0), 'lamZ':(-5.0,5.0), 's_logl':(0.01,0.9)}
 
     def log_likelihood(self, theta):
-        
+
         lam0, lamM, lamZ, sigma_logl = theta
-        
+
         model = ln_lambda_Mz(self.mass, self.redshift, lam0, lamM, lamZ)
         dist = self.richness - model
-        return -0.5*np.sum(dist**2 / sigma_logl**2 + 4*np.pi*np.log(sigma_logl))
+        s2 = sigma_logl**2
+        return -0.5i * np.sum(dist**2 / s2 + np.log(2.0*np.pi*s2))
         # return -0.5*np.dot(dist, np.dot(err, dist))
-    
+
     def log_prior(self, theta):
         ### tener cuidado con el orden de lims!
         if np.prod(
@@ -54,11 +55,11 @@ class LamMassRelation:
             return -np.inf
         return lp + self.log_likelihood(theta)
 
-# ==================    
+# ==================
 def run_fit(
-        mass, 
-        redshift, 
-        richness, 
+        mass,
+        redshift,
+        richness,
         richness_err,
         init_guess = [50.0, 1.3, -0.3, 0.2],
         nwalkers=10,
@@ -112,7 +113,7 @@ def main():
     savefilename = f'massrichness_relation_{SAMPLE}.hdf5'
 
     m200 = np.zeros((3,4))
-    e_m200 = np.zeros((2,3,4))    
+    e_m200 = np.zeros((2,3,4))
     richness = np.zeros((3,4))
     meanz = np.zeros((3,4))
     for z, (zmin,zmax) in enumerate(zip(ZMIN, ZMAX)):
@@ -123,7 +124,7 @@ def main():
             datafile = f'results/lensing_desy3_{SAMPLE}_{zstr}_{lstr}_bin15log.fits'
             chainfile = f'results/fitting_desy3_{SAMPLE}_{zstr}_{lstr}.hdf5'
 
-            fit, err = load_fitted_params(chainfile, model_name=MODEL, cov_mode=COVMODE) 
+            fit, err = load_fitted_params(chainfile, model_name=MODEL, cov_mode=COVMODE)
 
             m200[z,l] = fit['M200']
             e_m200[0,z,l] = -err['M200'][0]
@@ -135,7 +136,7 @@ def main():
 
 
     sampler = run_fit(
-        m200, meanz, richness, 
+        m200, meanz, richness,
         richness_err=np.zeros_like(richness),
         nwalkers=NWALKERS,
         nit=NIT,
