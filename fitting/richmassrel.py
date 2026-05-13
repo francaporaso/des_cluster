@@ -173,9 +173,10 @@ def main():
     nlbins = len(LMIN)
 
     m200 = np.zeros((nzbins,nlbins))
-    e_m200 = np.zeros((2,nzbins,nlbin))
-    richness = np.zeros((nzbins,nlbin))
-    meanz = np.zeros((nzbins,nlbin))
+    e_m200 = np.zeros((2,nzbins,nlbins))
+    richness = np.zeros((nzbins,nlbins))
+    meanz = np.zeros((nzbins,nlbins))
+
     for z, (zmin,zmax) in enumerate(zip(ZMIN, ZMAX)):
         zstr = f'z{100*zmin:03.0f}-{100*zmax:03.0f}'
         for l, (lmin, lmax) in enumerate(zip(LMIN, LMAX)):
