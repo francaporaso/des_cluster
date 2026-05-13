@@ -76,9 +76,9 @@ class LamMassRelation:
 
     def log_likelihood(self, theta):
 
-        _, lamM, _, sigma_logl = theta
+        lam0, lamM, lamZ, sigma_logl = theta
 
-        model = self.func(self.xdata, self.redshift, *theta)
+        model = self.func(self.xdata, self.redshift, lam0, lamM, lamZ)
         dist = self.ydata - model
 
         s2 = sigma_logl**2 + (lamM*self.yerr)**2
