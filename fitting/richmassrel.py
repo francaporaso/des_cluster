@@ -66,7 +66,10 @@ class LamMassRelation:
         else:
             self.xerr = np.zeros_like(xdata)
         self.ydata = ydata
-        self.yerr = yerr
+        if yerr is not None:
+            self.yerr = yerr
+        else:
+            self.yerr = np.zeros_like(ydata)
 
         self.nparams = funcs_dict[relation]['nparams']
         self.func = funcs_dict[relation]['func']
