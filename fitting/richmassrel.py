@@ -84,7 +84,7 @@ class LamMassRelation:
         model = self.func(self.xdata, self.redshift, lam0, lamM, lamZ)
         dist = self.ydata - model
 
-        s2 = sigma_logl**2 + (lamM*self.xerr)**2
+        s2 = sigma_logl**2 + (lamM*self.xerr/self.xdata)**2
 
         return -0.5 * np.sum(dist**2 / s2 + np.log(2.0*np.pi*s2))
         # return -0.5*np.dot(dist, np.dot(err, dist))
