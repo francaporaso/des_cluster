@@ -15,35 +15,73 @@ def ln_lambda_Mz(mass, redshift, lam0, lamM, lamZ):
     zpiv = 0.6
     return np.log(lam0) + lamM*np.log(mass/Mpiv) + lamZ*np.log((1+redshift)/(1+zpiv))
 
+def ln_M_lambdaz(richness, redshift, M0, F_l, G_z):
+    lampiv = 40.0
+    zpiv = 0.35
+    return np.log(M0) + F_l*np.log(richness/lampiv) + G_z*np.((1.0+z)/(1.0+zpiv))
+
+funcs_dict = {
+    'mass-richness': {
+        'func': ln_M_lambdaz,
+        'nparams': 3,
+        'param_names': ['M0','F_l','G_z','sigma_M'],
+        'param_limts':{
+            'M0':(1e13, 1e15),
+            'F_l':(0.01, 10),
+            'G_z':(-1.0, 1.0)
+
+        }
+    },
+    'richness-mass': {
+        'func': ln_lambda_Mz,
+        'nparams': 4,
+        'param_names': ['lam0', 'lamM', 'lamZ', 'sigma_logl'],
+        'param_limits': {
+            'lam0':(5.0, 250.0),
+            'lamM':(0.01, 10.0),
+            'lamZ':(-5.0, 5.0),
+            's_logl':(0.01, 1.0)
+        }
+    }
+}
+
 class LamMassRelation:
 
-    def __init__(self,
-                 mass,
-                 mass_err,
-                 redshift,
-                 richness,
-                 richness_err=None
+    def __init__(
+            self,
+            redshift,
+            xdata,
+            ydata,
+            yerr,
+            relation='mass-richness',
+            xerr=None,
         ):
-        self.mass = mass
+
+
         self.redshift = redshift
-        self.richness = richness
-        if richness_err is not None:
-            self.richness_err = richness_err
+
+        self.xdata = xdata
+        if xerr is not None:
+            self.xerr = xerr
         else:
-            self.richness_err = np.zeros_like(self.richness)
-        self.mass_err = mass_err
-        self.nparams = 4
-        self.param_name = ['lam0', 'lamM', 'lamZ', 's_logl']
-        self.limits = {'lam0':(5.0,250.0), 'lamM':(0.01,10.0), 'lamZ':(-5.0,5.0), 's_logl':(0.01,1.0)}
+            self.xerr = np.zeros_like(xdata)
+        self.ydata = ydata
+        self.yerr = yerr
+
+        self.nparams = funcs_dict[relation]['nparams']
+        self.func = funcs_dict[relation]['func']
+        self.param_name = funcs_dict[relation]['param_names']
+        self.limits = funcs_dict[relation]['param_limits']
+
 
     def log_likelihood(self, theta):
 
-        lam0, lamM, lamZ, sigma_logl = theta
+        _, lamM, _, sigma_logl = theta
 
-        model = ln_lambda_Mz(self.mass, self.redshift, lam0, lamM, lamZ)
-        dist = self.richness - model
+        model = self.func(self.xdata, self.redshift, *theta)
+        dist = self.ydata - model
 
-        s2 = sigma_logl**2 + self.mass_err**2 #+ 1.0/self.richness + self.richness_err
+        s2 = sigma_logl**2 + (lamM*self.yerr)**2
 
         return -0.5 * np.sum(dist**2 / s2 + np.log(2.0*np.pi*s2))
         # return -0.5*np.dot(dist, np.dot(err, dist))
@@ -91,11 +129,12 @@ def run_fit(
     ):
 
     L = LamMassRelation(
-        mass=mass,
-        mass_err=mass_err,
+        ydata=mass,
+        yerr=mass_err,
         redshift=redshift,
-        richness=richness,
-        richness_err=richness_err
+        xdata=richness,
+        xerr=richness_err,
+        relation='richness-mass'
     )
 
     group_name = 'emcee/'
