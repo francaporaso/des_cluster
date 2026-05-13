@@ -169,10 +169,13 @@ def main():
     COVMODE = config['RUN']['COVMODE']
     savefilename = f'rich-mass_rel_{SAMPLE}.hdf5'
 
-    m200 = np.zeros((3,4))
-    e_m200 = np.zeros((2,3,4))
-    richness = np.zeros((3,4))
-    meanz = np.zeros((3,4))
+    nzbins = len(ZMIN)
+    nlbins = len(LMIN)
+
+    m200 = np.zeros((nzbins,nlbins))
+    e_m200 = np.zeros((2,nzbins,nlbin))
+    richness = np.zeros((nzbins,nlbin))
+    meanz = np.zeros((nzbins,nlbin))
     for z, (zmin,zmax) in enumerate(zip(ZMIN, ZMAX)):
         zstr = f'z{100*zmin:03.0f}-{100*zmax:03.0f}'
         for l, (lmin, lmax) in enumerate(zip(LMIN, LMAX)):
@@ -180,9 +183,6 @@ def main():
 
             datafile = f'results/lensing_desy3_{SAMPLE}_{zstr}_{lstr}_bin15log.fits'
             chainfile = f'results/fitting_desy3_{SAMPLE}_{zstr}_{lstr}.hdf5'
-            print(datafile)
-            print(chainfile)
-            assert input('continue [y/n]')=='y'
 
             fit, err = load_fitted_params(chainfile, model_name=MODEL, cov_mode=COVMODE)
 
