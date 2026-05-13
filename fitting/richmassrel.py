@@ -18,7 +18,7 @@ def ln_lambda_Mz(mass, redshift, lam0, lamM, lamZ):
 def ln_M_lambdaz(richness, redshift, M0, F_l, G_z):
     lampiv = 40.0
     zpiv = 0.35
-    return np.log(M0) + F_l*np.log(richness/lampiv) + G_z*np.((1.0+z)/(1.0+zpiv))
+    return np.log(M0) + F_l*np.log(richness/lampiv) + G_z*np.log((1.0+z)/(1.0+zpiv))
 
 funcs_dict = {
     'mass-richness': {
