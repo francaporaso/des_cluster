@@ -129,11 +129,11 @@ def run_fit(
     ):
 
     L = LamMassRelation(
-        ydata=mass,
-        yerr=mass_err,
+        ydata=richness,
+        yerr=richness_err,
         redshift=redshift,
-        xdata=richness,
-        xerr=richness_err,
+        xdata=mass,
+        xerr=mass_err,
         relation='richness-mass'
     )
 
