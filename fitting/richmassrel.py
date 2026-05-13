@@ -180,6 +180,9 @@ def main():
 
             datafile = f'results/lensing_desy3_{SAMPLE}_{zstr}_{lstr}_bin15log.fits'
             chainfile = f'results/fitting_desy3_{SAMPLE}_{zstr}_{lstr}.hdf5'
+            print(datafile)
+            print(chainfile)
+            assert input('continue [y/n]')=='y'
 
             fit, err = load_fitted_params(chainfile, model_name=MODEL, cov_mode=COVMODE)
 
