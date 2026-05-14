@@ -360,7 +360,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     hdul.writeto(outputname, overwrite=cfg.OVERWRITE)
     print(f' File saved in: {outputname}', flush=True)
 
-    if PLOT:
+    if cfg.PLOT:
         plot_profile(binspace(cfg.RIN, cfg.ROUT, cfg.NBINS), dsigma_t, dsigma_x)
 
     return 0
