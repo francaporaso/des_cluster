@@ -229,7 +229,7 @@ def partial_profile(inp):
 
 def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
 
-    l = read_redmapper(lensname, zmin, zmax, lmin, lmax, pcen) # redmapper
+    l = read_redmapper(cfg.lensname, zmin, zmax, lmin, lmax, pcen) # redmapper
 
     nlenses = len(l)
     print(f'>> Z = [{zmin}, {zmax})')
@@ -304,7 +304,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     dsigma_x = (1/(1-f_cl))*dsigma_x_num/response_sum
 
     # ==== Saving
-    outputname = (f'results/lensing_desy3_{sample}_'
+    outputname = (f'results/lensing_desy3_{cfg.sample}_'
                   f'z{100*zmin:03.0f}-{100*zmax:03.0f}_'
                   f'lambda{lmin:02.0f}-{lmax:02.0f}_'
                   f'bin{cfg.NBINS}{cfg.BINNING}.fits')
@@ -414,7 +414,7 @@ def main():
 
     for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(cfg.ZBINS, cfg.LBINS), start=1):
         print(f'  \n[{i}/{total}]  ', flush=True)
-        check = stacking(zmin, zmax, lmin, lmax)
+        check = stacking(zmin, zmax, lmin, lmaxi, cfg.PCEN)
         assert check == 0, '>>> Something went wrong. <<<'
 
     print(' End '.center(17,'-'))
