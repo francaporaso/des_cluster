@@ -1,4 +1,4 @@
-#from argparse import ArgumentParser
+from argparse import ArgumentParser
 import numpy as np
 from astropy.cosmology import FlatLambdaCDM
 from astropy.table import Table
@@ -10,12 +10,14 @@ from time import time, asctime
 from tqdm import tqdm
 import toml
 from itertools import product
+from dataclasses import dataclass
 
 from lensing.funcs import eq2p2, cov_matrix, get_jackknife_kmeans
 #from io import *
 #from nzsource import calculate_median, sigma_crit, lensing_efficiency, read_nzsource
 
 # === Fixed globals
+cfg = None
 COSMO = FlatLambdaCDM(H0=100, Om0=0.3)
 NSIDE = 128
 ZMED = np.array([0.285, 0.476, 0.743, 0.942]) # median redshift of source distribution
@@ -27,30 +29,41 @@ binspace = None
 
 # ==== Input globals
 # read from config file
-config = toml.load('lensing/config.toml')
-lensname=config['RUN']['LENSNAME']
-sourcename=config['RUN']['SOURCENAME']
-sample=config['RUN']['SAMPLE']
+class Config:
 
-NCORES = config['RUN']['NCORES']
-PLOT = config['RUN']['PLOT']
-OVERWRITE = config['RUN']['OVERWRITE']
-RIN, ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
-NBINS = config['PROFILE']['NBINS']
-NJK = config['PROFILE']['NJK']
-BINNING = config['PROFILE']['BINNING']
-#LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
-#ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
+    def __init__(self, configfile:str='lensing/config.toml'):
 
-# Lens bin lists — each pair (ZMIN[i], ZMAX[i]) and (LMIN[j], LMAX[j])
-# is read as a list; scalars are wrapped so the rest of the code is uniform.
-def _to_list(val):
-    return val if isinstance(val, list) else [val]
+        config = toml.load(configfile)
 
-ZMIN_LIST = _to_list(config['LENSES']['ZMIN'])
-ZMAX_LIST = _to_list(config['LENSES']['ZMAX'])
-LMIN_LIST = _to_list(config['LENSES']['LMIN'])
-LMAX_LIST = _to_list(config['LENSES']['LMAX'])
+        self.lensname=config['RUN']['LENSNAME']
+        self.sourcename=config['RUN']['SOURCENAME']
+        self.sample=config['RUN']['SAMPLE']
+
+        self.NCORES = config['RUN']['NCORES']
+        self.PLOT = config['RUN']['PLOT']
+        self.OVERWRITE = config['RUN']['OVERWRITE']
+        self.RIN, self.ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
+        self.NBINS = config['PROFILE']['NBINS']
+        self.NJK = config['PROFILE']['NJK']
+        self.BINNING = config['PROFILE']['BINNING']
+
+        self.PCEN = config['LENSES']['PCEN']
+        self.ZBINS = self._edges_to_bins(config['LENSES']['ZEDGES'])
+        self.LBINS = self._edges_to_bins(config['LENSES']['LEDGES'])
+
+       #LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
+        #ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
+
+        # Lens bin lists — each pair (ZMIN[i], ZMAX[i]) and (LMIN[j], LMAX[j])
+        # is read as a list; scalars are wrapped so the rest of the code is uniform.
+
+    def _edges_to_bins(self, edges, name):
+        if not isinstance(edges, list) or len(edges) < 2:
+            raise ValueError(f'[LENSES] {name} must be a list with at least 2 values.')
+        for lo, hi in zip(edges[:-1], edges[1:]):
+            if lo >= hi:
+                raise ValueError(f'[LENSES] {name} must be strictly increasing, got {lo} >= {hi}.')
+        return list(zip(edges[:-1], edges[1:]))
 
 
 def _footprint_mask(ra, dec, z, padding=1.5):
@@ -74,7 +87,7 @@ def _footprint_mask(ra, dec, z, padding=1.5):
 
     for i, (ra0, dec0, z0) in enumerate(zip(ra, dec, z)):
         DEGxMPC     = COSMO.arcsec_per_kpc_proper(z0).to('deg/Mpc').value
-        search_rad  = np.deg2rad(DEGxMPC * ROUT * padding)
+        search_rad  = np.deg2rad(DEGxMPC * cfg.ROUT * padding)
         pix_in_disc = hp.query_disc(
             NSIDE,
             vec=hp.ang2vec(ra0, dec0, lonlat=True),
@@ -86,25 +99,25 @@ def _footprint_mask(ra, dec, z, padding=1.5):
     n_cut = (~keep).sum()
     if n_cut:
         print(f'>> Footprint cut: removed {n_cut}/{len(ra)} edge lenses '
-              f'(ROUT={ROUT} Mpc/h, padding={padding}x)', flush=True)
+              f'(ROUT={cfg.ROUT} Mpc/h, padding={padding}x)', flush=True)
     return keep
 
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
-                   ZMIN=0.2, ZMAX=0.3, LMIN=10, LMAX=50, PCEN=0.5):
+                   zmin=0.2, zmax=0.3, lmin=10, lmax=50, pcen=0.5):
     l = Table.read(filename, format='fits', memmap=True)
     mask = (
-        (l['redshift'] >  ZMIN) & (l['redshift'] <= ZMAX) &
-        (l['lambda']   >  LMIN) & (l['lambda']   <= LMAX) &
-        (l['pcen']     >  PCEN)
+        (l['redshift'] >  zmin) & (l['redshift'] <= zmax) &
+        (l['lambda']   >  lmin) & (l['lambda']   <= lmax) &
+        (l['pcen']     >  pcen)
     )
     l = l[mask]
-    footprint = _footprint_mask(l['ra_cl'], l['dec_cl'], l['redshift'], padding=1.5)
+    footprint = _footprint_mask(l['ra_cl'], l['dec_cl'], l['redshift'], padding=1.0)
     return l[footprint]
 
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
     return Table.read(filename, format='fits', memmap=True)
 
-def init_globals():
+def init_globals(configfile):
     global binspace
     global SOURCE#, LENSES
     global PIX_TO_IDX
@@ -117,7 +130,7 @@ def init_globals():
         raise ValueError('BINNING must be "log" or "lin".')
 
     # reading catalogs
-    SOURCE = read_source(sourcename) # metacal file
+    SOURCE = read_source(cfg.sourcename) # metacal file
     #LENSES = read_redmapper(lensname) # redmapper
 
     # making a dict of healpix idx for fast query
@@ -159,15 +172,15 @@ def partial_profile(inp):
 
     ra0, dec0, z0, *w_b = inp
 
-    dsigma_t_num = np.zeros(NBINS)
-    dsigma_x_num = np.zeros(NBINS)
-    response_sum = np.zeros(NBINS)
-    n_bin = np.zeros(NBINS)
-    sq_weight_sum = np.zeros(NBINS)
-    weight_sum = np.zeros(NBINS)
+    dsigma_t_num = np.zeros(cfg.NBINS)
+    dsigma_x_num = np.zeros(cfg.NBINS)
+    response_sum = np.zeros(cfg.NBINS)
+    n_bin = np.zeros(cfg.NBINS)
+    sq_weight_sum = np.zeros(cfg.NBINS)
+    weight_sum = np.zeros(cfg.NBINS)
 
     DEGxMPC = COSMO.arcsec_per_kpc_proper(z0).to('deg/Mpc').value
-    psi = DEGxMPC*ROUT
+    psi = DEGxMPC*cfg.ROUT
 
     # get masked data
     mask, w_b = get_masked_idx_fast(psi, ra0, dec0, z0, w_b)
@@ -195,10 +208,10 @@ def partial_profile(inp):
     et = (-e1*cos2t+e2*sin2t)*w_s
     ex = (e1*sin2t+e2*cos2t)*w_s
 
-    ndots = binspace(RIN, ROUT, NBINS+1)
+    ndots = binspace(cfg.RIN, cfg.ROUT, cfg.NBINS+1)
     dig = np.digitize((np.rad2deg(rads)/DEGxMPC), ndots)
 
-    for n_i in range(NBINS):
+    for n_i in range(cfg.NBINS):
         m_i = dig == n_i+1
         for b in range(4):
             zbin = catdata['bhat'] == b
@@ -222,20 +235,20 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     print(f'>> Z = [{zmin}, {zmax})')
     print(f'>> LAMBDA = [{lmin}, {lmax})')
     print(f'>> NLENSES = {nlenses}')
-    localNJK = NJK
-    if localNJK < int(NBINS**(3/2)):
-        localNJK = int(NBINS**(3/2))
+    localNJK = cfg.NJK
+    if localNJK < int(cfg.NBINS**(3/2)):
+        localNJK = int(cfg.NBINS**(3/2))
     print(f'>> Using NJK = {localNJK}')
 
-    dsigma_t_num = np.zeros((localNJK+1, NBINS))
-    dsigma_x_num = np.zeros((localNJK+1, NBINS))
-    response_sum = np.zeros((localNJK+1, NBINS))
+    dsigma_t_num = np.zeros((localNJK+1, cfg.NBINS))
+    dsigma_x_num = np.zeros((localNJK+1, cfg.NBINS))
+    response_sum = np.zeros((localNJK+1, cfg.NBINS))
 
-    weight_sl    = np.zeros((localNJK+1, NBINS))
-    sq_weight_sl = np.zeros((localNJK+1, NBINS))
-    n_bin        = np.zeros((localNJK+1, NBINS))
+    weight_sl    = np.zeros((localNJK+1, cfg.NBINS))
+    sq_weight_sl = np.zeros((localNJK+1, cfg.NBINS))
+    n_bin        = np.zeros((localNJK+1, cfg.NBINS))
 
-    with Pool(processes=NCORES) as pool:
+    with Pool(processes=cfg.NCORES) as pool:
         results_map = list(
             tqdm(
                 pool.imap(
@@ -284,9 +297,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     #response = np.sum(response_sum, axis=0)
 
     # cluster contaminants correction
-    area = np.pi*np.diff(binspace(RIN, ROUT, NBINS+1))**2
-    den_n = n_eff/area
-    f_cl = 1.0 - den_n[-1]/den_n
+    f_cl = contaminants_fraction(n_eff)
 
     # profiles
     dsigma_t = (1/(1-f_cl))*dsigma_t_num/response_sum
@@ -296,29 +307,29 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     outputname = (f'results/lensing_desy3_{sample}_'
                   f'z{100*zmin:03.0f}-{100*zmax:03.0f}_'
                   f'lambda{lmin:02.0f}-{lmax:02.0f}_'
-                  f'bin{NBINS}{BINNING}.fits')
+                  f'bin{cfg.NBINS}{cfg.BINNING}.fits')
 
     head=fits.Header()
     head.update({
         'nlenses':nlenses,
-        'lenscat':lensname,
-        'sourcat':sourcename,
+        'lenscat':cfg.lensname,
+        'sourcat':cfg.sourcename,
         'l_min':lmin,
         'l_max':lmax,
         'l_mean':np.mean(l['lambda']),
         'z_min':zmin,
         'z_max':zmax,
         'z_mean':np.mean(l['redshift']),
-        'RIN':RIN,
-        'ROUT':ROUT,
-        'NBINS':NBINS,
+        'RIN':cfg.RIN,
+        'ROUT':cfg.ROUT,
+        'NBINS':cfg.NBINS,
         'NJK':localNJK,
-        'binning':BINNING,
+        'binning':cfg.BINNING,
         'HISTORY':f'{asctime()}',
     })
 
     table = Table({
-        'R':binspace(RIN, ROUT, NBINS),
+        'R':binspace(cfg.RIN, cfg.ROUT, cfg.NBINS),
         'DSigma_t':dsigma_t[0],
         'DSigma_x':dsigma_x[0],
         'N_eff':n_eff[0],
@@ -346,13 +357,21 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         *jack_hdu
     ])
 
-    hdul.writeto(outputname, overwrite=OVERWRITE)
+    hdul.writeto(outputname, overwrite=cfg.OVERWRITE)
     print(f' File saved in: {outputname}', flush=True)
 
     if PLOT:
-        plot_profile(binspace(RIN, ROUT, NBINS), dsigma_t, dsigma_x)
+        plot_profile(binspace(cfg.RIN, cfg.ROUT, cfg.NBINS), dsigma_t, dsigma_x)
 
     return 0
+
+def contaminants_fraction(n_eff):
+    # cluster contaminants correction
+    area = np.pi*np.diff(binspace(cfg.RIN, cfg.ROUT, cfg.NBINS+1))**2
+    den_n = n_eff/area
+    f_cl = 1.0 - den_n[-1]/den_n
+
+    return f_cl
 
 def plot_profile(r, dsigma_t, dsigma_x):
 
@@ -374,21 +393,23 @@ def plot_profile(r, dsigma_t, dsigma_x):
     #fig.savefig('results/test-des_dsigma.png')
 
 def main():
+    global cfg
+
     print(' Start '.center(15,'-'))
+    parser = ArgumentParser()
+    parser.add_argument('--config', type=str, default='lensing/config.toml', action='store')
+    args = parser.parse_args()
 
     t1 = time()
 
+    cfg = Config(args['config'])
     init_globals()
 
-    # Build the list of (zmin, zmax) pairs and (lmin, lmax) pairs
-    zbins = list(zip(ZMIN_LIST, ZMAX_LIST))
-    lbins = list(zip(LMIN_LIST, LMAX_LIST))
-
-    total = len(zbins) * len(lbins)
+    total = len(cfg.ZBINS) * len(cfg.LBINS)
     print(f'>> Running {len(zbins)} redshift bin(s) x {len(lbins)} richness bin(s) = {total} combination(s)')
 
     print('>> RIN '+f'{"= ": >14}{RIN:.2f}')
-    print('>> ROUT '+f'{"= ": >14}{ROUT:.2f}')
+    print('>> ROUT '+f'{"= ": >14}{cfg.ROUT:.2f}')
     print('>> NBINS '+f'{"= ": >17}{NBINS:<2d}')
 
     for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins, lbins), start=1):
