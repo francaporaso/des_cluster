@@ -294,7 +294,6 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
 
     n_eff = weight_sl/sq_weight_sl
-    #response = np.sum(response_sum, axis=0)
 
     # cluster contaminants correction
     f_cl = contaminants_fraction(n_eff)
@@ -309,6 +308,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
                   f'lambda{lmin:02.0f}-{lmax:02.0f}_'
                   f'bin{cfg.NBINS}{cfg.BINNING}.fits')
 
+    richness_quartile = np.quartile(l['lambda'], [16,50,86])
+
     head=fits.Header()
     head.update({
         'nlenses':nlenses,
@@ -317,6 +318,9 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         'l_min':lmin,
         'l_max':lmax,
         'l_mean':np.mean(l['lambda']),
+        'l_med':richness_quartile[1],
+        'l_low':richness_quartile[0],
+        'l_hig':richness_quartile[2],
         'z_min':zmin,
         'z_max':zmax,
         'z_mean':np.mean(l['redshift']),
