@@ -406,7 +406,7 @@ def main():
     init_globals()
 
     total = len(cfg.ZBINS) * len(cfg.LBINS)
-    print(f'>> Running {len(zbins)} redshift bin(s) x {len(lbins)} richness bin(s) = {total} combination(s)')
+    print(f'>> Running {len(cfg.ZBINS)} redshift bin(s) x {len(cfg.LBINS)} richness bin(s) = {total} combination(s)')
 
     print('>> RIN '+f'{"= ": >14}{RIN:.2f}')
     print('>> ROUT '+f'{"= ": >14}{cfg.ROUT:.2f}')
