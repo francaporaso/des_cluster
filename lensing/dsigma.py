@@ -414,7 +414,7 @@ def main():
 
     for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(cfg.ZBINS, cfg.LBINS), start=1):
         print(f'  \n[{i}/{total}]  ', flush=True)
-        check = stacking(zmin, zmax, lmin, lmaxi, cfg.PCEN)
+        check = stacking(zmin, zmax, lmin, lmax, cfg.PCEN)
         assert check == 0, '>>> Something went wrong. <<<'
 
     print(' End '.center(17,'-'))
