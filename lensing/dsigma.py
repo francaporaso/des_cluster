@@ -48,8 +48,8 @@ class Config:
         self.BINNING = config['PROFILE']['BINNING']
 
         self.PCEN = config['LENSES']['PCEN']
-        self.ZBINS = self._edges_to_bins(config['LENSES']['ZEDGES'])
-        self.LBINS = self._edges_to_bins(config['LENSES']['LEDGES'])
+        self.ZBINS = self._edges_to_bins(config['LENSES']['ZEDGES'], 'ZEDGES')
+        self.LBINS = self._edges_to_bins(config['LENSES']['LEDGES'], 'LEDGES')
 
        #LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
         #ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
