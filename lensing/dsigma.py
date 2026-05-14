@@ -384,18 +384,10 @@ def plot_profile(r, dst, e_dst, dsx, e_dsx):
     fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
 
     axes[0].errorbar(r, dst, e_dst, fmt='ok', capsize=2)
-    axes[1].errorbar(r, dsx, fmt='ok', capsize=2)
+    axes[1].errorbar(r, dsx, e_dsx, fmt='ok', capsize=2)
     axes[0].loglog()
-    axes[1].loglog()
-    plt.show()
     #axes[1].loglog()
-
-    # axes[0,1].scatter(r, N_bin, c='green', s=5)
-    # axes[1,1].scatter(r, n_eff, c='green', s=5)
-    # axes[0,1].loglog()
-    # axes[1,1].loglog()
-
-    #fig.savefig('results/test-des_dsigma.png')
+    plt.show()
 
 def main():
     global cfg
