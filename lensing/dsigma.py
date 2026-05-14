@@ -412,7 +412,7 @@ def main():
     print('>> ROUT '+f'{"= ": >14}{cfg.ROUT:.2f}')
     print('>> NBINS '+f'{"= ": >17}{cfg.NBINS:<2d}')
 
-    for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins, lbins), start=1):
+    for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(cfg.ZBINS, cfg.LBINS), start=1):
         print(f'  \n[{i}/{total}]  ', flush=True)
         check = stacking(zmin, zmax, lmin, lmax)
         assert check == 0, '>>> Something went wrong. <<<'
