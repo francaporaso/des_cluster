@@ -408,9 +408,9 @@ def main():
     total = len(cfg.ZBINS) * len(cfg.LBINS)
     print(f'>> Running {len(cfg.ZBINS)} redshift bin(s) x {len(cfg.LBINS)} richness bin(s) = {total} combination(s)')
 
-    print('>> RIN '+f'{"= ": >14}{RIN:.2f}')
+    print('>> RIN '+f'{"= ": >14}{cfg.RIN:.2f}')
     print('>> ROUT '+f'{"= ": >14}{cfg.ROUT:.2f}')
-    print('>> NBINS '+f'{"= ": >17}{NBINS:<2d}')
+    print('>> NBINS '+f'{"= ": >17}{cfg.NBINS:<2d}')
 
     for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins, lbins), start=1):
         print(f'  \n[{i}/{total}]  ', flush=True)
