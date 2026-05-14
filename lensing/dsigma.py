@@ -361,7 +361,13 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     print(f' File saved in: {outputname}', flush=True)
 
     if cfg.PLOT:
-        plot_profile(binspace(cfg.RIN, cfg.ROUT, cfg.NBINS), dsigma_t[0], dsigma_x[0])
+        plot_profile(
+            r=binspace(cfg.RIN, cfg.ROUT, cfg.NBINS),
+            dst=dsigma_t[0],
+            e_dst=np.sqrt(np.diag(cov_matrix(dsigma_t[1:,:]))),
+            dsx=dsigma_x[0],
+            e_dsx=np.sqrt(np.diag(cov_matrix(dsigma_t[1:,:])))
+        )
 
     return 0
 
@@ -373,14 +379,14 @@ def contaminants_fraction(n_eff):
 
     return f_cl
 
-def plot_profile(r, dsigma_t, dsigma_x):
+def plot_profile(r, dst, e_dst, dsx, e_dsx):
 
     fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
 
-    axes[0].scatter(r, dsigma_t, s=5, marker='o')
-    axes[1].scatter(r[dsigma_x > 0], dsigma_x[dsigma_x > 0], s=5, marker='o', color='gray')
-    axes[1].scatter(r[dsigma_x <= 0], np.abs(dsigma_x[dsigma_x <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
+    axes[0].errorbar(r, dst, e_dst, fmt='ok', capsize=2)
+    axes[1].errorbar(r, dsx, fmt='ok', capsize=2)
     axes[0].loglog()
+    axes[1].loglog()
     plt.show()
     #axes[1].loglog()
 
