@@ -402,7 +402,7 @@ def main():
 
     t1 = time()
 
-    cfg = Config(args['config'])
+    cfg = Config(args.config)
     init_globals()
 
     total = len(cfg.ZBINS) * len(cfg.LBINS)
