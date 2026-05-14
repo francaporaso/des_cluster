@@ -377,8 +377,7 @@ def plot_profile(r, dsigma_t, dsigma_x):
 
     fig, axes = plt.subplots(ncols=1, nrows=2, sharex=True, figsize=(5,6))
 
-    axes[0].scatter(r[dsigma_t > 0], dsigma_t[dsigma_t > 0], s=5, marker='o')
-    axes[0].scatter(r[dsigma_t <= 0], np.abs(dsigma_t[dsigma_t <= 0]), s=5, marker='o', edgecolor='b', facecolor='none')
+    axes[0].scatter(r, dsigma_t, s=5, marker='o')
     axes[1].scatter(r[dsigma_x > 0], dsigma_x[dsigma_x > 0], s=5, marker='o', color='gray')
     axes[1].scatter(r[dsigma_x <= 0], np.abs(dsigma_x[dsigma_x <= 0]), s=5, marker='o', edgecolor='gray', facecolor='none')
     axes[0].loglog()
