@@ -308,7 +308,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
                   f'lambda{lmin:02.0f}-{lmax:02.0f}_'
                   f'bin{cfg.NBINS}{cfg.BINNING}.fits')
 
-    richness_quartile = np.percentil(l['lambda'], [16,50,86])
+    richness_quartile = np.percentile(l['lambda'], [16,50,86])
 
     head=fits.Header()
     head.update({
