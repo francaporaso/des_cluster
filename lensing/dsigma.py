@@ -122,9 +122,9 @@ def init_globals():
     global SOURCE#, LENSES
     global PIX_TO_IDX
 
-    if BINNING=='log':
+    if cfg.BINNING=='log':
         binspace = np.geomspace
-    elif BINNING=='lin':
+    elif cfg.BINNING=='lin':
         binspace = np.linspace
     else:
         raise ValueError('BINNING must be "log" or "lin".')
