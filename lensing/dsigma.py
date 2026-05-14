@@ -117,7 +117,7 @@ def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
     return Table.read(filename, format='fits', memmap=True)
 
-def init_globals(configfile):
+def init_globals():
     global binspace
     global SOURCE#, LENSES
     global PIX_TO_IDX
