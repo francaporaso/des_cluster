@@ -51,12 +51,6 @@ class Config:
         self.ZBINS = self._edges_to_bins(config['LENSES']['ZEDGES'], 'ZEDGES')
         self.LBINS = self._edges_to_bins(config['LENSES']['LEDGES'], 'LEDGES')
 
-       #LMIN, LMAX = config['LENSES']['LMIN'], config['LENSES']['LMAX']
-        #ZMIN, ZMAX = config['LENSES']['ZMIN'], config['LENSES']['ZMAX']
-
-        # Lens bin lists — each pair (ZMIN[i], ZMAX[i]) and (LMIN[j], LMAX[j])
-        # is read as a list; scalars are wrapped so the rest of the code is uniform.
-
     def _edges_to_bins(self, edges, name):
         if not isinstance(edges, list) or len(edges) < 2:
             raise ValueError(f'[LENSES] {name} must be a list with at least 2 values.')

@@ -14,28 +14,40 @@ from fitting.utilfuncs import *
 from fitting.plotting import *
 
 # ==== Fix globals
+cfg = None
 
-# === Input globals
-config = toml.load('fitting/config.toml')
-DATANAME = config['NAMES']['DATANAME']
-FOLDER = config['NAMES']['FOLDER']
-SAMPLE = config['NAMES']['SAMPLE']
-CHAINNAME = config['NAMES']['CHAINNAME']
-ZMIN = config['LENSES']['ZMIN']
-ZMAX = config['LENSES']['ZMAX']
-LMIN = config['LENSES']['LMIN']
-LMAX = config['LENSES']['LMAX']
-NBINS = config['LENSES']['NBINS']
-BINNING = config['LENSES']['BINNING']
+# ====
+class Config:
 
-NCORES = config['RUN']['NCORES']
-NIT = config['RUN']['NIT']
-NWALKERS = config['RUN']['NWALKERS']
-COVMODE = config['RUN']['COVMODE']
-MODEL = config['RUN']['MODEL']
-FIXPARAM = config['RUN']['FIXPARAM']
-OBSERVABLE = config['RUN']['OBSERVABLE']
-PLOT = config['RUN']['PLOT']
+    def __init__(self, configfile:str='fitting/config.toml'):
+
+        config = toml.load(configfile)
+
+        self.DATANAME = config['NAMES']['DATANAME']
+        self.FOLDER = config['NAMES']['FOLDER']
+        self.SAMPLE = config['NAMES']['SAMPLE']
+        self.CHAINNAME = config['NAMES']['CHAINNAME']
+        self.ZBINS = self._edges_to_bins(config['LENSES']['ZEDGES'], 'ZEDGES')
+        self.LBINS = self._edges_to_bins(config['LENSES']['LEDGES'], 'LEDGES')
+        self.NBINS = config['LENSES']['NBINS']
+        self.BINNING = config['LENSES']['BINNING']
+
+        self.NCORES = config['RUN']['NCORES']
+        self.NIT = config['RUN']['NIT']
+        self.NWALKERS = config['RUN']['NWALKERS']
+        self.COVMODE = config['RUN']['COVMODE']
+        self.MODEL = config['RUN']['MODEL']
+        self.FIXPARAM = config['RUN']['FIXPARAM']
+        self.OBSERVABLE = config['RUN']['OBSERVABLE']
+        self.PLOT = config['RUN']['PLOT']
+
+    def _edges_to_bins(self, edges, name):
+        if not isinstance(edges, list) or len(edges) < 2:
+            raise ValueError(f'[LENSES] {name} must be a list with at least 2 values.')
+        for lo, hi in zip(edges[:-1], edges[1:]):
+            if lo >= hi:
+                raise ValueError(f'[LENSES] {name} must be strictly increasing, got {lo} >= {hi}.')
+        return list(zip(edges[:-1], edges[1:]))
 
 # ===
 def run_emcee(
@@ -79,43 +91,44 @@ def run_emcee(
     return sampler
 
 def main():
+    global cfg
 
     parser = ArgumentParser()
     parser.add_argument('--overwrite', action='store_true')
-    parser.add_argument('--config', type=str, default='config.toml', action='store')
+    parser.add_argument('--config', type=str, default='fitting/config.toml', action='store')
     args = parser.parse_args()
 
-    zbins = list(zip(ZMIN, ZMAX))
-    lbins = list(zip(LMIN, LMAX))
-    tot = len(zbins)*len(lbins)
-    print(f'>> Fitting {len(zbins)} redshift bins x {len(lbins)} lambda bins = {tot} profiles')
+    cfg = Config(args.config)
 
-    for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(zbins,lbins), start=1):
+    tot = len(cfg.ZBINS)*len(cfg.LBINS)
+    print(f'>> Fitting {len(cfg.ZBINS)} redshift bins x {len(cfg.LBINS)} lambda bins = {tot} profiles')
+
+    for i, ((zmin, zmax), (lmin, lmax)) in enumerate(product(cfg.ZBINS, cfg.LBINS), start=1):
         print(f'>> \n[{i}/{tot}]', flush=True)
         zstr = f'z{100*zmin:03.0f}-{100*zmax:03.0f}'
         lstr = f'lambda{lmin:02.0f}-{lmax:02.0f}'
 
-        data_filename = FOLDER + f'{DATANAME}_{zstr}_{lstr}_bin{NBINS}{BINNING}.fits'
-        chain_filename = FOLDER + f'{CHAINNAME}_{SAMPLE}_{zstr}_{lstr}.hdf5'
+        data_filename = FOLDER + f'{cfg.DATANAME}_{zstr}_{lstr}_bin{cfg.NBINS}{cfg.BINNING}.fits'
+        chain_filename = FOLDER + f'{cfg.CHAINNAME}_{cfg.SAMPLE}_{zstr}_{lstr}.hdf5'
 
         sampler = run_emcee(
-            ncores=NCORES,
-            nit=NIT,
-            nwalkers=NWALKERS,
+            ncores=cfg.NCORES,
+            nit=cfg.NIT,
+            nwalkers=cfg.NWALKERS,
             data_filename=data_filename,
             save_filename=chain_filename,
-            model_name=MODEL,
-            observable=OBSERVABLE,
-            fix_params=FIXPARAM,
-            cov_mode=COVMODE,
+            model_name=cfg.MODEL,
+            observable=cfg.OBSERVABLE,
+            fix_params=cfg.FIXPARAM,
+            cov_mode=cfg.COVMODE,
         )
 
-        param_names = list(default_limits.get(MODEL).keys())
+        param_names = list(default_limits.get(cfg.MODEL).keys())
         # not possible to fix params for now
-        fitpar, errpar = get_fitted_params(sampler.get_chain(discard=int(NIT*0.15)), param_names)
+        fitpar, errpar = get_fitted_params(sampler.get_chain(discard=int(cfg.NIT*0.15)), param_names)
 
         with h5py.File(chain_filename, 'a') as f:
-            group_path = f'fitedparams/{MODEL}/{COVMODE}'
+            group_path = f'fitedparams/{cfg.MODEL}/{cfg.COVMODE}'
 
             # Overwrite if exists
             if group_path in f:
@@ -132,7 +145,7 @@ def main():
             plot_chains(sampler.get_chain())
             plt.show()
 
-            plot_corner(sampler, discard=int(args.NIT*0.15));
+            plot_corner(sampler, discard=int(cfg.NIT*0.15));
             plt.show()
 
 if __name__ == '__main__':
