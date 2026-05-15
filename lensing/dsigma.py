@@ -21,7 +21,7 @@ cfg = None
 COSMO = FlatLambdaCDM(H0=100, Om0=0.3)
 NSIDE = 128
 ZMED = np.array([0.285, 0.476, 0.743, 0.942]) # median redshift of source distribution
-REDSHIFT = 'redshift' # name of the redshift col in source table
+# REDSHIFT = 'redshift' # name of the redshift col in source table ## not used for now
 SOURCE = None
 #LENSES = None
 PIX_TO_IDX : dict = {}
