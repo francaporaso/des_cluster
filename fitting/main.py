@@ -84,7 +84,7 @@ def run_emcee(
     backend = emcee.backends.HDFBackend(save_filename, name=group_name)
     with Pool(processes=ncores) as pool:
         sampler = emcee.EnsembleSampler(
-            NWALKERS, L.nparams, L.log_probability, pool=pool, backend=backend
+            nwalkers, L.nparams, L.log_probability, pool=pool, backend=backend
         )
         sampler.run_mcmc(init_pos, nit, progress=True, store=True)
 
@@ -108,8 +108,8 @@ def main():
         zstr = f'z{100*zmin:03.0f}-{100*zmax:03.0f}'
         lstr = f'lambda{lmin:02.0f}-{lmax:02.0f}'
 
-        data_filename = FOLDER + f'{cfg.DATANAME}_{zstr}_{lstr}_bin{cfg.NBINS}{cfg.BINNING}.fits'
-        chain_filename = FOLDER + f'{cfg.CHAINNAME}_{cfg.SAMPLE}_{zstr}_{lstr}.hdf5'
+        data_filename = self.FOLDER + f'{cfg.DATANAME}_{zstr}_{lstr}_bin{cfg.NBINS}{cfg.BINNING}.fits'
+        chain_filename = self.FOLDER + f'{cfg.CHAINNAME}_{cfg.SAMPLE}_{zstr}_{lstr}.hdf5'
 
         sampler = run_emcee(
             ncores=cfg.NCORES,
