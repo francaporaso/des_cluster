@@ -185,6 +185,10 @@ def partial_profile(inp):
         np.deg2rad(ra0), np.deg2rad(dec0)
     )
 
+    ### theta is measured east of north (ie from y towards x)
+    ### to transform to usual convention (x towards y):
+    ### phi = np.pi/2 + (2.0*np.pi - theta)
+
     #get weights
     w_s = catdata['weight']
 
