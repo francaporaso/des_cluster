@@ -34,10 +34,12 @@ def normalize_cov(cov):
             norm_cov[i,j]=cov[i,j]/np.sqrt(cov[i,i]*cov[j,j])
     return norm_cov
 
-def eq2p2(ra_gal, dec_gal, RA0,DEC0):
+def eq2p2(ra_gal, dec_gal, RA0, DEC0):
     """
     equatorial 2 polars
     angular separation and position angle from centre (RA0,DEC0) to gal position (ra_gal, dec_gal)
+    angle theta is measured EAST OF NORTH (from N towards E, clockwise)
+    
     returns two angles in radians
     all parameters must be in radians.
     """
