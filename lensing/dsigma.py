@@ -30,36 +30,6 @@ binspace = None
 
 # ==== Input globals
 # read from config file
-#class Config:
-#
-#    def __init__(self, configfile:str='lensing/config.toml'):
-#
-#        config = toml.load(configfile)
-#
-#        self.lensname=config['RUN']['LENSNAME']
-#        self.sourcename=config['RUN']['SOURCENAME']
-#        self.sample=config['RUN']['SAMPLE']
-#
-#        self.NCORES = config['RUN']['NCORES']
-#        self.PLOT = config['RUN']['PLOT']
-#        self.OVERWRITE = config['RUN']['OVERWRITE']
-#        self.RIN, self.ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
-#        self.NBINS = config['PROFILE']['NBINS']
-#        self.NJK = config['PROFILE']['NJK']
-#        self.BINNING = config['PROFILE']['BINNING']
-#
-#        self.PCEN = config['LENSES']['PCEN']
-#        self.ZBINS = self._edges_to_bins(config['LENSES']['ZEDGES'], 'ZEDGES')
-#        self.LBINS = self._edges_to_bins(config['LENSES']['LEDGES'], 'LEDGES')
-#
-#    def _edges_to_bins(self, edges, name):
-#        if not isinstance(edges, list) or len(edges) < 2:
-#            raise ValueError(f'[LENSES] {name} must be a list with at least 2 values.')
-#        for lo, hi in zip(edges[:-1], edges[1:]):
-#            if lo >= hi:
-#                raise ValueError(f'[LENSES] {name} must be strictly increasing, got {lo} >= {hi}.')
-#        return list(zip(edges[:-1], edges[1:]))
-
 
 def _footprint_mask(ra, dec, z, padding=1.5):
     '''
