@@ -1,27 +1,26 @@
-[RUN]
-SAMPLE = 'testpcen08'
-LENSNAME = '../cats/DESY3/desy3_redmapper_cluster-ws.fits'
-SOURCENAME = '../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
-NCORES = 32
-OVERWRITE = true
-PLOT = false
+[run]
+sample = 'testpcen08'
+ncores = 32
+overwrite = true
+plot = false
 
-[PROFILE]
-NBINS = 15
-RIN = 0.2 #Mpc/h
-ROUT = 5.0 #Mpc/h
-NJK = 40
-BINNING = 'log' # 'lin'
+[catalog]
+lenses = '../cats/DESY3/desy3_redmapper_cluster-ws.fits'
+sources = '../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
+angles = '../'
 
-[LENSES]
-ZEDGES = [0.1, 0.34, 0.47, 0.58]
-LEDGES = [20, 30, 45, 60, 250]
-PCEN = 0.8
+[profile]
+nbins = 15
+rin = 0.2 #mpc/h
+rout = 5.0 #mpc/h
+njk = 40
+binning = 'log' # 'lin'
 
-# zbins separated in lin spaced bins
-ZMIN = [0.1, 0.34, 0.47]
-ZMAX = [0.34, 0.47, 0.58]
-# lambda bins separated according McClintock+18
-LMIN = [20, 30, 45, 60]
-LMAX = [30, 45, 60, 250]
+[lensescut]
+# redshift bin edges
+zedges = [0.1, 0.34, 0.47, 0.58]
+# richness lambda bin edges
+ledges = [20, 30, 45, 60, 250]
+# probability cut (grather than) for good centre
+pcen = 0.8
 
