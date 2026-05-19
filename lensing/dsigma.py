@@ -37,7 +37,7 @@ class Config:
 
         self.lensname=config['catalog']['lenses']
         self.sourcename=config['catalog']['sources']
-        self.lensangles = config['catalog']['angles']
+        self.anglesname = config['catalog']['angles']
         
         self.sample=config['run']['sample']
         self.NCORES = config['run']['ncores']
@@ -52,6 +52,9 @@ class Config:
         self.PCEN = config['lensescut']['pcen']
         self.ZBINS = self._edges_to_bins(config['lensescut']['zedges'], 'ZEDGES')
         self.LBINS = self._edges_to_bins(config['lensescut']['ledges'], 'LEDGES')
+        self.MEMCUT = config['lensescut']['memcut']
+        self.ANGWEIGHT = config['lensescut']['angweight']
+
 
     def _edges_to_bins(self, edges, name):
         if not isinstance(edges, list) or len(edges) < 2:
@@ -109,6 +112,11 @@ def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
     l = l[mask]
     footprint = _footprint_mask(l['ra_cl'], l['dec_cl'], l['redshift'], padding=1.0)
     return l[footprint]
+
+def read_cluster_orientation(mem='pmemcut', weight='lum'):
+    with h5py.File(cfg.anglename) as f:
+        angles = f[f'{mem}/{weight}'][()]
+    return angles
 
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
     return Table.read(filename, format='fits', memmap=True)
@@ -217,7 +225,7 @@ def partial_profile(inp):
     ex = (e1*sin2t+e2*cos2t)*w_s
 
     # angle wrt the main axis
-     phi = theta - phi0
+    phi = theta - phi0
 
     ndots = binspace(cfg.RIN, cfg.ROUT, cfg.NBINS+1)
     dig = np.digitize((np.rad2deg(rads)/DEGxMPC), ndots)
@@ -254,6 +262,7 @@ def partial_profile(inp):
 def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
 
     l = read_redmapper(cfg.lensname, zmin, zmax, lmin, lmax, pcen) # redmapper
+    ang = read_cluster_orientation(cfg.MEMCUT, cfg.ANGWEIGHT)
 
     nlenses = len(l)
     print(f'>> Z = [{zmin}, {zmax})')
@@ -282,7 +291,17 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
             tqdm(
                 pool.imap(
                     partial_profile,
-                    l['ra_cl','dec_cl','redshift','wb_0','wb_1','wb_2','wb_3'].as_array()
+                    np.array([
+                        l['ra_cl'].data,
+                        l['dec_cl'].data,
+                        l['redshift'].data,
+                        ang[l['mem_match_id']],
+                        l['wb_0'].data,
+                        l['wb_1'].data,
+                        l['wb_2'].data,
+                        l['wb_3'].data,
+                    ])
+                    #l['ra_cl','dec_cl','redshift','wb_0','wb_1','wb_2','wb_3'].as_array()
                 ), total=nlenses
             )
         )
