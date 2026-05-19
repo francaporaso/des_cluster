@@ -269,7 +269,11 @@ def partial_profile(inp):
 
 def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
 
-    l, ang = read_redmapper(cfg.lensname, zmin, zmax, lmin, lmax, pcen, cfg.MEMCUT, cfg.ANGWEIGHT) # redmapper + orientations
+    l, ang = read_redmapper(
+        cfg.lensname, cfg.anglesname,
+        zmin, zmax, lmin, lmax, pcen, 
+        cfg.MEMCUT, cfg.ANGWEIGHT
+    ) # redmapper + orientations
 
     nlenses = len(l)
     print(f'>> Z = [{zmin}, {zmax})')
