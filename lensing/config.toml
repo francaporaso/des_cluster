@@ -7,7 +7,7 @@ plot = false
 [catalog]
 lenses = '../cats/DESY3/desy3_redmapper_cluster-ws.fits'
 sources = '../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'
-angles = '../'
+angles = '../cats/DESY3/desy3_redmapper_cluster-orientations.hdf5'
 
 [profile]
 nbins = 15
@@ -23,4 +23,7 @@ zedges = [0.1, 0.34, 0.47, 0.58]
 ledges = [20, 30, 45, 60, 250]
 # probability cut (grather than) for good centre
 pcen = 0.8
-
+# member cut used to calculate inertia
+memcut = 'pmemcut' # 'pmemcut' | 'allmem'
+# weighting used to measure inertia
+angweight = 'lum' # 'lum' | 'dist' | 'wo_weight'
