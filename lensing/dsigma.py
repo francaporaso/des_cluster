@@ -35,21 +35,23 @@ class Config:
 
         config = toml.load(configfile)
 
-        self.lensname=config['RUN']['LENSNAME']
-        self.sourcename=config['RUN']['SOURCENAME']
-        self.sample=config['RUN']['SAMPLE']
+        self.lensname=config['catalog']['lenses']
+        self.sourcename=config['catalog']['sources']
+        self.lensangles = config['catalog']['angles']
+        
+        self.sample=config['run']['sample']
+        self.NCORES = config['run']['ncores']
+        self.PLOT = config['run']['plot']
+        self.OVERWRITE = config['run']['overwrite']
+        
+        self.RIN, self.ROUT = config['profile']['rin'], config['profile']['rout'] #Mpc/h
+        self.NBINS = config['profile']['nbins']
+        self.NJK = config['profile']['njk']
+        self.BINNING = config['profile']['binning']
 
-        self.NCORES = config['RUN']['NCORES']
-        self.PLOT = config['RUN']['PLOT']
-        self.OVERWRITE = config['RUN']['OVERWRITE']
-        self.RIN, self.ROUT = config['PROFILE']['RIN'], config['PROFILE']['ROUT'] #Mpc/h
-        self.NBINS = config['PROFILE']['NBINS']
-        self.NJK = config['PROFILE']['NJK']
-        self.BINNING = config['PROFILE']['BINNING']
-
-        self.PCEN = config['LENSES']['PCEN']
-        self.ZBINS = self._edges_to_bins(config['LENSES']['ZEDGES'], 'ZEDGES')
-        self.LBINS = self._edges_to_bins(config['LENSES']['LEDGES'], 'LEDGES')
+        self.PCEN = config['lensescut']['pcen']
+        self.ZBINS = self._edges_to_bins(config['lensescut']['zedges'], 'ZEDGES')
+        self.LBINS = self._edges_to_bins(config['lensescut']['ledges'], 'LEDGES')
 
     def _edges_to_bins(self, edges, name):
         if not isinstance(edges, list) or len(edges) < 2:
