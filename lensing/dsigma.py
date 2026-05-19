@@ -122,7 +122,7 @@ def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
     with h5py.File(angname) as f:
         angles = Table(f[f'{mem}/{weight}'])
     
-    angles = angles[angles['idx'] == cl_idx]
+    angles = angles[np.isin(angles['idx'], cl_idx)]
 
     return l, angles
 
