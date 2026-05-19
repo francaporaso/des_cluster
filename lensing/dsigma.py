@@ -10,7 +10,8 @@ from time import time, asctime
 from tqdm import tqdm
 import toml
 from itertools import product
-from dataclasses import dataclass
+#from dataclasses import dataclass
+import h5py
 
 from lensing.funcs import eq2p2, cov_matrix, get_jackknife_kmeans
 #from io import *
@@ -102,7 +103,10 @@ def _footprint_mask(ra, dec, z, padding=1.5):
     return keep
 
 def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
-                   zmin=0.2, zmax=0.3, lmin=10, lmax=50, pcen=0.5):
+                   angname='../cats/DESY3/test-orientations.h5',
+                   zmin=0.2, zmax=0.3, lmin=10, lmax=50, pcen=0.5,
+                   mem='allmem', weight='dist'):
+    
     l = Table.read(filename, format='fits', memmap=True)
     mask = (
         (l['redshift'] >  zmin) & (l['redshift'] <= zmax) &
@@ -265,8 +269,7 @@ def partial_profile(inp):
 
 def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
 
-    l = read_redmapper(cfg.lensname, zmin, zmax, lmin, lmax, pcen) # redmapper
-    ang = read_cluster_orientation(cfg.MEMCUT, cfg.ANGWEIGHT)
+    l, ang = read_redmapper(cfg.lensname, zmin, zmax, lmin, lmax, pcen, cfg.MEMCUT, cfg.ANGWEIGHT) # redmapper + orientations
 
     nlenses = len(l)
     print(f'>> Z = [{zmin}, {zmax})')
@@ -299,7 +302,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
                         l['ra_cl'].data,
                         l['dec_cl'].data,
                         l['redshift'].data,
-                        ang[l['mem_match_id']],
+                        ang['theta'].data,
                         l['wb_0'].data,
                         l['wb_1'].data,
                         l['wb_2'].data,
@@ -353,7 +356,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         gamma_tcos_num[0,:] = gammat[mask].sum(axis=0)
         gamma_xsin_num[0,:] = gammax[mask].sum(axis=0)
         resp_tcos_sum[0,:] = res_cos[mask].sum(axis=0)
-        resp_xsin_sum[0,:] = res_sin[mask].sum(axis=0)     
+        resp_xsin_sum[0,:] = res_sin[mask].sum(axis=0)
         # n_eff
         weight_sl[j+1,:] = w_sl[mask].sum(axis=0)**2
         sq_weight_sl[j+1,:] = sqw_sl[mask].sum(axis=0)
