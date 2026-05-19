@@ -111,12 +111,16 @@ def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
     )
     l = l[mask]
     footprint = _footprint_mask(l['ra_cl'], l['dec_cl'], l['redshift'], padding=1.0)
-    return l[footprint]
 
-def read_cluster_orientation(mem='pmemcut', weight='lum'):
+    l = l[footprint]
+    cl_idx = l['mem_match_id']
+
     with h5py.File(cfg.anglename) as f:
-        angles = f[f'{mem}/{weight}'][()]
-    return angles
+        angles = Table(f[f'{mem}/{weight}'][()])
+    
+    angles = angles[angles['idx'] == cl_idx]
+
+    return l, angles
 
 def read_source(filename='../cats/DESY3/desy3_metacal-unsheared-zbins_w-pix128_25314.fits'):
     return Table.read(filename, format='fits', memmap=True)
