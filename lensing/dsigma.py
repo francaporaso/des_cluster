@@ -164,11 +164,19 @@ def partial_profile(inp):
     Profile of reduced shear g_t(r) as in eq. 6 of Grandis et al. (2024)
     '''
 
-    ra0, dec0, z0, *w_b = inp
-
+    # right ascention | declination | redshift | angle of semimayor axis | lensing eff. weights for redshift bins
+    ra0, dec0, z0, phi0, *w_b = inp
+    
+    # monopole
     dsigma_t_num = np.zeros(cfg.NBINS)
     dsigma_x_num = np.zeros(cfg.NBINS)
     response_sum = np.zeros(cfg.NBINS)
+    # quadrupole
+    gamma_tcos_num = np.zeros(cfg.NBINS)
+    gamma_xsin_num = np.zeros(cfg.NBINS)
+    resp_tcos_sum = np.zeros(cfg.NBINS)
+    resp_xsin_sum = np.zeros(cfg.NBINS)
+    # n_eff
     n_bin = np.zeros(cfg.NBINS)
     sq_weight_sum = np.zeros(cfg.NBINS)
     weight_sum = np.zeros(cfg.NBINS)
@@ -187,7 +195,7 @@ def partial_profile(inp):
 
     ### theta is measured east of north (ie from y towards x)
     ### to transform to usual convention (x towards y):
-    ### phi = np.pi/2 + (2.0*np.pi - theta)
+    theta = np.pi/2 + (2.0*np.pi - theta)
 
     #get weights
     w_s = catdata['weight']
@@ -206,6 +214,9 @@ def partial_profile(inp):
     et = (-e1*cos2t+e2*sin2t)*w_s
     ex = (e1*sin2t+e2*cos2t)*w_s
 
+    # angle wrt the main axis
+     phi = theta - phi0
+
     ndots = binspace(cfg.RIN, cfg.ROUT, cfg.NBINS+1)
     dig = np.digitize((np.rad2deg(rads)/DEGxMPC), ndots)
 
@@ -214,16 +225,29 @@ def partial_profile(inp):
         for b in range(4):
             zbin = catdata['bhat'] == b
 
+            cos_2phi = np.cos(2.0*phi)
+            sin_2phi = np.sin(2.0*phi)
+
+            # monopole
             dsigma_t_num[n_i] += w_b[b]**2 * np.sum(et[m_i & zbin])
             dsigma_x_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin])
 
-            response_sum[n_i] += w_b[b]**3 * np.sum(res[m_i & zbin])
+            # quadrupole
+            gamma_tcos_num[n_i] += w_b[b]**2 * np.sum(et[m_i & zbin] * cos_2phi)
+            gamma_xsin_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin] * sin_2phi))
 
+            # counts/denominators
+            ## monopole
+            response_sum[n_i] += w_b[b]**3 * np.sum(res[m_i & zbin])
+            ## quadrupole
+            resp_tcos_sum[n_i] +=  w_b[b]**3 * np.sum(res[m_i & zbin] * cos_2phi**2)
+            resp_xsin_sum[n_i] +=  w_b[b]**3 * np.sum(res[m_i & zbin] * sin_2phi**2)
+            ## n_eff
             weight_sum[n_i] += w_b[b] * np.sum(res[m_i & zbin])
             sq_weight_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
             n_bin[n_i] += np.count_nonzero(m_i & zbin) if w_b[b] != 0.0 else 0.0
 
-    return dsigma_t_num, dsigma_x_num, response_sum, weight_sum, sq_weight_sum, n_bin
+    return dsigma_t_num, dsigma_x_num, response_sum, gamma_tcos_num, gamma_xsin_num, resp_tcos_sum, resp_xsin_sum, weight_sum, sq_weight_sum, n_bin
 
 def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
 
@@ -242,6 +266,11 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     dsigma_x_num = np.zeros((localNJK+1, cfg.NBINS))
     response_sum = np.zeros((localNJK+1, cfg.NBINS))
 
+    gamma_tcos_num = np.zeros((localNJK+1, cfg.NBINS))
+    gamma_xsin_num = np.zeros((localNJK+1, cfg.NBINS))
+    resp_tcos_sum = np.zeros((localNJK+1, cfg.NBINS))
+    resp_xsin_sum = np.zeros((localNJK+1, cfg.NBINS))
+
     weight_sl    = np.zeros((localNJK+1, cfg.NBINS))
     sq_weight_sl = np.zeros((localNJK+1, cfg.NBINS))
     n_bin        = np.zeros((localNJK+1, cfg.NBINS))
@@ -259,15 +288,22 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     # === calculating stack
 
     # reduce
-    gt, gx, res, w_sl, sqw_sl, nbin = map(
+    gt, gx, res, gammat, gammax, res_cos, res_sin, w_sl, sqw_sl, nbin = map(
         lambda x: np.vstack(x),
         zip(*results_map)
     )
 
-    #calculate sum over lenses
+    # calculate sum over lenses
+    # monopole
     dsigma_t_num[0,:] = gt.sum(axis=0)
     dsigma_x_num[0,:] = gx.sum(axis=0)
     response_sum[0,:] = res.sum(axis=0)
+    # quadrupole
+    gamma_tcos_num[0,:] = gammat.sum(axis=0)
+    gamma_xsin_num[0,:] = gammax.sum(axis=0)
+    resp_tcos_sum[0,:] = res_cos.sum(axis=0)
+    resp_xsin_sum[0,:] = res_sin.sum(axis=0)
+    # n_eff
     weight_sl[0,:] = np.sum(w_sl, axis=0)**2
     sq_weight_sl[0,:] = sqw_sl.sum(axis=0)
     n_bin[0,:] = nbin.sum(axis=0)
@@ -284,9 +320,16 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     )
     for j, k in enumerate(range(localNJK)):
         mask = (kidx!=k)
+        # monopole
         dsigma_t_num[j+1,:] = gt[mask].sum(axis=0)
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
         response_sum[j+1,:] = res[mask].sum(axis=0)
+        # quadrupole
+        gamma_tcos_num[0,:] = gammat[mask].sum(axis=0)
+        gamma_xsin_num[0,:] = gammax[mask].sum(axis=0)
+        resp_tcos_sum[0,:] = res_cos[mask].sum(axis=0)
+        resp_xsin_sum[0,:] = res_sin[mask].sum(axis=0)     
+        # n_eff
         weight_sl[j+1,:] = w_sl[mask].sum(axis=0)**2
         sq_weight_sl[j+1,:] = sqw_sl[mask].sum(axis=0)
         n_bin[j+1,:] = nbin[mask].sum(axis=0)
@@ -297,11 +340,16 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     f_cl = contaminants_fraction(n_eff)
 
     # profiles
+    ## monopole
     dsigma_t = (1/(1-f_cl))*dsigma_t_num/response_sum
     dsigma_x = (1/(1-f_cl))*dsigma_x_num/response_sum
 
+    ## quadrupole
+    gamma_tcos = (1/(1-f_cl))*gamma_tcos_num/resp_tcos_sum
+    gamma_xsin = (1/(1-f_cl))*gamma_xsin_num/resp_xsin_sum
+
     # ==== Saving
-    outputname = (f'results/lensing_desy3_{cfg.sample}_'
+    outputname = (f'results/lensing_desy3_quad_{cfg.sample}_'
                   f'z{100*zmin:03.0f}-{100*zmax:03.0f}_'
                   f'lambda{lmin:02.0f}-{lmax:02.0f}_'
                   f'bin{cfg.NBINS}{cfg.BINNING}.fits')
@@ -334,6 +382,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         'R':binspace(cfg.RIN, cfg.ROUT, cfg.NBINS),
         'DSigma_t':dsigma_t[0],
         'DSigma_x':dsigma_x[0],
+        'Gamma_tcos':gamma_tcos[0],
+        'Gamma_xsin':gamma_xsin[0],
         'N_eff':n_eff[0],
         'N_raw':n_bin[0]
     })
@@ -341,6 +391,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     cov_hdu = [
         fits.ImageHDU(cov_matrix(dsigma_t[1:,:]), name='cov_DSigma_t'),
         fits.ImageHDU(cov_matrix(dsigma_x[1:,:]), name='cov_DSigma_x'),
+        fits.ImageHDU(cov_matrix(gamma_tcos[1:,:]), name='cov_Gamma_tcos'),
+        fits.ImageHDU(cov_matrix(gamma_xsin[1:,:]), name='cov_Gamma_xsin'),
         fits.ImageHDU(cov_matrix(n_eff[1:,:]), name='cov_N_eff'),
         fits.ImageHDU(cov_matrix(n_bin[1:,:]), name='cov_N_raw'),
     ]
@@ -348,6 +400,8 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
     jack_hdu = [
         fits.ImageHDU(dsigma_t[1:localNJK+1, :], name='jack_DSigma_t'),
         fits.ImageHDU(dsigma_x[1:localNJK+1, :], name='jack_DSigma_x'),
+        fits.ImageHDU(gamma_tcos[1:localNJK+1, :], name='jack_Gamma_tcos'),
+        fits.ImageHDU(gamma_xsin[1:localNJK+1, :], name='jack_Gamma_xsin'),
         fits.ImageHDU(n_eff[1:localNJK+1, :], name='jack_N_eff'),
         fits.ImageHDU(n_bin[1:localNJK+1, :], name='jack_N_raw'),
     ]
@@ -370,6 +424,14 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
             dsx=dsigma_x[0],
             e_dsx=np.sqrt(np.diag(cov_matrix(dsigma_t[1:,:])))
         )
+        plot_profile(
+            r=binspace(cfg.RIN, cfg.ROUT, cfg.NBINS),
+            dst=gamma_tcos[0],
+            e_dst=np.sqrt(np.diag(cov_matrix(gamma_tcos[1:,:]))),
+            dsx=gamma_xsin[0],
+            e_dsx=np.sqrt(np.diag(cov_matrix(gamma_xsin[1:,:])))
+        )
+ 
 
     return 0
 
