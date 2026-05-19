@@ -244,7 +244,7 @@ def partial_profile(inp):
 
             # quadrupole
             gamma_tcos_num[n_i] += w_b[b]**2 * np.sum(et[m_i & zbin] * cos_2phi)
-            gamma_xsin_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin] * sin_2phi))
+            gamma_xsin_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin] * sin_2phi)
 
             # counts/denominators
             ## monopole
