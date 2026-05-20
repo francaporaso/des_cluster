@@ -192,11 +192,13 @@ def partial_profile(inp):
     #((r1-r2)/(0.5*(r1+r2)) < 0.1%)
     res = 0.5*(r1+r2)*w_s
 
-    #get weighted tangential ellipticities
+    #get weighted tangential ellipticities  
     cos2t = np.cos(2.0*theta)
     sin2t = np.sin(2.0*theta)
-    et = (-e1*cos2t+e2*sin2t)*w_s
-    ex = (e1*sin2t+e2*cos2t)*w_s
+    #et = (-e1 * cos2t + e2 * sin2t) * w_s
+    #ex = ( e1 * sin2t + e2 * cos2t) * w_s
+    et = (-e1 * cos2t - e2 * sin2t) * w_s
+    ex = (-e1 * sin2t + e2 * cos2t) * w_s
 
     # angle wrt the main axis
     phi = theta - phi0
