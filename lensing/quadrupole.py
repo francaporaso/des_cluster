@@ -325,10 +325,10 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
         dsigma_x_num[j+1,:] = gx[mask].sum(axis=0)
         response_sum[j+1,:] = res[mask].sum(axis=0)
         # quadrupole
-        gamma_tcos_num[0,:] = gammat[mask].sum(axis=0)
-        gamma_xsin_num[0,:] = gammax[mask].sum(axis=0)
-        resp_tcos_sum[0,:] = res_cos[mask].sum(axis=0)
-        resp_xsin_sum[0,:] = res_sin[mask].sum(axis=0)
+        gamma_tcos_num[j+1,:] = gammat[mask].sum(axis=0)
+        gamma_xsin_num[j+1,:] = gammax[mask].sum(axis=0)
+        resp_tcos_sum[j+1,:] = res_cos[mask].sum(axis=0)
+        resp_xsin_sum[j+1,:] = res_sin[mask].sum(axis=0)
         # n_eff
         weight_sl[j+1,:] = w_sl[mask].sum(axis=0)**2
         sq_weight_sl[j+1,:] = sqw_sl[mask].sum(axis=0)
