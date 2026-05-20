@@ -277,7 +277,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
                         l['wb_1'].data,
                         l['wb_2'].data,
                         l['wb_3'].data,
-                    ])
+                    ]).T
                     #l['ra_cl','dec_cl','redshift','wb_0','wb_1','wb_2','wb_3'].as_array()
                 ), total=nlenses
             )
