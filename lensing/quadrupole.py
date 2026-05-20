@@ -197,8 +197,8 @@ def partial_profile(inp):
     sin2t = np.sin(2.0*theta)
     #et = (-e1 * cos2t + e2 * sin2t) * w_s
     #ex = ( e1 * sin2t + e2 * cos2t) * w_s
-    et = (-e1 * cos2t - e2 * sin2t) * w_s
-    ex = (-e1 * sin2t + e2 * cos2t) * w_s
+    et = (e1 * cos2t + e2 * sin2t) * w_s
+    ex = (e1 * sin2t - e2 * cos2t) * w_s
 
     # angle wrt the main axis
     phi = theta - phi0
