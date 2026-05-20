@@ -201,6 +201,9 @@ def partial_profile(inp):
     # angle wrt the main axis
     phi = theta - phi0
 
+    cos_2phi = np.cos(2.0*phi)
+    sin_2phi = np.sin(2.0*phi)
+
     ndots = binspace(cfg.RIN, cfg.ROUT, cfg.NBINS+1)
     dig = np.digitize((np.rad2deg(rads)/DEGxMPC), ndots)
 
@@ -209,23 +212,20 @@ def partial_profile(inp):
         for b in range(4):
             zbin = catdata['bhat'] == b
 
-            cos_2phi = np.cos(2.0*phi)
-            sin_2phi = np.sin(2.0*phi)
-
             # monopole
             dsigma_t_num[n_i] += w_b[b]**2 * np.sum(et[m_i & zbin])
             dsigma_x_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin])
 
             # quadrupole
-            gamma_tcos_num[n_i] += w_b[b]**2 * np.sum(et[m_i & zbin] * cos_2phi)
-            gamma_xsin_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin] * sin_2phi)
+            gamma_tcos_num[n_i] += w_b[b]**2 * np.sum(et[m_i & zbin] * cos_2phi[m_i & zbin])
+            gamma_xsin_num[n_i] += w_b[b]**2 * np.sum(ex[m_i & zbin] * sin_2phi[m_i & zbin])
 
             # counts/denominators
             ## monopole
             response_sum[n_i] += w_b[b]**3 * np.sum(res[m_i & zbin])
             ## quadrupole
-            resp_tcos_sum[n_i] +=  w_b[b]**3 * np.sum(res[m_i & zbin] * cos_2phi**2)
-            resp_xsin_sum[n_i] +=  w_b[b]**3 * np.sum(res[m_i & zbin] * sin_2phi**2)
+            resp_tcos_sum[n_i] +=  w_b[b]**3 * np.sum(res[m_i & zbin] * cos_2phi[m_i & zbin]**2)
+            resp_xsin_sum[n_i] +=  w_b[b]**3 * np.sum(res[m_i & zbin] * sin_2phi[m_i & zbin]**2)
             ## n_eff
             weight_sum[n_i] += w_b[b] * np.sum(res[m_i & zbin])
             sq_weight_sum[n_i] += w_b[b]**2 * np.sum(res[m_i & zbin]**2)
