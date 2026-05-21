@@ -1,22 +1,39 @@
-[RUN]
-NCORES = 32
-NIT = 1000
-NWALKERS = 64
-COVMODE = 'full' #or 'diag'
-MODEL = 'NFW'
-OBSERVABLE = 'delta_sigma'
-FIXPARAM = ['c200']
-PLOT = false
+[run]
+ncores = 32
+# if chain file with the same name is found, decide to overwrite it
+overwriteh5 = true
+# plots chains and corner when finished if true
+plot = false
 
-[NAMES]
-FOLDER = 'results/'
-DATANAME = 'lensing_desy3'
-SAMPLE = 'one'
+[mcmc]
+nit = 1000
+nwalkers = 64
+covmode = 'full' # 'diag' | 'full'
+model = 'NFW' # 'NFW' | 
+# fit the model with the second halo component?
+secondhalo = false
+# method to fit from model class
+observable = 'delta_sigma' # 'delta_sigma' | 'quad_gamma_t' | 'quad_gamma_x'
+# fix some parameter?
+fixparam = ['c200']
+chaisample = '1'
 
-[LENSES]
-NBINS = 15
-BINNING = 'log' # or 'lin'
-ZMIN = [0.1, 0.34, 0.47]
-ZMAX = [0.34, 0.47, 0.58]
-LMIN = [20, 30, 45, 60]
-LMAX = [30, 45, 60, 250]
+[profiles]
+folder = 'results/'
+dataname = 'lensing_desy3'
+sample = 'quad'
+nbins = 15
+binning = 'log' # or 'lin'
+
+# redshift bin edges
+zedges = [0.1, 0.34, 0.47, 0.58]
+# richness lambda bin edges
+ledges = [20, 30, 45, 60, 250]
+# probability cut (grather than) for good centre
+pcen = 0.8
+# member cut used to calculate inertia
+memcut = 'allmem' # 'pmemcut' | 'allmem'
+# weighting used to measure inertia
+angweight = 'wo_weight' # 'lum' | 'dist' | 'wo_weight'
+
+
