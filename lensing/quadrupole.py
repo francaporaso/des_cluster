@@ -145,7 +145,6 @@ def get_masked_idx_fast(psi, ra0, dec0, z0, wb):
 
 def partial_profile(inp):
     '''
-    Profile of reduced shear g_t(r) as in eq. 6 of Grandis et al. (2024)
     '''
 
     # right ascention | declination | redshift | angle of semimayor axis | lensing eff. weights for redshift bins
@@ -431,7 +430,6 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
             dsx=gamma_xsin[0],
             e_dsx=np.sqrt(np.diag(cov_matrix(gamma_xsin[1:,:])))
         )
- 
 
     return 0
 
