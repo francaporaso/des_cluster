@@ -89,10 +89,11 @@ class BaseModelQuad:
 # =============================
 
 class NFW:
-    def __init__(self, redshift, miss_pdf = rayleigh_pdf):
+    def __init__(self, redshift, miss_pdf = rayleigh_pdf, secondhalo=False):
         self.redshift : float = redshift
         self.rho_c : float = cosmo.critical_density(redshift).to('M_sun/Mpc^3').value
         self.miss_pdf = miss_pdf
+        self.secondhalo = secondhalo
 
     def R_200(self, M200:float) -> float | list[float]:
         ''' R_200 in Mpc/h '''
@@ -262,224 +263,194 @@ class NFW:
 
         ds_cen = self.dsigma_1h(R, M200=M200, c200=c200)
         ds_miss = self.dsigma_miss(R, M200=M200, c200=c200)
-        #ds_2h = self.dsigma_2h(R, M200, c200)
 
-        return pcc * ds_cen + (1.0 - pcc) * ds_miss #+ ds_2h
-
-
-
-
-class NFWFull:
-    def __init__(self, redshift, miss_pdf = rayleigh_pdf):
-        self.redshift : float = redshift
-        self.rho_c : float = cosmo.critical_density(redshift).to('M_sun/Mpc^3').value
-        self.miss_pdf = miss_pdf
-
-    def R_200(self, M200:float) -> float | list[float]:
-        ''' R_200 in Mpc/h '''
-        return (M200 * (3.0 / (4.0 * np.pi)) * 1.0 / (200.0 * self.rho_c))**(1/3)
-
-    def c_200(self, M200:float) -> float:
-        ''' c_200 [adim]'''
-        return concentration.concentration(M=M200, mdef='200c', z=self.redshift, model='diemer19')
-
-    def sigma_1h(self, R, M200, c200):
-        eps = 1e-6
-
-        # if c200 is None:
-            # c200 = self.c_200(M200)
-
-        deltac = (200.0/3.0) * ((c200**3) / (np.log(1.0 + c200) - (c200 / (1 + c200))))
-
-        r200 = self.R_200(M200)
-        x = (R * c200) / r200
-
-        m1 = x < 1 - eps
-        m2 = x > 1 + eps
-        m3 = np.abs(x - 1) <= eps
-
-        jota  = np.zeros_like(R)
-
-        atanh = np.arctanh(np.sqrt((1.0 - x[m1]) / (1.0 + x[m1])))
-        jota[m1] = (1.0 / (x[m1]**2 -1.0)) * (1.0 - (2.0 / np.sqrt(1.0 - x[m1]**2)) * atanh)
-
-        atan = np.arctan(np.sqrt((x[m2] - 1.0) / (1.0 + x[m2])))
-        jota[m2] = (1.0 / (x[m2]**2 - 1.0)) * (1.0 - (2.0 / np.sqrt(x[m2]**2 - 1.0)) * atan)
-
-        jota[m3] = 1/3
-
-        rs_m = r200/c200 # Mpc/h
-        kapak = (2.0 * rs_m * deltac * self.rho_c) * (1e-12) #Msun/pc^2
-        # Units M_sun/pc2
-        return kapak * jota
-
-    def dsigma_1h(self, R:np.ndarray[float], M200:float, c200) -> np.ndarray[float]:
-        '''
-        Projected density contrast of NFW density model.
-        M200 in solar masses
-        R in h^-1 Mpc
-        '''
-
-        # if c200 is None:
-            # c200 = self.c_200(M200)
-
-        deltac = (200.0/3.0) * (c200**3)/ (np.log(1.0 + c200) - c200 / (1.0 + c200))
-
-        r200 = self.R_200(M200)
-        x = (R * c200) / r200
-
-        jota = np.zeros_like(x)
-
-        m1 = x<1.0
-        m2 = x>1.0
-        m3 = ~(m1|m2) #not (m1 or m2) => not(x<1 or x>1) => not(x!=1) => x==1.0
-
-        if np.any(m1):
-            xm = x[m1]
-            xm_sq = xm*xm
-
-            sqrt_term = np.sqrt(1.0 - xm_sq)
-            atanh = np.arctanh(np.sqrt((1.0 - xm) / (1.0 + xm)))
-
-            jota[m1] = (
-                (4.0 * atanh) / (xm_sq * sqrt_term)
-                + (2.0 * np.log(xm / 2.0)) / xm_sq
-                - 1.0 / (xm_sq - 1.0)
-                + (2.0 * atanh) / ((xm_sq - 1.0) * sqrt_term)
-            )
-
-        if np.any(m2):
-            xm = x[m2]
-            xm_sq = xm*xm
-
-            sqrt_term = np.sqrt(xm_sq - 1.0)
-            atan = np.arctan(np.sqrt((xm - 1.0) / (1.0 + xm)))
-
-            jota[m2] = (
-                (4.0 * atan) / (xm_sq * sqrt_term)
-                + (2.0 * np.log(xm / 2.0)) / xm_sq
-                - 1.0 / (xm_sq - 1.0)
-                + (2.0 * atan) / ((xm_sq - 1.0) ** 1.5)
-            )
-
-        if np.any(m3):
-            jota[m3] = 2.0 * np.log(0.5) + 5.0 / 3.0
-
-        rs_m = r200/c200
-        kapak = (2.0 * rs_m * deltac * self.rho_c) * (1e-12) # Msun/pc^2
-
-        return kapak * jota
-
-    def sigma_miss(self, R, M200, c200):
-
-        R = np.atleast_1d(R) # for compatibility with eli funcs
-
-        Ntheta = 100
-        NRs = 100
-
-        # if c200 is None:
-        # c200 = self.c_200(M200)
-
-        # if s_off is None:
-        s_off = 0.4
-            #s_off = tau * self.R_200(M200)
-
-        # --- integration grids ---
-        theta = np.linspace(0, 2*np.pi, Ntheta)
-        Rs = np.linspace(0, 5.0 * s_off, NRs)
-
-        Rg = R[:, None, None]
-        Rsg = Rs[None, :, None]
-        thetag = theta[None, None, :]
-        Rtrue = np.sqrt(Rg**2 + Rsg**2 + 2.0 * Rg * Rsg * np.cos(thetag))
-
-        Sigma_vals = self.sigma_1h(Rtrue, M200=M200, c200=c200)
-
-        #angular average
-        Sigma_theta = simpson(Sigma_vals, theta, axis=2) / (2.0 * np.pi)
-
-        #miscentering pdf
-        P = self.miss_pdf(Rs, s_off)
-
-        Sigma_miss = simpson(Sigma_theta * P[None, :], Rs, axis=1)
-
-        return Sigma_miss
+        if self.secondhalo:
+            ds_2h = self.dsigma_2h(R, M200, c200)
+            return pcc * ds_cen + (1.0 - pcc) * ds_miss + ds_2h
+        return pcc * ds_cen + (1.0 - pcc) * ds_miss
 
 
-    def dsigma_miss(self, R, M200, c200):
-
-        num_x = 200
-        x_grid = np.linspace(1e-5, R.max(), num_x)
-
-        integrand = x_grid * self.sigma_miss(x_grid, M200=M200, c200=c200)
-        cumulative = cumulative_trapezoid(integrand, x_grid, initial=0.0)
-        interp = np.interp(R, x_grid, cumulative)
-
-        Sigma_miss = self.sigma_miss(R, M200, c200=c200)
-
-        Sigma_bar = (2.0/R**2) * interp
-        return Sigma_bar - Sigma_miss
-
-    def dsigma_2h(self, R, M200, c200):
-        '''
-        NFW contrast density from colossus
-        units Msun/pc2
-        '''
-
-        # if c200 is None:
-            # c200 = self.c_200(M200)
-
-        b = bias.haloBias(M200, model='tinker10', z=self.redshift, mdef='200c')
-        outer_term = profile_outer.OuterTermCorrelationFunction(z=self.redshift, bias=b)
-        pNFW = profile_nfw.NFWProfile(M=M200, mdef='200c', z=self.redshift, c=c200, outer_terms=[outer_term])
-
-        # Outer term integrated up to 50Mpc (Luo et al. 2017, Niemic et al 2017)
-        ds_out = pNFW.deltaSigmaOuter(R*1.e3, interpolate=False, interpolate_surface_density=False, accuracy=0.01, max_r_integrate=100e3)
-        return ds_out/(1.e3**2)
-
-    def delta_sigma(self, R, M200, pcc):
-
-        c200 = self.c_200(M200)
-
-        ds_cen = self.dsigma_1h(R, M200=M200, c200=c200)
-        ds_miss = self.dsigma_miss(R, M200=M200, c200=c200)
-        ds_2h = self.dsigma_2h(R, M200, c200)
-
-        return pcc * ds_cen + (1.0 - pcc) * ds_miss + ds_2h
 
 
-models_dict = {
-    'NFW':NFW,
-    'NFWFull':NFWFull,
-}
+#
+#class NFWFull:
+#    def __init__(self, redshift, miss_pdf = rayleigh_pdf):
+#        self.redshift : float = redshift
+#        self.rho_c : float = cosmo.critical_density(redshift).to('M_sun/Mpc^3').value
+#        self.miss_pdf = miss_pdf
+#
+#    def R_200(self, M200:float) -> float | list[float]:
+#        ''' R_200 in Mpc/h '''
+#        return (M200 * (3.0 / (4.0 * np.pi)) * 1.0 / (200.0 * self.rho_c))**(1/3)
+#
+#    def c_200(self, M200:float) -> float:
+#        ''' c_200 [adim]'''
+#        return concentration.concentration(M=M200, mdef='200c', z=self.redshift, model='diemer19')
+#
+#    def sigma_1h(self, R, M200, c200):
+#        eps = 1e-6
+#
+#        # if c200 is None:
+#            # c200 = self.c_200(M200)
+#
+#        deltac = (200.0/3.0) * ((c200**3) / (np.log(1.0 + c200) - (c200 / (1 + c200))))
+#
+#        r200 = self.R_200(M200)
+#        x = (R * c200) / r200
+#
+#        m1 = x < 1 - eps
+#        m2 = x > 1 + eps
+#        m3 = np.abs(x - 1) <= eps
+#
+#        jota  = np.zeros_like(R)
+#
+#        atanh = np.arctanh(np.sqrt((1.0 - x[m1]) / (1.0 + x[m1])))
+#        jota[m1] = (1.0 / (x[m1]**2 -1.0)) * (1.0 - (2.0 / np.sqrt(1.0 - x[m1]**2)) * atanh)
+#
+#        atan = np.arctan(np.sqrt((x[m2] - 1.0) / (1.0 + x[m2])))
+#        jota[m2] = (1.0 / (x[m2]**2 - 1.0)) * (1.0 - (2.0 / np.sqrt(x[m2]**2 - 1.0)) * atan)
+#
+#        jota[m3] = 1/3
+#
+#        rs_m = r200/c200 # Mpc/h
+#        kapak = (2.0 * rs_m * deltac * self.rho_c) * (1e-12) #Msun/pc^2
+#        # Units M_sun/pc2
+#        return kapak * jota
+#
+#    def dsigma_1h(self, R:np.ndarray[float], M200:float, c200) -> np.ndarray[float]:
+#        '''
+#        Projected density contrast of NFW density model.
+#        M200 in solar masses
+#        R in h^-1 Mpc
+#        '''
+#
+#        # if c200 is None:
+#            # c200 = self.c_200(M200)
+#
+#        deltac = (200.0/3.0) * (c200**3)/ (np.log(1.0 + c200) - c200 / (1.0 + c200))
+#
+#        r200 = self.R_200(M200)
+#        x = (R * c200) / r200
+#
+#        jota = np.zeros_like(x)
+#
+#        m1 = x<1.0
+#        m2 = x>1.0
+#        m3 = ~(m1|m2) #not (m1 or m2) => not(x<1 or x>1) => not(x!=1) => x==1.0
+#
+#        if np.any(m1):
+#            xm = x[m1]
+#            xm_sq = xm*xm
+#
+#            sqrt_term = np.sqrt(1.0 - xm_sq)
+#            atanh = np.arctanh(np.sqrt((1.0 - xm) / (1.0 + xm)))
+#
+#            jota[m1] = (
+#                (4.0 * atanh) / (xm_sq * sqrt_term)
+#                + (2.0 * np.log(xm / 2.0)) / xm_sq
+#                - 1.0 / (xm_sq - 1.0)
+#                + (2.0 * atanh) / ((xm_sq - 1.0) * sqrt_term)
+#            )
+#
+#        if np.any(m2):
+#            xm = x[m2]
+#            xm_sq = xm*xm
+#
+#            sqrt_term = np.sqrt(xm_sq - 1.0)
+#            atan = np.arctan(np.sqrt((xm - 1.0) / (1.0 + xm)))
+#
+#            jota[m2] = (
+#                (4.0 * atan) / (xm_sq * sqrt_term)
+#                + (2.0 * np.log(xm / 2.0)) / xm_sq
+#                - 1.0 / (xm_sq - 1.0)
+#                + (2.0 * atan) / ((xm_sq - 1.0) ** 1.5)
+#            )
+#
+#        if np.any(m3):
+#            jota[m3] = 2.0 * np.log(0.5) + 5.0 / 3.0
+#
+#        rs_m = r200/c200
+#        kapak = (2.0 * rs_m * deltac * self.rho_c) * (1e-12) # Msun/pc^2
+#
+#        return kapak * jota
+#
+#    def sigma_miss(self, R, M200, c200):
+#
+#        R = np.atleast_1d(R) # for compatibility with eli funcs
+#
+#        Ntheta = 100
+#        NRs = 100
+#
+#        # if c200 is None:
+#        # c200 = self.c_200(M200)
+#
+#        # if s_off is None:
+#        s_off = 0.4
+#            #s_off = tau * self.R_200(M200)
+#
+#        # --- integration grids ---
+#        theta = np.linspace(0, 2*np.pi, Ntheta)
+#        Rs = np.linspace(0, 5.0 * s_off, NRs)
+#
+#        Rg = R[:, None, None]
+#        Rsg = Rs[None, :, None]
+#        thetag = theta[None, None, :]
+#        Rtrue = np.sqrt(Rg**2 + Rsg**2 + 2.0 * Rg * Rsg * np.cos(thetag))
+#
+#        Sigma_vals = self.sigma_1h(Rtrue, M200=M200, c200=c200)
+#
+#        #angular average
+#        Sigma_theta = simpson(Sigma_vals, theta, axis=2) / (2.0 * np.pi)
+#
+#        #miscentering pdf
+#        P = self.miss_pdf(Rs, s_off)
+#
+#        Sigma_miss = simpson(Sigma_theta * P[None, :], Rs, axis=1)
+#
+#        return Sigma_miss
+#
+#
+#    def dsigma_miss(self, R, M200, c200):
+#
+#        num_x = 200
+#        x_grid = np.linspace(1e-5, R.max(), num_x)
+#
+#        integrand = x_grid * self.sigma_miss(x_grid, M200=M200, c200=c200)
+#        cumulative = cumulative_trapezoid(integrand, x_grid, initial=0.0)
+#        interp = np.interp(R, x_grid, cumulative)
+#
+#        Sigma_miss = self.sigma_miss(R, M200, c200=c200)
+#
+#        Sigma_bar = (2.0/R**2) * interp
+#        return Sigma_bar - Sigma_miss
+#
+#    def dsigma_2h(self, R, M200, c200):
+#        '''
+#        NFW contrast density from colossus
+#        units Msun/pc2
+#        '''
+#
+#        # if c200 is None:
+#            # c200 = self.c_200(M200)
+#
+#        b = bias.haloBias(M200, model='tinker10', z=self.redshift, mdef='200c')
+#        outer_term = profile_outer.OuterTermCorrelationFunction(z=self.redshift, bias=b)
+#        pNFW = profile_nfw.NFWProfile(M=M200, mdef='200c', z=self.redshift, c=c200, outer_terms=[outer_term])
+#
+#        # Outer term integrated up to 50Mpc (Luo et al. 2017, Niemic et al 2017)
+#        ds_out = pNFW.deltaSigmaOuter(R*1.e3, interpolate=False, interpolate_surface_density=False, accuracy=0.01, max_r_integrate=100e3)
+#        return ds_out/(1.e3**2)
+#
+#    def delta_sigma(self, R, M200, pcc):
+#
+#        c200 = self.c_200(M200)
+#
+#        ds_cen = self.dsigma_1h(R, M200=M200, c200=c200)
+#        ds_miss = self.dsigma_miss(R, M200=M200, c200=c200)
+#        ds_2h = self.dsigma_2h(R, M200, c200)
+#
+#        return pcc * ds_cen + (1.0 - pcc) * ds_miss + ds_2h
 
-default_limits = {
-    'NFW':{
-        'M200':(1e10, 1e16),
-        # 'c200':(1.0, 10.0),
-        'pcc':(0.1,1.0),
-        # 's_off':(0.01,1.0)
-    },
-    'NFWFull':{
-        'M200':(1e10, 1e16),
-        # 'c200':(1.0, 10.0),
-        'pcc':(0.1,1.0),
-        # 's_off':(0.01,1.0) }
-    }
-}
-
-default_guess = {
-    'NFW':{
-        'M200':1e14,
-        # 'c200':4.0,
-        'pcc':0.8,
-        # 's_off':0.4
-    },
-    'NFWFull':{
-        'M200':1e14,
-        'pcc':0.8
-    }
-}
 
 # ==========================
 #  DENSITY MODELS FOR VOIDS
