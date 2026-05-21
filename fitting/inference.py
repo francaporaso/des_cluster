@@ -40,15 +40,13 @@ class Likelihood:
         else:
             try:
                 self.func = model.__dict__.get(observable)
+                print(f'using observable method {observable} from model {model}')
             except:
                 raise ValueError(f'observable method {observable} not found in model {model}')
 
         if cov_mode == 'full':
-        
             self.yerr = np.linalg.inv(self.cov)*self.hartlap_factor
-        
         elif cov_mode == 'diag':
-        
             # this allows to use log_likelihood with both diag or full covariance!
             self.yerr = np.zeros_like(self.cov)
             np.fill_diagonal(self.yerr, 1.0/np.diag(self.cov))
