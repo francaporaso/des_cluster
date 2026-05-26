@@ -345,7 +345,7 @@ def stacking(zmin, zmax, lmin, lmax, pcen=0.5):
 
     ## quadrupole
     gamma_tcos = (1/(1-f_cl))*gamma_tcos_num/resp_tcos_sum
-    gamma_xsin = (1/(1-f_cl))*gamma_xsin_num/resp_xsin_sum
+    gamma_xsin = gamma_xsin_num/resp_xsin_sum
 
     # ==== Saving
     outputname = (f'results/lensing_desy3_quad_{cfg.sample}_'
