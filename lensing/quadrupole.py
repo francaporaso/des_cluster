@@ -32,7 +32,7 @@ binspace = None
 # ==== Input globals
 # read from config file
 
-def _footprint_mask(ra, dec, z, padding=1.5):
+def footprint_mask(ra, dec, z, padding=1.5):
     '''
     Returns a boolean mask (True = keep) for an array of lens positions.
     A lens is rejected if any healpix pixel within its search disc
@@ -80,7 +80,7 @@ def read_redmapper(filename='../cats/DESY3/desy3_redmapper_cluster-ws.fits',
         (l['pcen']     >  pcen)
     )
     l = l[mask]
-    footprint = _footprint_mask(l['ra_cl'], l['dec_cl'], l['redshift'], padding=1.0)
+    footprint = footprint_mask(l['ra_cl'], l['dec_cl'], l['redshift'], padding=1.0)
 
     l = l[footprint]
     cl_idx = l['mem_match_id']
