@@ -76,19 +76,28 @@ def plot_getdist(labels, names, discard, model, samplers, samplename):
     g.triangle_plot(list(samples.values()), filled=True);
 
 
-def plot_profile(datafile, chainfile, ax=None, model_name='NFW', cov_mode='full', components=True):
+def plot_profile(datafile, chainfile, ax=None, plot='mono', model_name='NFW', cov_mode='full', components=True):
 
     data = read_dataprofile_fits(datafile)
 
     if ax is None:
         fig, ax = plt.subplots(1,1)
-    ax.errorbar(
-        data.R,
-        data.DSigma_t,
-        np.sqrt(np.diag(data.covDSt)),
-        fmt='.k',
-        capsize=2,
-    )
+    if plot == 'mono':
+        ax.errorbar(
+            data.R,
+            data.DSigma_t,
+            np.sqrt(np.diag(data.covDSt)),
+            fmt='.k',
+            capsize=2,
+        )
+    if plot == 'quad':
+        ax.errorbar(
+            data.R,
+            data.Gamma_tcos,
+            np.sqrt(np.diag(data.covGtc)),
+            fmt='.k',
+            capsize=2,
+        )
     try:
         mcmc = HDFBackend(chainfile, name=f'emcee/{model_name}/{cov_mode}', read_only=True)
         fit, err = load_fitted_params(chainfile, model_name=model_name, cov_mode=cov_mode)
